@@ -51,6 +51,8 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
   const { loading } = useSelector(state => state.Dashboard);
   const { location: storedLocation, locationName, locationId } = useSelector(state => state.Auth);
   console.log(storedLocation)
+
+
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
       const response = await fetch(
@@ -172,7 +174,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       };
-
+      console.log("FirstTime location capture:::", newRegion)
       setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 1000);
       await getAddressFromCoordinates(newRegion.latitude, newRegion.longitude);

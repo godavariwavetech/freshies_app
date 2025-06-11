@@ -124,7 +124,7 @@ const BasketScreen = ({ navigation, route }) => {
 
   // Force green color by setting status to 0 if undefined, or ensure green is used
   const effectiveStatus = route.params?.status !== undefined && route.params?.status === 1 ? 0 : (route.params?.status || 0);
-  const backgroundColor = '#6A48D2'; // Replacing dynamic color with specific color
+  const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
 
   // Calculate total price
   const calculateTotalPrice = () => {
@@ -346,7 +346,7 @@ const BasketScreen = ({ navigation, route }) => {
           contact: selectedAddress?.customer_mobile_number,
           name: selectedAddress?.customer_name,
         },
-        theme: { color: '#065E2C' },
+        theme: { color: '#8655d2' },
       };
 
       RazorpayCheckout.open(options)

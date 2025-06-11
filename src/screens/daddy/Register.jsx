@@ -35,6 +35,7 @@ export default function Register({ navigation, route }) {
     title: '',
     message: ''
   });
+  const [sendingOTP, setSendingOTP] = useState(false);
   const dispatch = useDispatch();
   const loading = useSelector(state => state.Auth.loading);
 
@@ -56,17 +57,16 @@ export default function Register({ navigation, route }) {
   };
 
   const handleGetOTP = async () => {
-    // Validate phone number
     if (!phoneNumber || phoneNumber.length !== 10) {
       Alert.alert('Invalid Phone Number', 'Please enter a valid 10-digit phone number');
       return;
     }
 
     if (validatePhoneNumber()) {
+      setSendingOTP(true); // Set loading true
       try {
         const response = await getUserLoginOTP(parseInt(phoneNumber, 10));
         if (response.status === 200) {
-          // Navigate to OTP Verification screen with phone number and OTP
           navigation.navigate(route.params?.isFromCart ? "OTPVerification1" : "OTPVerification", {
             phoneNumber: phoneNumber,
             otp: response.loginotp,
@@ -78,9 +78,12 @@ export default function Register({ navigation, route }) {
       } catch (error) {
         Alert.alert('Error', 'Unable to get OTP. Please try again.');
         console.error(error);
+      } finally {
+        setSendingOTP(false); // Set loading false
       }
-    };
-  }
+    }
+  };
+
 
   useEffect(() => {
     dispatch(setInitial())
@@ -147,8 +150,17 @@ export default function Register({ navigation, route }) {
               maxLength={10}
             />
           </View>
-          <TouchableOpacity onPress={handleGetOTP} style={styles.loginButton}>
-            <Text style={styles.loginText}>Get OTP</Text>
+          <TouchableOpacity
+            onPress={handleGetOTP}
+            style={[
+              styles.loginButton,
+              sendingOTP && { opacity: 0.6 } // Visual feedback when disabled
+            ]}
+            disabled={sendingOTP}
+          >
+            <Text style={styles.loginText}>
+              {sendingOTP ? <ActivityIndicator size="small" color="#fff" /> : 'Get OTP'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -229,7 +241,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   loginButton: {
-    backgroundColor: '#6A48D2', // updated
+    backgroundColor: "#8655d2", // updated
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

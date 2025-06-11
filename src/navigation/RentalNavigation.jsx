@@ -7,7 +7,7 @@ import CategorieItems from '../screens/daddy/CategorieItems';
 import CartScreen from '../screens/daddy/CartScreen';
 import AddressListScreen from '../screens/daddy/AddressListScreen';
 import AddAddressScreen from '../screens/daddy/AddAddressScreen';
-import MoreDetailsScreen from '../screens/daddy/MoreDetailsScreen'; 
+import MoreDetailsScreen from '../screens/daddy/MoreDetailsScreen';
 import CheckoutScreen from '../screens/daddy/CheckoutScreen';
 import SupportScreen from '../screens/daddy/SupportScreen';
 import FeedbackScreen from '../screens/daddy/FeedbackScreen';
@@ -48,63 +48,63 @@ const Stack = createStackNavigator();
 
 export default function RentalNavigation() {
   return (
-    <Stack.Navigator  screenOptions={{headerShown: false}} initialRouteName='BottomNavigation'>
-    <Stack.Screen name='BottomNavigation' component={BottomNavigation} />
-    <Stack.Screen name='RestaurantScreen' component={RestaurantScreen} />
-    <Stack.Screen name='CategorieItems' component={CategorieItems} />
-    <Stack.Screen name='CartScreen' component={CartScreen} />
-    <Stack.Screen name='AddressList' component={AddressListScreen} />
-    <Stack.Screen name='AddAddress' component={AddAddressScreen} />
-    <Stack.Screen name='MoreDetails' component={MoreDetailsScreen} />
-    <Stack.Screen name='Checkout' component={CheckoutScreen} />
-    <Stack.Screen name='Support' component={SupportScreen} />
-    <Stack.Screen name='Feedback' component={FeedbackScreen} />
-    <Stack.Screen name='OrderSuccess' component={OrderSuccessScreen} />
-    <Stack.Screen name='OrderDetailsScreen' component={OrderDetailsScreen} />
-    <Stack.Screen name='Coupons' component={CouponsScreen} />
-    <Stack.Screen name='ServiceLocations' component={ServiceLocationsScreen} />
-    <Stack.Screen name='PrivacyPolicy' component={PrivacyPolicyScreen} />
-    <Stack.Screen name='TermsConditions' component={TermsConditionsScreen} />
-    <Stack.Screen name='SelectServiceFromLocation' component={SelectServiceFromLocation} />
-    <Stack.Screen name='ServicesAvailable' component={ServicesAvailableScreen} />
-    <Stack.Screen name='ServiceUnavailable' component={ServiceUnavailableScreen} />
-    <Stack.Screen  name='Register1' component={Register} />
-    <Stack.Screen  name='OTPVerification1' component={OTPVerification} />
-    <Stack.Screen name='RefundPolicy' component={RefundPolicyScreen} />
-    <Stack.Screen name='ProductDetailsScreen' component={ProductDetailsScreen} />
-    <Stack.Screen name='ByOncescreen' component={ByOncescreen} />
-    <Stack.Screen name='PlaceOrder' component={PlaceOrder} />
-    <Stack.Screen name='TrackOrder' component={TrackOrder} />
-    <Stack.Screen name='UserHome' component={UserHome} />
-    <Stack.Screen name='Categories' component={Categories} />
-    <Stack.Screen name='SubscriptionPage' component={SubscriptionPage} />
-    <Stack.Screen name='EditSubscribe' component={EditSubscribe} />
-    <Stack.Screen name='FullviewofCategoriesTab' component={FullviewofCategoriesTab} />
-    <Stack.Screen name='Wlletscreen' component={Wlletscreen} />
-    <Stack.Screen name='ReorderScreen' component={ReorderScreen} />
-    <Stack.Screen name='RechargeHistoryScreen' component={RechargeHistoryScreen} />
-    <Stack.Screen name='ApplyCuponScreen' component={ApplyCuponScreen} />
-    <Stack.Screen name='CouponDetailsScreen' component={CouponDetailsScreen} />
-    <Stack.Screen name='BillingHistory' component={BillingHistory} />
-    <Stack.Screen name='GroceriesScreen' component={GroceriesScreen} />
-    <Stack.Screen name='ViewTrack' component={ViewTrack} />
-    <Stack.Screen name='MyFavoritesScreen' component={MyFavoritesScreen}
-     options={{ headerShown: true }}
-     />
+    <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName='BottomNavigation'>
+      <Stack.Screen name='BottomNavigation' component={BottomNavigation} />
+      <Stack.Screen name='RestaurantScreen' component={RestaurantScreen} />
+      <Stack.Screen name='CategorieItems' component={CategorieItems} />
+      <Stack.Screen name='CartScreen' component={CartScreen} />
+      <Stack.Screen name='AddressList' component={AddressListScreen} />
+      <Stack.Screen name='AddAddress' component={AddAddressScreen} />
+      <Stack.Screen name='MoreDetails' component={MoreDetailsScreen} />
+      <Stack.Screen name='Checkout' component={CheckoutScreen} />
+      <Stack.Screen name='Support' component={SupportScreen} />
+      <Stack.Screen name='Feedback' component={FeedbackScreen} />
+      <Stack.Screen name='OrderSuccess' component={OrderSuccessScreen} />
+      <Stack.Screen name='OrderDetailsScreen' component={OrderDetailsScreen} />
+      <Stack.Screen name='Coupons' component={CouponsScreen} />
+      <Stack.Screen name='ServiceLocations' component={ServiceLocationsScreen} />
+      <Stack.Screen name='PrivacyPolicy' component={PrivacyPolicyScreen} />
+      <Stack.Screen name='TermsConditions' component={TermsConditionsScreen} />
+      <Stack.Screen name='SelectServiceFromLocation' component={SelectServiceFromLocation} />
+      <Stack.Screen name='ServicesAvailable' component={ServicesAvailableScreen} />
+      <Stack.Screen name='ServiceUnavailable' component={ServiceUnavailableScreen} />
+      <Stack.Screen name='Register1' component={Register} />
+      <Stack.Screen name='OTPVerification1' component={OTPVerification} />
+      <Stack.Screen name='RefundPolicy' component={RefundPolicyScreen} />
+      <Stack.Screen name='ProductDetailsScreen' component={ProductDetailsScreen} />
+      <Stack.Screen name='ByOncescreen' component={ByOncescreen} />
+      <Stack.Screen name='PlaceOrder' component={PlaceOrder} />
+      <Stack.Screen name='TrackOrder' component={TrackOrder} />
+      <Stack.Screen name='UserHome' component={UserHome} />
+      <Stack.Screen name='Categories' component={Categories} />
+      <Stack.Screen name='SubscriptionPage' component={SubscriptionPage} />
+      <Stack.Screen name='EditSubscribe' component={EditSubscribe} />
+      <Stack.Screen name='FullviewofCategoriesTab' component={FullviewofCategoriesTab} />
+      <Stack.Screen name='Wlletscreen' component={Wlletscreen} />
+      <Stack.Screen name='ReorderScreen' component={ReorderScreen} />
+      <Stack.Screen name='RechargeHistoryScreen' component={RechargeHistoryScreen} />
+      <Stack.Screen name='ApplyCuponScreen' component={ApplyCuponScreen} />
+      <Stack.Screen name='CouponDetailsScreen' component={CouponDetailsScreen} />
+      <Stack.Screen name='BillingHistory' component={BillingHistory} />
+      <Stack.Screen name='GroceriesScreen' component={GroceriesScreen} />
+      <Stack.Screen name='ViewTrack' component={ViewTrack} />
+      <Stack.Screen name='MyFavoritesScreen' component={MyFavoritesScreen}
+        options={{ headerShown: true }}
+      />
 
-    <Stack.Screen
-      name="LocationSelection"
-      component={LocationSelectionScreen}
-      options={{ headerShown: false }}
-    />
-    <Stack.Screen
-      name="CategoriesScreen"
-      component={CategoriesScreen}
-      options={{
-        cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
-        gestureDirection: 'vertical',
-      }}
-    />
- </Stack.Navigator>
+      <Stack.Screen
+        name="LocationSelection"
+        component={LocationSelectionScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CategoriesScreen"
+        component={CategoriesScreen}
+        options={{
+          cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
+          gestureDirection: 'vertical',
+        }}
+      />
+    </Stack.Navigator>
   )
 }

@@ -30,8 +30,7 @@ export const verifyMobile = createAsyncThunk(
     // const response = await api.post(endpoints.VERIFY_MOBILE, data);
     const response = {
       data: {
-        data: [{
-        }],
+        data: [{}],
         status: true
 
       }

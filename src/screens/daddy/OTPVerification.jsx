@@ -72,19 +72,19 @@ export default function OTPVerification({ navigation, route }) {
 
         dispatch(setMobile(route.params?.phoneNumber))
 
-        // Navigate based on flow
+        // // Navigate based on flow
         if (route.params?.isFromCart) {
           navigation.replace("CartScreen");
         } else {
           dispatch(actionLogin());
-          navigation.replace('BottomNavigation');
+          // navigation.replace('BottomNavigation');
         }
         return;
       }
 
       // If not matched with route params OTP, try customer login
       const loginResponse = await customerLogin(parseInt(route.params?.phoneNumber, 10));
-
+      
       // Compare entered OTP with customer login OTP
       if (loginResponse.status === 200 &&
         enteredOtp === loginResponse.data.customer_otp.toString()) {
@@ -201,13 +201,18 @@ export default function OTPVerification({ navigation, route }) {
               <Text style={{ fontSize: 14, color: timer == 0 ? "#6A48D2" : "#8F8F8F", fontWeight: "700", textAlign: "center", marginTop: responsiveHeight(1) }}>Resend OTP</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={handleVerifyOtp} style={styles.loginButton}>
+          <TouchableOpacity
+            onPress={handleVerifyOtp}
+            style={[styles.loginButton, loader && { opacity: 0.6 }]}
+            disabled={loader}
+          >
             {loader ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.loginText}>Verify</Text>
             )}
           </TouchableOpacity>
+
         </View>
       </View>
     </Pressable>
@@ -279,7 +284,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   loginButton: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: "#8655d2",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -314,7 +319,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     alignSelf: 'flex-start',
     marginTop: 8,
-    // marginVertical: 10,
+    textAlign: "center"
   },
   otpContainer: {
     flexDirection: 'row',

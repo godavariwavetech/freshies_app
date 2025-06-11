@@ -145,7 +145,7 @@ function UserHome() {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar backgroundColor="white" barStyle="dark-content" translucent={false} />
+      {/* <StatusBar backgroundColor="green" barStyle="dark-content" translucent={false} /> */}
       <View style={styles.gradientContainer}>
         <View style={styles.headerContainer}>
           <TouchableOpacity
@@ -165,13 +165,10 @@ function UserHome() {
               </Text>
             </View>
           </TouchableOpacity>
-          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => navigation.navigate('BuyOnceScreen')} style={styles.supportButton}>
-              <Image
-                source={{ uri: placeholderImage }}
-                style={{ width: 24, height: 24, tintColor: '#000' }}
-              />
-            </TouchableOpacity>
+          import {Ionicons} from '@expo/vector-icons'; // or 'react-native-vector-icons/Ionicons'
+
+          <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+            {/* Wallet Button */}
             <TouchableOpacity onPress={() => navigation.navigate('Wlletscreen')} style={styles.supportButton}>
               <Ionicons
                 name="wallet-outline"
@@ -180,7 +177,18 @@ function UserHome() {
                 style={styles.searchIcon}
               />
             </TouchableOpacity>
+
+            {/* 🛒 Cart Button */}
+            <TouchableOpacity onPress={() => navigation.navigate('ByOncescreen')} style={styles.supportButton}>
+              <Ionicons
+                name="cart-outline"
+                size={21}
+                color="#000"
+                style={styles.searchIcon}
+              />
+            </TouchableOpacity>
           </View>
+
         </View>
 
 
@@ -322,7 +330,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     tintColor: '#000',
-    marginRight: 8,
+    marginRight: 0,
   },
   searchInput: {
     flex: 1,

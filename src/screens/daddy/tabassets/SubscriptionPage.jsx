@@ -48,7 +48,7 @@ const initialSubscriptions = [
 ];
 
 const MySubscriptionScreen = ({ navigation, route }) => {
-  const backgroundColor = '#6A48D2';
+  const backgroundColor = '#8655d2';
   const [subscriptions, setSubscriptions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('5%'),
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     borderRadius: 10,
   },
   exploreButtonText: {

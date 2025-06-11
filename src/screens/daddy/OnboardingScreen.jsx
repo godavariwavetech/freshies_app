@@ -9,6 +9,7 @@ import {
   Dimensions,
   ImageBackground,
   Alert,
+  Modal
 } from 'react-native';
 import { responsiveHeight } from 'react-native-responsive-dimensions';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -16,6 +17,9 @@ import Geolocation from '@react-native-community/geolocation';
 import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { useDispatch } from 'react-redux';
 import { setLocation } from '../../redux/reducers/auth'; // Update with your actual path
+import { checkAddressExistence } from '../../services/services';
+import { useNavigation } from '@react-navigation/native';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,6 +40,8 @@ const onboardingData = [
 
 const OnboardingScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [isCheckingAddress, setIsCheckingAddress] = useState(true)
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -60,12 +66,54 @@ const OnboardingScreen = ({ navigation }) => {
     }
   };
 
-  const getLocation = () => {
+  const getLocation = async () => {
     Geolocation.getCurrentPosition(
       position => {
-        const { latitude, longitude } = position.coords;
-        console.log(latitude, longitude)
-        dispatch(setLocation({ latitude, longitude }));
+        (async () => {
+          const { latitude, longitude } = position.coords;
+          console.log(latitude, longitude);
+          const region = {
+                  latitude,
+                  longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                };
+          dispatch(setLocation(region));
+
+          // try {
+          //   setIsCheckingAddress(true);
+
+          //   const response = await dispatch(
+          //     checkAddressExistence({
+          //       latitude: parseFloat(latitude),
+          //       longitude: parseFloat(longitude),
+          //     }),
+          //   );
+
+          //   console.log("heroooooooooooooooo", response);
+
+          //   if (response.payload.data.length > 0) {
+          //     const region = {
+          //       latitude,
+          //       longitude,
+          //       latitudeDelta: 0.01,
+          //       longitudeDelta: 0.01,
+          //     };
+
+          //     dispatch(setLocation(region));
+          //     dispatch(setLocationName(response.payload.data[0].location_name));
+          //     dispatch(setLocationId(response.payload.data[0].id));
+          //     dispatch(setShopAddress(response.payload.data[0]));
+          //     navigation.goBack();
+          //   } else {
+          //     setShowServiceModal(true);
+          //   }
+          // } catch (error) {
+          //   console.error('Location confirmation error:', error);
+          // } finally {
+          //   setIsCheckingAddress(false);
+          // }
+        })(); // immediately-invoked async function expression
       },
       error => {
         console.warn(error);
@@ -74,6 +122,7 @@ const OnboardingScreen = ({ navigation }) => {
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
   };
+
 
   const handleNext = () => {
     if (currentIndex < onboardingData.length - 1) {
@@ -120,6 +169,44 @@ const OnboardingScreen = ({ navigation }) => {
           </TouchableOpacity>
         </ImageBackground>
       </View>
+
+      <Modal
+        transparent
+        visible={showServiceModal}
+        animationType="fade"
+        onRequestClose={() => setShowServiceModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Service Unavailable</Text>
+            <Text style={styles.modalText}>
+              We currently do not provide service in your area. You can change your location or visit our app for more information.
+            </Text>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.changeLocationBtn}
+                onPress={() => {
+                  setShowServiceModal(false);
+                  navigation.navigate('SelectServiceFromLocation'); // 👈 Navigate here
+                }}
+              >
+                <Text style={styles.buttonText}>Change Location</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.visitAppBtn}
+                onPress={() => {
+                  setShowServiceModal(false);
+                  Linking.openURL("https://yourwebsite.com"); // Change to your app URL
+                }}
+              >
+                <Text style={styles.buttonText}>Visit Our App</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
@@ -177,6 +264,53 @@ const styles = StyleSheet.create({
     bottom: responsiveHeight(6),
     position: 'absolute',
   },
+
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    marginHorizontal: 30,
+    width: '85%',
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  changeLocationBtn: {
+    backgroundColor: '#f39c12',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 6,
+  },
+  visitAppBtn: {
+    backgroundColor: '#3498db',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 6,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  }
 });
 
 export default OnboardingScreen; 

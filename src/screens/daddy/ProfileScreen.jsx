@@ -329,7 +329,6 @@ const ProfileScreen = () => {
       
   ];
 
-  console.log(orders, '+++++++++++++++++>>>>ORDERS');
 
   // Render favorites preview
   const renderFavoritesPreview = () => {
@@ -430,18 +429,18 @@ const ProfileScreen = () => {
         />
       }
     >
-      <StatusBar backgroundColor="#6A48D2" barStyle="light-content" />
+      <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
       
       <LinearGradient
-        colors={['#6A48D2', '#F7F2F2']}
+        colors={['#8655d2', '#8655d2']}
         style={styles.gradientContainer}>
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             gap: 10,
-            marginTop: responsiveHeight(5),
-            marginLeft: responsiveWidth(5),
+            marginTop: responsiveHeight(2),
+            marginLeft: responsiveWidth(2),
           }}>
           <Image
             source={{
@@ -563,7 +562,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Add padding for tab bar
   },
   header: { padding: 20, backgroundColor: '#6A48D2', alignItems: 'center' },
-  profileName: { fontSize: 24, fontWeight: 'bold', color: '#000' },
+  profileName: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
   ordersHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

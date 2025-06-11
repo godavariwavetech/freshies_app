@@ -247,4 +247,21 @@ export const getServices = createAsyncThunk(
           }
         }
   }
-)
+)  
+
+
+
+export const getPreviousOrders = async (payload) => {
+  try {
+    const response = await api.post('/public_app/getorderlist',payload);
+    console.log("0000", response)
+    if (response.data.status === 200) {
+      return response.data.data; // Return the array of coupons
+    } else {
+      throw new Error('Unexpected response status: ' + response.data.status);
+    }
+  } catch (error) {
+    console.error('Error fetching coupons:', error);
+    throw error;
+  }
+};

@@ -524,7 +524,7 @@ export default function GroceriesScreen({ navigation, route }) {
     }));
 
     return (
-      <View style={[styles.productCard, { width: productCardWidth, minHeight: 270 }]}>
+      <View style={[styles.productCard, { width: productCardWidth, gap: 8 }]}>
         <TouchableOpacity
           style={styles.favoriteIcon}
           onPress={() => toggleFavorite(item)}
@@ -575,13 +575,12 @@ export default function GroceriesScreen({ navigation, route }) {
           <Text style={styles.quantityText}>{selectedVariant.quantity_type}</Text>
         )}
 
-        <Text style={styles.description}>{item.description}</Text>
+        {/* <Text style={styles.description}>{item.description}</Text> */}
         <View style={styles.priceRow}>
           <Text style={styles.productPrice}>₹{adjustedPrice.toFixed(2)}</Text>
           <Text style={styles.productOffer}>₹{adjustedOffer.toFixed(2)}</Text>
         </View>
         <View style={styles.buttonRow}>
-
           {item.subscription === 1 && (
             <TouchableOpacity
               style={[styles.subscribeBtn, { backgroundColor: '#FBEAEA', borderColor: '#9010BF' }]}
@@ -598,7 +597,6 @@ export default function GroceriesScreen({ navigation, route }) {
             >
               <Text style={styles.subscribeText}>Subscribe</Text>
             </TouchableOpacity>
-
           )}
 
           {cartItem ? (
@@ -619,7 +617,7 @@ export default function GroceriesScreen({ navigation, route }) {
             </View>
           ) : (
             <TouchableOpacity
-              style={[styles.buyBtn, { backgroundColor: '#9010BF' }]}
+              style={[styles.buyBtn, { backgroundColor: '#8655d2' }]}
               onPress={() => handleBuyOnce(item)}
             >
               <Text style={styles.buyText}>Buy Once</Text>
@@ -1032,7 +1030,7 @@ const styles = StyleSheet.create({
   },
   backButton: { padding: 5 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#000', flex: 1, textAlign: 'center' },
-  headerIcons: { flexDirection: 'row', width: 80, justifyContent: 'space-between' ,gap: 10},
+  headerIcons: { flexDirection: 'row', width: 80, justifyContent: 'space-between', gap: 10 },
   searchContainer: {
     marginTop: 10,
     backgroundColor: '#fff',
@@ -1074,7 +1072,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedCategoryItem: {
-    backgroundColor: '#9010BF',
+    backgroundColor: '#8655d2',
     borderLeftWidth: 3,
     borderLeftColor: '#9010BF',
   },
@@ -1132,7 +1130,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: productCardWidth,
     marginRight: 8,
-    minHeight: 270,
+
     justifyContent: 'space-between',
   },
   productImage: {
@@ -1140,7 +1138,7 @@ const styles = StyleSheet.create({
     height: (productCardWidth - 12) * 0.7,
     borderRadius: 4,
     borderBottomLeftRadius: 0,
-    borderBottomRightRadius:0,
+    borderBottomRightRadius: 0,
     marginBottom: 2,
     backgroundColor: '#fff',
     alignSelf: 'center',
@@ -1189,7 +1187,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 5,
+    marginBottom: 1,
     width: '100%',
   },
   productPrice: {
@@ -1208,7 +1206,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     gap: 4,
-    padding: 5
+    padding: 4
   },
   subscribeBtn: {
     backgroundColor: '#fff',

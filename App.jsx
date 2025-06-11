@@ -76,6 +76,7 @@ const App = () => {
     const checkAndRequestPermissions = async () => {
       if (Platform.OS === 'android') {
         try {
+          console.log("parledhu vachind")
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
           );
@@ -141,6 +142,13 @@ const App = () => {
     <Provider store={store}>
       <NavigationContainer>
         <View style={{ flex: 1 }}>
+          {/* 🔵 Global StatusBar */}
+          <StatusBar
+            backgroundColor="#4B3395" // Android background
+            barStyle="light-content"  // iOS & Android text/icons
+            translucent={false}
+          />
+  
           <NetworkStatusBanner />
           <RootNavigation />
           <CustomModal
@@ -149,13 +157,14 @@ const App = () => {
             message="A new version of the app is available. Please update to continue using all features."
             confirmText="Update Now"
             onConfirm={handleUpdate}
-            cancelText=''
+            cancelText=""
           />
           <Toast />
         </View>
       </NavigationContainer>
     </Provider>
   );
+  
 };
 
 export default App;

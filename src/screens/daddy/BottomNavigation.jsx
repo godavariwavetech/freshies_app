@@ -29,6 +29,7 @@ import SubscriptionPage from '../daddy/tabassets/SubscriptionPage';
 // import RechargeHistoryScreen from '../daddy/tabassets/RechargeHistoryScreen';
 import ProductDetailsScreen from '../daddy/tabassets/ProductDetailsScreen';
 import PreviousOrdersScreen from '../PreviousOrdersScreen';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 const Tab = createBottomTabNavigator();
 
 export default function BottomNavigation() {
@@ -81,9 +82,19 @@ export default function BottomNavigation() {
             ) : (
               <ProfileSvg color={'gray'} />
             );
+          } else if (route.name === 'PreviousOrdersScreen') {
+            iconName = (
+              <Ionicons
+                name={focused ? 'receipt' : 'receipt-outline'} // example icon
+                size={24}
+                color={focused ? '#4B3395' : 'gray'}
+              />
+            );
           }
+        
           return iconName;
         },
+
         tabBarActiveTintColor: '#4B3395',
         tabBarInactiveTintColor: 'gray',
         tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
@@ -125,27 +136,26 @@ export default function BottomNavigation() {
           contentStyle: {},
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Cart"
         component={BuyOncescreen}
         options={{
           tabBarLabel: 'Cart',
           contentStyle: {},
         }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Profile',
-          contentStyle: {},
-        }}
-      />
+      /> */}
       <Tab.Screen
         name="PreviousOrdersScreen"
         component={PreviousOrdersScreen}
         options={{
-          tabBarLabel: 'PreviousOrdersScreen',
+          tabBarLabel: 'Orders', // shorter label
+        }}
+      />
+       <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profile',
           contentStyle: {},
         }}
       />
@@ -158,7 +168,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: '#4B3395',
+    backgroundColor: "#8655d2",
     borderRadius: 10,
     minWidth: 20,
     height: 20,
