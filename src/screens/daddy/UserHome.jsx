@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { responsiveWidth } from 'react-native-responsive-dimensions';
@@ -18,65 +19,57 @@ import Toast from 'react-native-toast-message';
 import { getSubCategories, getItems } from '../../services/services';
 import PromoCard from '../../components/promocards';
 import Skeleton from './Skeleton';
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Placeholder image URI
 const placeholderImage = 'https://via.placeholder.com/100';
 
 function UserHome() {
   const navigation = useNavigation();
+  const totalItems = useSelector((state) => state.cart.totalItems);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [subcategories, setSubCategories] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Map sub_category_name to GroceriesScreen categoryKey
-  const subcategoryToCategoryMap = {
-    'Rice': 'rice',
-    'Oils': 'oils',
-    'Millets': 'millets',
-    'Seeds': 'seeds',
-    'Chicken': 'chicken',
-    'Mutton': 'mutton',
-    'Fish': 'fish',
-    'Prawns': 'prawns',
-    'Veg Pickles': 'veg_pickles',
-    'Non-Veg Pickles': 'nonveg_pickles',
-  };
 
   // Fetch subcategories and derive categories
   useEffect(() => {
-    const loadSubCategories = async () => {
-      try {
-        setIsLoading(true);
-        const fetchedSubCategories = await getSubCategories();
-        setSubCategories(fetchedSubCategories);
-        const uniqueCategories = [
-          ...new Map(
-            fetchedSubCategories.map((sub) => [
-              sub.category_id,
-              { id: sub.category_id, name: sub.category_name },
-            ])
-          ).values(),
-        ];
-        setCategories(uniqueCategories);
-        setError(null);
-      } catch (error) {
-        setError('Failed to load categories');
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to load subcategories',
-          duration: 3000,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadSubCategories();
   }, []);
+
+  const loadSubCategories = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedSubCategories = await getSubCategories();
+      
+      setSubCategories(fetchedSubCategories);
+      const uniqueCategories = [
+        ...new Map(
+          fetchedSubCategories.map((sub) => [
+            sub.category_id,
+            { id: sub.category_id, name: sub.category_name },
+          ])
+        ).values(),
+      ];
+      setCategories(uniqueCategories);
+      setError(null);
+    } catch (error) {
+      setError('Failed to load categories');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to load subcategories',
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   // Filter subcategories by category_id
@@ -105,47 +98,30 @@ function UserHome() {
   };
 
   const handleSubCategories = async (subcategory) => {
-    if (subcategory.category_name === 'Soaps (Chemical free)' || subcategory.category_name === 'Soaps Organic') {
-      Toast.show({
-        type: 'info',
-        text1: 'Coming Soon',
-        text2: `${subcategory.category_name} section is under development`,
-        duration: 3000,
-        autoHide: true,
-      });
-      return;
-    }
+    
+    navigation.navigate('GroceriesScreen', {
+      subcategory_id: parseInt(subcategory.id),
+      subcategory_name: subcategory.category_name,
+      category_id: subcategory.category_id,
+    });
+  };
 
+  const onRefresh = async () => {
     try {
-      // Fetch items for the subcategory
-      const items = await getItems(subcategory.id, subcategory.category_id);
-
-      // Map sub_category_name to categoryKey
-      const categoryKey = subcategoryToCategoryMap[subcategory.category_name] || subcategory.category_name.toLowerCase();
-
-      // Navigate to GroceriesScreen with items
-      navigation.navigate('GroceriesScreen', {
-        status: subcategory.category_id === 1 ? 1 : subcategory.category_id === 3 ? 2 : 0, // Map category_id to status
-        categoryKey,
-        subcategory_id: parseInt(subcategory.id),
-        subcategory_name: subcategory.category_name,
-        category_id: subcategory.category_id,
-        items, // Pass fetched items
-      });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load items for this category',
-        duration: 3000,
-        autoHide: true,
-      });
+      setRefreshing(true);
+      // Re-fetch or reload your data here
+      await loadSubCategories(); // Replace with your actual fetch logic
+    } catch (err) {
+      console.error('Refresh error:', err);
+    } finally {
+      setRefreshing(false);
     }
   };
 
+
   return (
     <View style={styles.mainContainer}>
-      {/* <StatusBar backgroundColor="green" barStyle="dark-content" translucent={false} /> */}
+      <FocusAwareStatusBar barStyle="dark-content" backgroundColor="white" />
       <View style={styles.gradientContainer}>
         <View style={styles.headerContainer}>
           <TouchableOpacity
@@ -165,8 +141,6 @@ function UserHome() {
               </Text>
             </View>
           </TouchableOpacity>
-          import {Ionicons} from '@expo/vector-icons'; // or 'react-native-vector-icons/Ionicons'
-
           <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
             {/* Wallet Button */}
             <TouchableOpacity onPress={() => navigation.navigate('Wlletscreen')} style={styles.supportButton}>
@@ -177,21 +151,26 @@ function UserHome() {
                 style={styles.searchIcon}
               />
             </TouchableOpacity>
-
             {/* 🛒 Cart Button */}
-            <TouchableOpacity onPress={() => navigation.navigate('ByOncescreen')} style={styles.supportButton}>
-              <Ionicons
-                name="cart-outline"
-                size={21}
-                color="#000"
-                style={styles.searchIcon}
-              />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ByOncescreen')}
+              style={styles.supportButton}
+            >
+              <View style={styles.iconWrapper}>
+                <Ionicons
+                  name="cart-outline"
+                  size={22}
+                  color="#000"
+                />
+                {totalItems > 0 && (
+                  <View style={styles.cartBadge}>
+                    <Text style={styles.cartBadgeText}>{totalItems}</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
-
         </View>
-
-
         <TouchableOpacity style={styles.searchContainer}>
           <Image
             source={require('./tabassets/searchhome.png')}
@@ -209,14 +188,15 @@ function UserHome() {
           />
         </TouchableOpacity>
       </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingVertical: 5 }}
         style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <PromoCard />
-
         {/* Dynamically render sections for each category */}
         {categories.length === 0 && !isLoading && !error ? (
           <Text style={styles.errorText}>No categories available</Text>
@@ -246,29 +226,31 @@ function UserHome() {
                       }
                     >
                       <View style={styles.categoryGridItemContent}>
-                        <Image
-                          source={{
-                            uri: subcategory.sub_category_image || placeholderImage,
-                          }}
-                          style={styles.categoryGridImageSmall}
-                          resizeMode="cover"
-                        />
-                        <Text style={styles.categoryGridTextSmall}>{subcategory.sub_category_name}</Text>
+                        <View style={styles.imageWrapper}>
+                          <Image
+                            source={{ uri: subcategory.sub_category_image || placeholderImage }}
+                            style={styles.categoryGridImageSmall}
+                          />
+                        </View>
+
+                        <Text style={styles.categoryGridTextSmall}>
+                          {subcategory.sub_category_name}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                   ))}
                 </View>
+
               )}
             </View>
           ))
         )}
       </ScrollView>
       <Toast />
-
       {isLoading && (
         <ActivityIndicator
           size="large"
-          color="#6A48D2"
+          color="#8655d2"
           style={styles.loadingIndicator}
         />
       )}
@@ -290,11 +272,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: responsiveWidth(5),
+
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+
   },
   locationTitle: {
     color: '#545454',
@@ -354,35 +338,50 @@ const styles = StyleSheet.create({
   categoriesGridSmall: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 5,
+    gap: 2,
   },
   categoryGridItemSmall: {
-    width: 'auto',
-    flexBasis: '25%',
-    aspectRatio: 0.9,
-    paddingHorizontal: 1,
+    width: 100,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    margin: 5, // Instead of relying on gap
   },
   categoryGridItemContent: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 5,
+    justifyContent: "space-between"
   },
+
+  imageWrapper: {
+    width: 100,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    // ✅ iOS shadow (soft and natural)
+    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#8655d2',     // A glow color (e.g., purple)
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,                // Android glow-like effect
+    // ✅ Overflow settings
+    marginBottom: 5,
+    overflow: Platform.OS === 'ios' ? 'visible' : 'hidden',
+  },
+
+
+
   categoryGridImageSmall: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
-    marginBottom: 5,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   categoryGridTextSmall: {
     fontSize: 11,
     color: '#000',
     fontWeight: '500',
     textAlign: 'center',
-    paddingHorizontal: 2,
     flexWrap: 'wrap',
+    paddingHorizontal: 2,
   },
   errorText: {
     fontSize: 16,
@@ -399,6 +398,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  iconWrapper: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  cartBadge: {
+    position: 'absolute',
+    top: -7,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+
+  cartBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+
+
 });
 
 export default UserHome;

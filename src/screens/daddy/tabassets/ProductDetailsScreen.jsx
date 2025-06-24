@@ -21,11 +21,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { getItemDetails, recommendItems } from '../../../services/services';
+import { combineSlices } from '@reduxjs/toolkit';
+import FocusAwareStatusBar from '../../../components/CustomStatusBar';
+import { useSelector } from 'react-redux';
 
 const { width } = Dimensions.get('window');
 
 const ProductDetailScreen = ({ navigation, route }) => {
-
   const [productDetails, setProductDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
@@ -33,36 +35,15 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const [statusBarHeight, setStatusBarHeight] = useState(0);
   const [selectedWeight, setSelectedWeight] = useState(null);
   const [recommendedItems, setRecommendedItems] = useState([]);
-
-  // Determine product type with multiple fallback methods
-  const determineProductType = () => {
-    if (route.params?.productType) {
-      // console.log('Product Type from explicit param:', route.params.productType);
-      return route.params.productType;
-    }
-
-    const status = route.params?.status || 0;
-    if (status === 1) {
-      // console.log('Product Type from status:', 'meat');
-      return 'meat';
-    } else if (status === 2) {
-      // console.log('Product Type from status:', 'pickles');
-      return 'pickles';
-    }
-
-    // console.log('Product Type default:', 'groceries');
-    return 'groceries';
-  };
-
-  const productType = determineProductType();
+  const { customerId } = useSelector(state => state.Auth);
   const { status = 0, getCategories } = route.params || {};
-  const backgroundColor = productType === 'meat' ? '#6A48D2' : '#6A48D2';
-
+  const backgroundColor = '#8655d2';
+  
 
   useEffect(() => {
     const subcategoryItems = async () => {
       const response = await recommendItems(route.params.item.subcategory_id);
-      console.log("response", response.data)
+      
       setRecommendedItems(response.data)
     }
     subcategoryItems()
@@ -73,8 +54,8 @@ const ProductDetailScreen = ({ navigation, route }) => {
     const fetchItemDetails = async () => {
       try {
         if (route.params?.unique_id) {
-          const response = await getItemDetails(route.params.unique_id);
-          console.log("response2",response)
+          const response = await getItemDetails(customerId, route.params.unique_id);
+          
           if (response.data && response.data.length > 0) {
             const fetchedDetails = response.data;
             const processedDetails = fetchedDetails.map(detail => ({
@@ -111,48 +92,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
     fetchItemDetails();
   }, [route.params?.unique_id]);
 
-  // Load favorites
-  useEffect(() => {
-    const loadFavorites = async () => {
-      try {
-        const storedFavorites = await AsyncStorage.getItem('favorites');
-        if (storedFavorites) {
-          const parsedFavorites = JSON.parse(storedFavorites);
-          setFavorites(parsedFavorites);
-          const isCurrentItemFavorite = parsedFavorites.some(
-            fav => fav.id === productDetails?.id && fav.category === productDetails?.category
-          );
-          setIsFavorite(isCurrentItemFavorite);
-        }
-      } catch (error) {
-        console.error('Error loading favorites:', error);
-      }
-    };
-
-    if (productDetails) {
-      loadFavorites();
-    }
-  }, [productDetails]);
-
-  // StatusBar effect
-  useEffect(() => {
-    const height = getStatusBarHeight(true);
-    setStatusBarHeight(height);
-
-    StatusBar.setBarStyle('light-content');
-    if (Platform.OS === 'android') {
-      StatusBar.setTranslucent(false);
-      StatusBar.setBackgroundColor(backgroundColor || '#000');
-    }
-
-    return () => {
-      StatusBar.setBarStyle('default');
-      if (Platform.OS === 'android') {
-        StatusBar.setTranslucent(false);
-        StatusBar.setBackgroundColor('#FFFFFF');
-      }
-    };
-  }, [backgroundColor]);
 
   // Render loading state
   if (isLoading) {
@@ -179,16 +118,9 @@ const ProductDetailScreen = ({ navigation, route }) => {
     );
   }
 
-  // Simplified meat sizes for reference
-  const meatSizes = [
-    { id: 'small', label: 'Small', description: '250-300g' },
-    { id: 'medium', label: 'Medium', description: '400-450g' },
-    { id: 'large', label: 'Large', description: '600-650g' },
-  ];
 
   const toggleFavorite = async () => {
     if (!productDetails) return;
-
     try {
       let updatedFavorites;
       if (isFavorite) {
@@ -209,7 +141,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
             ...productDetails,
             category: productDetails.category || 'default',
             status,
-            productType,
           },
         ];
         Toast.show({
@@ -220,7 +151,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
           autoHide: true,
         });
       }
-
       setFavorites(updatedFavorites);
       setIsFavorite(!isFavorite);
       await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
@@ -236,84 +166,66 @@ const ProductDetailScreen = ({ navigation, route }) => {
     }
   };
 
-  // Restore dummy data for recommended products
-  const groceriesProductsData = {
-    millets: [
-      { id: '1', name: 'Foxtail Millet', brand: 'Organic Harvest', defaultWeight: '500g', price: 60, offer: 78, image: require('../../daddy/tabassets/kodo.png'), quality: 'Top Quality' },
-      { id: '2', name: 'Little Millet', brand: 'Nature\'s Bounty', defaultWeight: '500g', price: 55, offer: 70, image: require('../../daddy/tabassets/littlemillet.png'), quality: 'Low Quality' },
-      { id: '3', name: 'Barnyard Millet', brand: 'Green Fields', defaultWeight: '500g', price: 52, offer: 65, image: require('../../daddy/tabassets/kodo.png'), quality: 'Top Quality' },
-      { id: '4', name: 'Kodo Millet', brand: 'Earth\'s Best', defaultWeight: '500g', price: 48, offer: 60, image: require('../../daddy/tabassets/littlemillet.png'), quality: 'Low Quality' },
-      { id: '5', name: 'Moong Dal', brand: 'Harvest Gold', defaultWeight: '500g', price: 100 },
-      { id: '6', name: 'Chana Dal', brand: 'Organic Valley', defaultWeight: '1kg', price: 75, offer: 90, image: require('../../daddy/tabassets/littlemillet.png'), quality: 'Low Quality' },
-    ],
-    oils: [
-      { id: '1', name: 'Sunflower Oil', brand: 'Fortune', defaultWeight: '1L', price: 120, offer: 150, image: require('../../daddy/tabassets/Oil.png'), quality: 'Top Quality' },
-    ],
-    rice: [
-      { id: '1', name: 'Basmati Rice', brand: 'Tilda', defaultWeight: '1kg', price: 150, offer: 180, image: require('../../daddy/tabassets/Rice.png'), quality: 'Top Quality' },
-    ],
-    seeds: [
-      { id: '1', name: 'Chia Seeds', brand: 'Eden Brothers', defaultWeight: '200g', price: 150, offer: 180, image: require('../../daddy/tabassets/Seeds.png'), quality: 'Top Quality' },
-    ],
+
+  const handleBuyOnce = async (product) => {
+    
+    try {
+      const price = parseFloat(product.offer) || 0;
+      
+      const cartData = await AsyncStorage.getItem('cartItems');
+      const cart = cartData ? JSON.parse(cartData) : [];
+
+      const index = cart.findIndex(
+        (item) =>
+          item.id === product.unique_id &&
+          item.subcategory_id === route.params.item.subcategory_id
+      );
+      let updatedCart = [...cart];
+      if (index > -1) {
+        
+        const existingItem = cart[index];
+        const newQuantity = (existingItem.quantity || 1) + 1;
+        updatedCart[index] = {
+          ...existingItem,
+          quantity: newQuantity,
+          totalPrice: price * newQuantity,
+        };
+      } else {
+        
+        updatedCart.push({
+          ...product,
+          id: product.unique_id,
+          quantity: 1,
+          subcategory_id: route.params.item.subcategory_id,
+          status,
+        });
+      }
+      
+      await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
+      // setCartItems(updatedCart);
+      navigation.navigate('ByOncescreen', {
+        productDetails: product,
+        // status,
+        // getCategories,
+        // selectedQuantity: selectedWeight,
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to add to cart',
+        position: 'top',
+        topOffset: Platform.OS === 'ios' ? 50 : 30,
+      });
+    }
   };
 
-  const meatProductsData = {
-    chicken: [
-      { id: '1', name: 'Boneless Wings', defaultWeight: '450 gm', price: 466, offer: 350, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skinless', brand: 'Farm Fresh' },
-      { id: '2', name: 'Chicken Breast', defaultWeight: '450 gm', price: 466, offer: 350, image: require('../../daddy/tabassets/keema.png'), skin: 'Skin', brand: 'Venky\'s' },
-      { id: '3', name: 'Chicken Thighs', defaultWeight: '450 gm', price: 466, offer: 350, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skinless', brand: 'Godrej' },
-      { id: '4', name: 'Mince (Keema)', defaultWeight: '450 gm', price: 466, offer: 350, image: require('../../daddy/tabassets/keema.png'), skin: 'Skinless', brand: 'Real Good' },
-      { id: '5', name: 'Curry Cut', defaultWeight: '450 gm', price: 466, offer: 350, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skin', brand: 'Farm Fresh' },
-      { id: '6', name: 'Chicken Liver', defaultWeight: '450 gm', price: 466, offer: 350, image: require('../../daddy/tabassets/keema.png'), skin: 'Skinless', brand: 'Venky\'s' },
-    ],
-    mutton: {
-      lamb: [
-        { id: '1', name: 'Lamb Shoulder', defaultWeight: '450 gm', price: 600, offer: 500, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skin', brand: 'Premium Cuts' },
-      ],
-      maraka: [
-        { id: '1', name: 'Maraka Leg', defaultWeight: '450 gm', price: 650, offer: 550, image: require('../../daddy/tabassets/keema.png'), skin: 'Skinless', brand: 'Premium Cuts' },
-      ],
-      meka: [
-        { id: '1', name: 'Meka Shoulder', defaultWeight: '450 gm', price: 610, offer: 510, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skin', brand: 'Premium Cuts' },
-      ],
-    },
-    fish: [
-      { id: '1', name: 'Rohu Fish', defaultWeight: '1 kg', price: 300, offer: 250, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skin', brand: 'Sea Fresh' },
-    ],
-    prawns: [
-      { id: '1', name: 'Tiger Prawns', defaultWeight: '500 gm', price: 700, offer: 600, image: require('../../daddy/tabassets/bonelesswings.png'), skin: 'Skinless', brand: 'Sea King' },
-    ],
-  };
 
-  const picklesProductsData = {
-    veg_pickles: [
-      { id: '1', name: 'Tomato Pickle', brand: 'Priya', defaultWeight: '200g', price: 80, offer: 100, image: require('../../daddy/tabassets/veg.png'), quality: 'Top Quality' },
-    ],
-    nonveg_pickles: [
-      { id: '1', name: 'Chicken Pickle', brand: 'Priya', defaultWeight: '200g', price: 120, offer: 150, image: require('../../daddy/tabassets/veg.png'), quality: 'Top Quality' },
-    ],
-  };
-
-  // Determine recommended products based on product type
-  const recommendedProducts = productType === 'groceries'
-    ? Object.values(groceriesProductsData).flat()
-    : productType === 'meat'
-      ? Object.values(meatProductsData)
-        .flatMap(category => Array.isArray(category) ? category : Object.values(category).flat())
-      : productType === 'pickles'
-        ? Object.values(picklesProductsData).flat()
-        : [];
-
-  // Filter out the current item and shuffle
-  const shuffledRecommendedProducts = recommendedProducts
-    .filter(product => product.id !== productDetails?.id || product.category !== productDetails?.category)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 5);  
-
-console.log(productDetails)
+  // 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={[
@@ -327,7 +239,7 @@ console.log(productDetails)
               style={styles.headerImage}
               defaultSource={require('../../daddy/tabassets/prawns.png')}
               onError={(e) => {
-                console.log('Image load error:', e.nativeEvent.error);
+                
               }}
             />
             <LinearGradient
@@ -468,22 +380,33 @@ console.log(productDetails)
                 <TouchableOpacity
                   key={`${recItem.id}-${recItem.category || 'default'}`}
                   style={styles.recommendedItemContainer}
-                  onPress={() => {
-                    // Determine the product type for the recommended item
-                    const recProductType = productType; // Since recommended items are already filtered by productType
-                    navigation.push('ProductDetailScreen', {
+                  // onPress={() => {
+                  //   // Determine the product type for the recommended item
+                  //   const recProductType = productType; // Since recommended items are already filtered by productType
+                  //   navigation.push('ProductDetailsScreen', {
+                  //     item: {
+                  //       ...recItem,
+                  //       category: productDetails.category, // Preserve category for consistency
+                  //       subcategory: productDetails.subcategory || undefined,
+                  //       status,
+                  //       productType: recProductType,
+                  //     },
+                  //     status,
+                  //     productType: recProductType,
+                  //     getCategories,
+                  //   });
+                  // }}
+                  onPress={() =>
+                    navigation.navigate('ProductDetailsScreen', {
                       item: {
                         ...recItem,
-                        category: productDetails.category, // Preserve category for consistency
-                        subcategory: productDetails.subcategory || undefined,
-                        status,
-                        productType: recProductType,
+                        subcategory_id: recItem.sub_category_id,
+                        variant: ""
                       },
-                      status,
-                      productType: recProductType,
-                      getCategories,
-                    });
-                  }}
+                      unique_id: recItem.unique_id,
+
+                    })
+                  }
                 >
                   <Image source={{ uri: recItem.item_image }} style={styles.recommendedItemImage} />
                   <View style={styles.recommendedItemDetails}>
@@ -512,7 +435,7 @@ console.log(productDetails)
 
         {/* Bottom Bar for Buy and Subscribe */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.subscribeButton, { borderColor: backgroundColor }]}
             onPress={() => {
               // Find the selected item details
@@ -529,7 +452,7 @@ console.log(productDetails)
             }}
           >
             <Text style={[styles.subscribeButtonText, { color: backgroundColor }]}>SUBSCRIBE</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
             style={[styles.buyButton, { backgroundColor }]}
             onPress={() => {
@@ -538,12 +461,14 @@ console.log(productDetails)
                 item => item.quantity_type === selectedWeight
               );
 
-              navigation.navigate('ByOncescreen', {
-                productDetails: selectedItem,
-                status,
-                getCategories,
-                selectedQuantity: selectedWeight,
-              });
+
+              handleBuyOnce(selectedItem)
+              // navigation.navigate('ByOncescreen', {
+              //   productDetails: selectedItem,
+              //   status,
+              //   getCategories,
+              //   selectedQuantity: selectedWeight,
+              // });
             }}
           >
             <Text style={styles.buyButtonText}>BUY ONCE</Text>

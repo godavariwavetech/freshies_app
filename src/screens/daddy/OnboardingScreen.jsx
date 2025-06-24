@@ -71,7 +71,7 @@ const OnboardingScreen = ({ navigation }) => {
       position => {
         (async () => {
           const { latitude, longitude } = position.coords;
-          console.log(latitude, longitude);
+          
           const region = {
                   latitude,
                   longitude,
@@ -90,7 +90,7 @@ const OnboardingScreen = ({ navigation }) => {
           //     }),
           //   );
 
-          //   console.log("heroooooooooooooooo", response);
+          //   
 
           //   if (response.payload.data.length > 0) {
           //     const region = {
@@ -117,7 +117,7 @@ const OnboardingScreen = ({ navigation }) => {
       },
       error => {
         console.warn(error);
-        Alert.alert('Error', 'Unable to fetch location.');
+        Alert.alert('Location', 'Unable to fetch your location please On your Locacation in Settings.');
       },
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
     );
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     alignItems: 'center',
     justifyContent: 'center',
     bottom: responsiveHeight(6),

@@ -248,7 +248,7 @@ const AddAddressScreen = ({ navigation, route }) => {
 
 
   // const onMapPress = useCallback((e) => {
-  //   console.log("+++++++++++++>>>MAPPRESS",e)
+  //   
   //   const { latitude, longitude } = e.nativeEvent.coordinate;
   //   const newRegion = {
   //     latitude,
@@ -331,7 +331,7 @@ const AddAddressScreen = ({ navigation, route }) => {
       }));
     } else {
       // Add new address
-      console.log({addressType:selectedType,address:doorNo,customer_latitude:markerPosition.latitude,customer_longitude:markerPosition.longitude,customer_name:name,customer_mobile_number:contact  },"++++++++++++++++IAOIOAIOIAOIAOIO")
+      
      await dispatch(setAddressList({addressType:selectedType,address:doorNo,customer_latitude:markerPosition.latitude,customer_longitude:markerPosition.longitude,customer_name:name,customer_mobile_number:contact  }));
     }
     navigation.goBack();

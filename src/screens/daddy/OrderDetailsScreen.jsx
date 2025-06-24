@@ -27,7 +27,7 @@ import {getOrderDetails, getOrders} from '../../redux/reducers/daddy';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import CustomModal from '../../components/CustomModal';
 import {cancelOrder, submitReview} from '../../redux/reducers/reviews';
-import {getMessaging} from '@react-native-firebase/messaging';
+
 
 const OrderDetailsScreen = ({navigation, route}) => {
   const dispatch = useDispatch();
@@ -222,9 +222,9 @@ const OrderDetailsScreen = ({navigation, route}) => {
   };
 
   useEffect(() => {
-    getMessaging().onMessage(async remoteMessage => {
-      onRefresh();
-    });
+    // getMessaging().onMessage(async remoteMessage => {
+    //   onRefresh();
+    // });
   }, []);
 
 

@@ -1,189 +1,121 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity,StatusBar } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import Ionicons from 'react-native-vector-icons/Ionicons'; // ✅ using vector icons
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
 
-const TermsConditionsScreen = () => {
+const TermsAndConditionsScreen = () => {
   const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#6A48D2" />
+      {/* Custom Header */}
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.title}>Terms and Conditions</Text>
+        <Text style={styles.headerTitle}>Terms and Conditions</Text>
       </View>
-      <ScrollView style={{ padding: 20 }}>
-        <Text style={styles.effectiveDate}>Last Updated: 4/3/2025</Text>
-        <Text style={styles.content}>
-          Welcome to Local Daddy! These Terms and Conditions govern your use of our platform, including our website and mobile application. By accessing or using Local Daddy, you agree to comply with these Terms. If you do not agree, please refrain from using our services.
+
+      {/* Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.date}>Effective Date: 12/06/2025</Text>
+
+        <Text style={styles.sectionTitle}>1. Use of Service</Text>
+        <Text style={styles.text}>
+          You must be at least 18 years old to use our services. You are responsible for maintaining the confidentiality of your account and for all activities under your account.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>1. Definitions</Text>
-        <Text style={styles.content}>
-          <Text style={styles.subsectionTitle}>• "Local Daddy"</Text> refers to our food delivery platform, including the mobile application and website.{"\n"}
-          <Text style={styles.subsectionTitle}>• "User"</Text> refers to any individual who accesses or uses Local Daddy.{"\n"}
-          <Text style={styles.subsectionTitle}>• "Restaurant Partner"</Text> refers to the restaurants listed on our platform.{"\n"}
-          <Text style={styles.subsectionTitle}>• "Delivery Partner"</Text> refers to the individuals responsible for delivering orders.
+        <Text style={styles.sectionTitle}>2. Orders and Payments</Text>
+        <Text style={styles.text}>
+          All orders placed through our platform must be paid in full using the available payment options. Prices, availability, and delivery times may vary depending on vendors and your location.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>2. Eligibility</Text>
-        <Text style={styles.content}>
-          You must be at least 18 years old to use Local Daddy. By accessing our platform, you represent that you meet this requirement.
+        <Text style={styles.sectionTitle}>3. Delivery</Text>
+        <Text style={styles.text}>
+          We strive to deliver your order accurately and promptly. However, we are not liable for delays or cancellations due to unforeseen circumstances such as weather, traffic, or vendor availability.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>3. Use of Services</Text>
-        <Text style={styles.content}>
-          • You agree to use Local Daddy for lawful purposes only.{"\n"}
-          • You shall not engage in fraudulent activities, abuse promotions, or interfere with the platform's functionality.{"\n"}
-          • We reserve the right to suspend or terminate your account if we detect suspicious activity.
+        <Text style={styles.sectionTitle}>4. Cancellations and Refunds</Text>
+        <Text style={styles.text}>
+          Orders can be canceled within a short window after placement. Refunds are issued based on vendor and delivery status. Some perishable or pharmaceutical items may not be eligible for cancellation or return.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>4. Orders and Payments</Text>
-        <Text style={styles.content}>
-          • Orders placed through Local Daddy are subject to restaurant availability.{"\n"}
-          • Prices listed on the platform may change at any time.{"\n"}
-          • Payments must be made through the available payment methods. Local Daddy is not responsible for payment failures due to banking issues.{"\n"}
-          • Orders cannot be canceled once confirmed, unless explicitly allowed by the restaurant.
+        <Text style={styles.sectionTitle}>5. Prohibited Use</Text>
+        <Text style={styles.text}>
+          You agree not to misuse the platform, including engaging in fraudulent orders, using abusive language with staff, or attempting to disrupt the service.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>5. Delivery Policy</Text>
-        <Text style={styles.content}>
-          • Estimated delivery times are approximate and may vary due to factors such as traffic, weather, or restaurant preparation time.{"\n"}
-          • If an order cannot be delivered due to incorrect address details, the user may still be charged.{"\n"}
-          • Local Daddy is not liable for delays caused by third-party service providers.
+        <Text style={styles.sectionTitle}>6. Limitation of Liability</Text>
+        <Text style={styles.text}>
+          We are not liable for indirect, incidental, or consequential damages arising from the use of our services. Vendor quality, pricing, and inventory are the responsibility of the respective vendors.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>6. Refund and Cancellation Policy</Text>
-        <Text style={styles.content}>
-          • Refunds will be processed only in cases where an order is undelivered, incomplete, or incorrect.{"\n"}
-          • Any refund request must be made within 24 hours of order delivery.{"\n"}
-          • The final decision on refunds rests with Local Daddy.
+        <Text style={styles.sectionTitle}>7. Intellectual Property</Text>
+        <Text style={styles.text}>
+          All content on our platform, including logos, text, and visuals, is the property of Abhi24 and may not be copied or used without permission.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>7. User Conduct</Text>
-        <Text style={styles.content}>
-          • Users must not misuse, hack, or attempt to exploit vulnerabilities in the platform.{"\n"}
-          • Abusive language, harassment, or inappropriate behavior towards restaurant or delivery partners will not be tolerated.
+        <Text style={styles.sectionTitle}>8. Changes to Terms</Text>
+        <Text style={styles.text}>
+          We may update these terms from time to time. Continued use of our services after changes are posted means you accept the updated terms.
         </Text>
 
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>8. Intellectual Property</Text>
-        <Text style={styles.content}>
-          • All content on Local Daddy, including logos, trademarks, and text, is the property of Local Daddy and protected by copyright laws.{"\n"}
-          • You may not use our content without prior written consent.
-        </Text>
-
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>9. Limitation of Liability</Text>
-        <Text style={styles.content}>
-          • Local Daddy is not responsible for food quality, preparation, or hygiene standards of restaurant partners.{"\n"}
-          • We are not liable for any direct, indirect, or incidental damages arising from the use of our services.
-        </Text>
-
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>10. Privacy Policy</Text>
-        <Text style={styles.content}>
-          Your use of Local Daddy is also governed by our Privacy Policy. By using our platform, you consent to the collection and processing of your data as outlined in the policy.
-        </Text>
-
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>11. Modifications to Terms</Text>
-        <Text style={styles.content}>
-          We reserve the right to update these Terms at any time. Continued use of Local Daddy after modifications constitutes acceptance of the updated Terms.
-        </Text>
-
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>12. Governing Law</Text>
-        <Text style={styles.content}>
-          These Terms shall be governed by and interpreted in accordance with the laws of [Your Country/State].
-        </Text>
-
-        <View style={styles.separator} />
-
-        <Text style={styles.sectionTitle}>13. Contact Us</Text>
-        <Text style={[styles.content, { marginBottom: responsiveHeight(10) }]}>
-          For any queries or concerns regarding these Terms:{"\n"}
-          Email: localdaddyweb@gmail.com{"\n"}
-          Phone: 80747 09926
+        <Text style={styles.sectionTitle}>9. Governing Law</Text>
+        <Text style={styles.text}>
+          These terms are governed by the laws of India. Any disputes shall be resolved in the appropriate courts of this jurisdiction.
         </Text>
       </ScrollView>
     </View>
   );
 };
 
+export default TermsAndConditionsScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 20
   },
-  header: { 
-    backgroundColor: '#6A48D2', // Updated to #6A48D2
-    height: responsiveHeight(15),
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingBottom: responsiveHeight(3),
-    paddingLeft: responsiveWidth(5)
+  header: {
+    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8655d2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   backButton: {
-    width: responsiveWidth(7)
+    marginRight: 12,
   },
-  title: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: '#fff',
-    textAlign: "left" 
-  },
-  effectiveDate: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 15,
-    fontStyle: 'italic'
-  },
-  sectionTitle: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 15,
-    color: '#6A48D2' // Updated to #6A48D2
-  },
-  subsectionTitle: {
-    fontWeight: '600',
-    color: '#333'
+    color: 'white',
   },
   content: {
-    fontSize: 14,
-    marginTop: 5,
-    lineHeight: 24,
-    color: '#666'
+    padding: 16,
+    paddingBottom: 40,
   },
-  separator: {
-    height: 1,
-    backgroundColor: '#E0E0E0',
-    marginVertical: 15
-  }
+  date: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#666',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 6,
+    color: '#222',
+  },
+  text: {
+    fontSize: 14,
+    color: '#444',
+    lineHeight: 20,
+  },
 });
-
-export default TermsConditionsScreen;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,58 +7,101 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
+  RefreshControl, Alert
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
+import { fetchOrderStatus } from '../../../services/services';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 const ViewTrackScreen = ({ navigation, route }) => {
-  const { orderDetails, status } = route.params || {};
-  const backgroundColor = status === 1 ? '#D32F2F' : '#6A48D2';
+  const { orderDetails} = route.params || {};
+  const backgroundColor = "#8655d2";
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentOrderDetails, setCurrentOrderDetails] = useState(orderDetails);
 
-  // Detailed tracking steps
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        try {
+          const updatedData = await fetchOrderStatus(orderDetails?.orderId);
+          
+          if (updatedData.status === 200) {
+            setCurrentOrderDetails(updatedData.data[0]);
+          }
+        } catch (error) {
+          console.error('Focus Refresh Error:', error);
+          Alert.alert('Error', 'Failed to fetch order status.');
+        }
+      };
+
+      fetchData();
+    }, [orderDetails?.orderId])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const updatedData = await fetchOrderStatus(orderDetails?.orderId);
+      
+      if (updatedData.status === 200) {
+        setCurrentOrderDetails(updatedData.data[0]);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to refresh order status.');
+      console.error('Refresh Error:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [orderDetails?.orderId]);
+
+  const getStatusIndex = (orderStatus) => {
+    switch (orderStatus) {
+      case 0: return 0; // Order Confirmed
+      case 1: return 1; // Shipped
+      case 2: return 2; // Out for Delivery
+      case 3: return 3; // Delivered
+      default: return 0;
+    }
+  };
+  
+
   const trackingSteps = [
     {
-      title: 'Order Placed',
-      description: 'Your order has been successfully placed',
-      date: orderDetails?.orderDate ? new Date(orderDetails.orderDate).toLocaleString() : 'N/A',
-      status: 'completed'
-    },
-    {
       title: 'Order Confirmed',
-      description: 'Seller has confirmed your order',
-      date: orderDetails?.orderDate ? new Date(orderDetails.orderDate).toLocaleString() : 'N/A',
-      status: 'completed'
-    },
-    {
-      title: 'Processing',
-      description: 'Your order is being prepared',
-      date: 'Estimated: ' + new Date(new Date(orderDetails?.orderDate || Date.now()).getTime() + 24 * 60 * 60 * 1000).toLocaleString(),
-      status: 'pending'
+      description: '',
+      date: currentOrderDetails?.order_date_time || '',
+      icon: 'checkmark-circle-outline',
     },
     {
       title: 'Shipped',
-      description: 'Order has been shipped',
-      date: 'Estimated: ' + new Date(new Date(orderDetails?.orderDate || Date.now()).getTime() + 48 * 60 * 60 * 1000).toLocaleString(),
-      status: 'pending'
+      description: 'Your item has arrived at Facility',
+      date: currentOrderDetails?.accept_order_date_time || '',
+      icon: 'cube-outline',
     },
     {
-      title: 'Out for Delivery',
-      description: 'Your package is on its way',
-      date: 'Estimated: ' + new Date(new Date(orderDetails?.orderDate || Date.now()).getTime() + 72 * 60 * 60 * 1000).toLocaleString(),
-      status: 'pending'
+      title: 'Out For Delivery',
+      description: '',
+      date: currentOrderDetails?.deliveryboy_pickup_time || '',
+      icon: 'bicycle-outline',
     },
     {
-      title: 'Delivered',
-      description: 'Package has been delivered',
-      date: 'Estimated: ' + new Date(new Date(orderDetails?.orderDate || Date.now()).getTime() + 96 * 60 * 60 * 1000).toLocaleString(),
-      status: 'pending'
+      title: 'Delivery',
+      description: '',
+      date: currentOrderDetails?.order_deliverd_date_time || '',
+      icon: 'location-outline',
     }
   ];
+
+  
+  const status = getStatusIndex(currentOrderDetails?.order_status);
+
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={backgroundColor} />
-      
+
       {/* Header */}
       <View style={[styles.header, { backgroundColor }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -67,47 +110,60 @@ const ViewTrackScreen = ({ navigation, route }) => {
         <Text style={styles.headerTitle}>Order Tracking</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Order ID */}
         <View style={styles.orderIdContainer}>
           <Text style={styles.orderIdLabel}>Order ID</Text>
-          <Text style={styles.orderIdText}>{orderDetails?.orderId || 'N/A'}</Text>
+          <Text style={styles.orderIdText}>{orderDetails?.order_id || 'N/A'}</Text>
         </View>
 
-        {/* Tracking Timeline */}
+        {/* Timeline */}
         <View style={styles.trackingTimeline}>
-          {trackingSteps.map((step, index) => (
-            <View key={index} style={styles.trackingStep}>
-              {/* Status Indicator */}
-              <View style={styles.statusIndicatorContainer}>
-                <View 
-                  style={[
-                    styles.statusIndicator, 
-                    step.status === 'completed' 
-                      ? { backgroundColor } 
-                      : { borderColor: backgroundColor, borderWidth: 2 }
-                  ]}
-                />
-                {index < trackingSteps.length - 1 && (
-                  <View 
-                    style={[
-                      styles.connectingLine, 
-                      step.status === 'completed' 
-                        ? { backgroundColor } 
-                        : { backgroundColor: '#ccc' }
-                    ]} 
-                  />
-                )}
-              </View>
+          {trackingSteps.map((step, index) => {
+            const isCompleted = index < status;
+            const isCurrent = index === status;
+            const isUpcoming = index > status;
 
-              {/* Step Details */}
-              <View style={styles.stepDetails}>
-                <Text style={styles.stepTitle}>{step.title}</Text>
-                <Text style={styles.stepDescription}>{step.description}</Text>
-                <Text style={styles.stepDate}>{step.date}</Text>
+            return (
+              <View key={index} style={styles.trackingStep}>
+                {/* Left icon and line */}
+                <View style={styles.statusIndicatorContainer}>
+                  <Ionicons
+                    name={step.icon}
+                    size={20}
+                    color={isCompleted || isCurrent ? backgroundColor : '#ccc'}
+                    style={{ marginBottom: 5 }}
+                  />
+                  {index < trackingSteps.length - 1 && (
+                    <View
+                      style={[
+                        styles.connectingLine,
+                        {
+                          backgroundColor: index < status ? backgroundColor : '#ccc'
+                        }
+                      ]}
+                    />
+                  )}
+                </View>
+
+                {/* Step content */}
+                <View style={styles.stepDetails}>
+                  <Text style={styles.stepTitle}>{step.title}</Text>
+                  {step.description ? (
+                    <Text style={styles.stepDescription}>{step.description}</Text>
+                  ) : null}
+                  {step.date ? (
+                    <Text style={styles.stepDate}>{step.date}</Text>
+                  ) : null}
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -155,24 +211,17 @@ const styles = StyleSheet.create({
   },
   trackingStep: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: responsiveHeight(2),
+    alignItems: 'flex-start',
+    marginBottom: responsiveHeight(3),
   },
   statusIndicatorContainer: {
     alignItems: 'center',
     marginRight: responsiveWidth(4),
-  },
-  statusIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 30,
   },
   connectingLine: {
     width: 2,
-    height: responsiveHeight(10),
-    position: 'absolute',
-    top: 20,
-    zIndex: -1,
+    height: responsiveHeight(7),
   },
   stepDetails: {
     flex: 1,
@@ -180,12 +229,12 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 2,
   },
   stepDescription: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 5,
+    marginBottom: 2,
   },
   stepDate: {
     fontSize: 12,
@@ -193,4 +242,32 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ViewTrackScreen; 
+export default ViewTrackScreen;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

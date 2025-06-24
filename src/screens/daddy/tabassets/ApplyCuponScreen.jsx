@@ -29,13 +29,13 @@ const ApplyCouponScreen = ({ navigation, route }) => {
       try {
         setIsLoading(true);
         const response = await getCoupons();
-         console.log(response)
+         
         // Filter and validate coupons
         const validCoupons = response.filter(coupon => {
           const minPurchase = parseFloat(coupon.coupon_upto_price || 0);
           return totalAmount >= minPurchase;
         });
-        console.log(validCoupons)
+        
         setCoupons(validCoupons);
         setIsLoading(false);
       } catch (err) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,168 +12,212 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
-
-// Sample data for categories and items
-const categories = ['Groceries', 'Fresh Meat'];
-
-const itemsData = {
-  Groceries: [
-    { id: '1', name: 'Rice', image: require('../daddy/tabassets/Rice.png') },
-    { id: '2', name: 'Seeds', image: require('../daddy/tabassets/Seeds.png') },
-    { id: '3', name: 'Oils', image: require('../daddy/tabassets/Oil.png') },
-    { id: '4', name: 'Millets', image: require('../daddy/tabassets/Millets.png') },
-  ],
-  'Fresh Meat': [
-    { id: '5', name: 'Chicken', image: require('../daddy/tabassets/keema.png') },
-    { id: '6', name: 'Mutton', image: require('../daddy/tabassets/muttoncurry.png') },
-    { id: '7', name: 'Fish', image: require('../daddy/tabassets/fish.png') },
-    { id: '8', name: 'Prawns', image: require('../daddy/tabassets/prawns.png') },
-  ],
-};
+import { getSubCategories, NestedItems } from '../../services/services';
+import Toast from 'react-native-toast-message';
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
 
 const { width } = Dimensions.get('window');
 const sidebarWidth = width * 0.4; // 40% of screen width for sidebar
 const itemWidth = (width - sidebarWidth - 40) / 2; // Adjust item width based on screen size
 
 const CategoryScreen = ({ navigation, route }) => {
+  const { searchResults: initialSearchResults = [], searchQuery = '' } = route.params || {}; 
+  
   const [selectedCategory, setSelectedCategory] = useState('Fresh Meat');
   const [selectedSubcategory, setSelectedSubcategory] = useState('Chicken');
   const [searchResults, setSearchResults] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [subcategoryId, setSubcategoryId] = useState("")
+  const [itemsData, setItemsData] = useState([])
 
-  // Check for search results passed from UserHome
-  React.useEffect(() => {
-    if (route.params?.searchResults) {
-      setSearchResults(route.params.searchResults);
-      
-      // If search results exist, update category and subcategory
-      if (route.params.searchResults.length > 0) {
-        const firstResult = route.params.searchResults[0];
-        setSelectedCategory(firstResult.type);
-        setSelectedSubcategory(firstResult.category_name);
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        const subCats = await getSubCategories();
+        setSubcategoryId(subCats[0].id)
+        
+        const grouped = subCats.reduce((acc, item) => {
+          const category = item.category_name;
+          if (!acc[category]) {
+            acc[category] = [];
+          }
+          acc[category].push(item);
+          return acc;
+        }, {});
+        setSubcategories(grouped);
+      } catch (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to load subcategories',
+          position: 'top',
+          topOffset: Platform.OS === 'ios' ? 50 : 30,
+        });
       }
-    }
-  }, [route.params?.searchResults]);
+    };
 
-  // Define the background color
-  const backgroundColor = '#6A48D2';
+    fetchSubcategories();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchNestedSubcategories = async () => {
+
+      try {
+        const subCats = await NestedItems({
+          "subcategory_id": subcategoryId
+        });
+       
+        const groupedItems = subCats.data.reduce((acc, item) => {
+          if (!acc[item.item_name]) {
+            acc[item.item_name] = {
+              id: item.id,
+              item_name: item.item_name,
+              item_image: item.item_image,
+              item_description: item.item_description,
+              filter_one: item.filter_one,
+              unique_id: item.unique_id,
+              variants: []
+            };
+          }
+
+          acc[item.item_name].variants.push({
+            id: item.id,
+            quantity_type: item.quantity_type,
+            actual_price: item.actual_price,
+            selling_price: item.selling_price
+          });
+
+          return acc;
+        }, {});
+        const groupedList = Object.values(groupedItems);
+        
+        setItemsData(groupedList)
+        // setSubcategories(filteredSubcategories);
+      } catch (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to load subcategories',
+          position: 'top',
+          topOffset: Platform.OS === 'ios' ? 50 : 30,
+        });
+      }
+
+    };
+    if (subcategoryId) {
+      fetchNestedSubcategories();
+    }
+
+  }, [subcategoryId]);
+
+
+
+  const backgroundColor = '#8655d2';
 
   // Render search results or default items
-  const dataToRender = searchResults.length > 0 
+  const dataToRender = searchResults.length > 0
     ? searchResults.map(result => ({
-        id: result.id,
-        name: result.category_name,
-        image: result.category_image,
-        type: result.type
-      }))
+      id: result.id,
+      name: result.category_name,
+      image: result.category_image,
+      type: result.type
+    }))
     : itemsData[selectedCategory];
 
-  const renderCategoryItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.categoryItem,
-        (selectedCategory === item || 
-         (searchResults.length > 0 && item === searchResults[0].type)) && 
-        [styles.selectedCategoryItem, { backgroundColor: backgroundColor + '20' }],
-      ]}
-      onPress={() => {
-        setSelectedCategory(item);
-        // Reset subcategory when changing main category
-        setSelectedSubcategory(itemsData[item][0].name);
-        // Clear search results
-        setSearchResults([]);
-      }}
-    >
-      <Text
-        style={[
-          styles.categoryText,
-          (selectedCategory === item || 
-           (searchResults.length > 0 && item === searchResults[0].type)) && 
-          [styles.selectedCategoryText, { color: backgroundColor }],
-        ]}
-      >
-        {item}
-      </Text>
-    </TouchableOpacity>
+  const renderGroupedCategory = ({ item }) => (
+    <View style={styles.categoriesSidebarGroup}>
+      <Text style={styles.categoriesSidebarHeader}>{item.category}</Text>
+      {item.subcategories.map(sub => (
+        <TouchableOpacity
+          key={sub.id}
+          style={[
+            styles.categoriesSidebarSubItem,
+            selectedSubcategory === sub.sub_category_name && [
+              styles.categoriesSidebarSubItemSelected,
+              { backgroundColor: backgroundColor + '20' },
+            ],
+          ]}
+          onPress={() => {
+            setSelectedCategory(item.category);
+            setSelectedSubcategory(sub.sub_category_name);
+            setSearchResults([]);
+            setSubcategoryId(sub.id)
+          }}
+        >
+          <Text
+            style={[
+              styles.categoriesSidebarSubItemText,
+              selectedSubcategory === sub.sub_category_name && {
+                color: backgroundColor,
+                fontWeight: 'bold',
+              },
+            ]}
+          >
+            {sub.sub_category_name}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
   );
+
 
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={[
-        styles.productItem,
-        (selectedSubcategory === item.name || 
-         (searchResults.length > 0 && item.name === searchResults[0].category_name)) && 
-        styles.selectedProductItem,
+        styles.productItem
       ]}
-      onPress={() => {
-        // Set the selected subcategory
-        setSelectedSubcategory(item.name);
-
-        // Clear search results
-        setSearchResults([]);
-
-        if (item.type === 'Groceries' || selectedCategory === 'Groceries') {
-          // Navigate to GroceriesScreen with the selected subcategory
-          navigation.navigate('GroceriesScreen', { 
-            categoryKey: item.name.toLowerCase() 
-          });
-        } else if (item.type === 'Fresh Meat' || selectedCategory === 'Fresh Meat') {
-          // Navigate to GroceriesScreen with status 1 for meat-related content
-          navigation.navigate('GroceriesScreen', { 
-            status: 1, 
-            categoryKey: item.name.toLowerCase() 
-          });
-        } else if (item.type === 'Pickles') {
-          // Navigate to GroceriesScreen with status 2 for pickles
-          navigation.navigate('GroceriesScreen', { 
-            status: 2, 
-            categoryKey: item.name.toLowerCase() 
-          });
-        }
-      }}
+      onPress={() =>
+        navigation.navigate('ProductDetailsScreen', {
+          item: {
+            ...item,
+            subcategory_id: subcategoryId,
+            variant: ""
+          },
+          unique_id: item.unique_id,
+          
+        })
+      }
     >
-      <Image 
-        source={item.image} 
+      <Image
+        source={{ uri: item.item_image }}
         style={[
-          styles.productImage,
-          (selectedSubcategory === item.name || 
-           (searchResults.length > 0 && item.name === searchResults[0].category_name)) && 
-          [styles.selectedProductImage, { borderColor: backgroundColor }],
-        ]} 
+          styles.productImage]}
       />
-      <Text 
+      <Text
         style={[
-          styles.productName,
-          (selectedSubcategory === item.name || 
-           (searchResults.length > 0 && item.name === searchResults[0].category_name)) && 
-          [styles.selectedProductText, { color: backgroundColor }],
-        ]}
+          styles.productName]}
       >
-        {item.name}
+        {item.item_name}
       </Text>
     </TouchableOpacity>
   );
 
+  const groupedCategoryData = Object.entries(subcategories).map(([category, subcategories]) => ({
+    category,
+    subcategories: subcategories.map((sub) => sub)
+  }));
+
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: backgroundColor }]}>
       {/* Status Bar */}
-      <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
-
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.mainContainer}>
         {/* Sidebar */}
         <View style={styles.sidebar}>
           <FlatList
-            data={categories}
-            renderItem={renderCategoryItem}
-            keyExtractor={item => item}
+            data={groupedCategoryData}
+            renderItem={renderGroupedCategory}
+            keyExtractor={(item) => item.category}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesSidebar}
           />
         </View>
 
         {/* Main Content */}
-        <ScrollView 
-          style={[styles.content, { backgroundColor: '#fff' }]} // Set right side background to white
-          contentContainerStyle={styles.contentContainer}
-        >
+
+        <View style={{ backgroundColor: "white", flex: 1, padding: 10, overflow: "scroll" }}>
           {searchResults.length > 0 && (
             <View style={styles.searchResultsHeader}>
               <Text style={styles.searchResultsText}>
@@ -185,14 +229,14 @@ const CategoryScreen = ({ navigation, route }) => {
             </View>
           )}
           <FlatList
-            data={dataToRender}
+            data={itemsData}
             renderItem={renderProductItem}
             keyExtractor={item => item.id}
             numColumns={2}
             columnWrapperStyle={styles.columnWrapper}
             showsVerticalScrollIndicator={false}
           />
-        </ScrollView>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -206,6 +250,8 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     flexDirection: 'row',
+    borderTopWidth: 0.5,
+    borderTopColor: '#B0B0B0',
   },
   sidebar: {
     width: sidebarWidth,
@@ -219,14 +265,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   selectedCategoryItem: {
-    backgroundColor: '#6A48D220', // Light green background with 20% opacity
+    backgroundColor: '#8655d220', // Light green background with 20% opacity
   },
   categoryText: {
     fontSize: 16,
     color: '#333',
   },
   selectedCategoryText: {
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: 'bold',
   },
   content: {
@@ -252,12 +298,13 @@ const styles = StyleSheet.create({
     width: itemWidth - 20,
     height: itemWidth - 20,
     borderRadius: (itemWidth - 20) / 2,
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '#FFF',
     marginBottom: 5,
+    objectFit: "fill"
   },
   selectedProductImage: {
     borderWidth: 2,
-    borderColor: '#6A48D2',
+    borderColor: '#8655d2',
   },
   productName: {
     fontSize: 14,
@@ -265,7 +312,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedProductText: {
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: 'bold',
   },
   searchResultsHeader: {
@@ -281,8 +328,52 @@ const styles = StyleSheet.create({
   },
   clearSearchText: {
     fontSize: 14,
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: 'bold',
+  },
+
+
+  categoriesSidebar: {
+    width: sidebarWidth,
+    backgroundColor: '#E8ECEF',
+    paddingVertical: 15,
+  },
+
+  // Group wrapper for a category
+  categoriesSidebarGroup: {
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+
+  // Category title
+  categoriesSidebarHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingBottom: 4,
+  },
+
+  // Subcategory button
+  categoriesSidebarSubItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    borderRadius: 5,
+  },
+
+  // Selected subcategory
+  categoriesSidebarSubItemSelected: {
+    backgroundColor: '#8655d220',
+  },
+
+  // Subcategory text
+  categoriesSidebarSubItemText: {
+    fontSize: 15,
+    color: '#333',
   },
 });
 

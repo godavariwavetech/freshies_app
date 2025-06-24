@@ -1,10 +1,9 @@
 import { View, Text } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import BottomNavigation from '../screens/daddy/BottomNavigation';
 import RestaurantScreen from '../screens/daddy/RestaurantScreen';
 import CategorieItems from '../screens/daddy/CategorieItems';
-import CartScreen from '../screens/daddy/CartScreen';
 import AddressListScreen from '../screens/daddy/AddressListScreen';
 import AddAddressScreen from '../screens/daddy/AddAddressScreen';
 import MoreDetailsScreen from '../screens/daddy/MoreDetailsScreen';
@@ -43,16 +42,31 @@ import CouponDetailsScreen from '../screens/daddy/tabassets/CuponDetails';
 import BillingHistory from '../screens/daddy/tabassets/BillingHistory';
 import GroceriesScreen from '../screens/daddy/GroceriesScreen';
 import MyFavoritesScreen from '../screens/daddy/MyFavoritesScreen';
-// import OrderDetailsScreen from '../screens/daddy/OrderDetailsScreen';
+import AboutUsScreen from '../screens/AboutUs';
+import { WalletAPI } from '../services/services';
+import { setWalletData } from '../redux/reducers/walletSlice';
+import { useDispatch, useSelector } from 'react-redux';
+
 const Stack = createStackNavigator();
 
 export default function RentalNavigation() {
+  const dispatch = useDispatch();
+  const { customerId } = useSelector(state => state.Auth);
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      const data = await WalletAPI.getWalletAmounts(customerId);
+      
+      dispatch(setWalletData(data)); 
+    };
+    fetchWallet();
+  }, []);
+
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName='BottomNavigation'>
       <Stack.Screen name='BottomNavigation' component={BottomNavigation} />
       <Stack.Screen name='RestaurantScreen' component={RestaurantScreen} />
       <Stack.Screen name='CategorieItems' component={CategorieItems} />
-      <Stack.Screen name='CartScreen' component={CartScreen} />
       <Stack.Screen name='AddressList' component={AddressListScreen} />
       <Stack.Screen name='AddAddress' component={AddAddressScreen} />
       <Stack.Screen name='MoreDetails' component={MoreDetailsScreen} />
@@ -68,6 +82,7 @@ export default function RentalNavigation() {
       <Stack.Screen name='SelectServiceFromLocation' component={SelectServiceFromLocation} />
       <Stack.Screen name='ServicesAvailable' component={ServicesAvailableScreen} />
       <Stack.Screen name='ServiceUnavailable' component={ServiceUnavailableScreen} />
+      <Stack.Screen name='AboutUsScreen' component={AboutUsScreen} />
       <Stack.Screen name='Register1' component={Register} />
       <Stack.Screen name='OTPVerification1' component={OTPVerification} />
       <Stack.Screen name='RefundPolicy' component={RefundPolicyScreen} />
@@ -88,15 +103,8 @@ export default function RentalNavigation() {
       <Stack.Screen name='BillingHistory' component={BillingHistory} />
       <Stack.Screen name='GroceriesScreen' component={GroceriesScreen} />
       <Stack.Screen name='ViewTrack' component={ViewTrack} />
-      <Stack.Screen name='MyFavoritesScreen' component={MyFavoritesScreen}
-        options={{ headerShown: true }}
-      />
-
-      <Stack.Screen
-        name="LocationSelection"
-        component={LocationSelectionScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name='MyFavoritesScreen' component={MyFavoritesScreen}/>
+      <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
       <Stack.Screen
         name="CategoriesScreen"
         component={CategoriesScreen}

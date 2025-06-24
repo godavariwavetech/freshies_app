@@ -1,38 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  StatusBar,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import FocusAwareStatusBar from '../../../components/CustomStatusBar';
+import { WalletAPI } from '../../../services/services';
+import { useSelector } from 'react-redux';
 
 const BillingHistoryScreen = ({ navigation }) => {
-  // Mock billing history data
-  const billingHistory = [
-    { id: '1', date: '12 Apr 2025, 10:30 AM', amount: '-₹500.00', description: 'Payment for Order #1234' },
-    { id: '2', date: '11 Apr 2025, 02:15 PM', amount: '-₹250.00', description: 'Payment for Order #1233' },
-    { id: '3', date: '10 Apr 2025, 09:45 AM', amount: '-₹1000.00', description: 'Payment for Order #1232' },
-    { id: '4', date: '09 Apr 2025, 11:20 AM', amount: '-₹300.00', description: 'Payment for Order #1231' },
-  ];
+  const [billingHistory, setBillingHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { customerId } = useSelector(state => state.Auth);
+
+  
+
+  useEffect(() => {
+    const fetchBillingHistory = async () => {
+      setLoading(true);
+      const data = await WalletAPI.getBillingHistory(customerId);
+      
+      setBillingHistory(data);
+      setLoading(false);
+    };
+
+    fetchBillingHistory();
+  }, []);
 
   const renderBillingItem = ({ item }) => (
     <View style={styles.billingItem}>
       <View style={styles.billingDetails}>
-        <Text style={styles.billingDescription}>{item.description}</Text>
-        <Text style={styles.billingDate}>{item.date}</Text>
+        <Text style={styles.billingDescription}>Txn ID: {item.razorpay_order_id}</Text>
+        <Text style={styles.billingDate}>{item.formatted_datetime}</Text>
       </View>
-      <Text style={styles.billingAmount}>{item.amount}</Text>
+      <Text style={styles.billingAmount}>- ₹{parseFloat(item.payment_amount).toFixed(2)}</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#6A48D2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -40,17 +53,26 @@ const BillingHistoryScreen = ({ navigation }) => {
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Billing History</Text>
-        <View style={{ width: wp('6%') }} /> {/* Placeholder for symmetry */}
+        <View style={{ width: wp('6%') }} />
       </View>
 
-      {/* Billing List */}
-      <FlatList
-        data={billingHistory}
-        renderItem={renderBillingItem}
-        keyExtractor={(item) => item.id}
-        style={styles.billingList}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* List or Loading */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#8655d2" style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={billingHistory}
+          renderItem={renderBillingItem}
+          keyExtractor={(item) => item.id.toString()}
+          style={styles.billingList}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <Text style={{ textAlign: 'center', marginTop: 30, color: '#999' }}>
+              No billing history found.
+            </Text>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -66,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
     paddingVertical: hp('2%'),
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
   },
   headerTitle: {
     fontSize: wp('5%'),
@@ -103,8 +125,38 @@ const styles = StyleSheet.create({
   billingAmount: {
     fontSize: wp('4%'),
     fontWeight: 'bold',
-    color: '#6A48D2', // Red for debits
+    color: '#8655d2', // Red for debits
   },
+  billingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 0.5,
+    borderColor: '#ccc',
+  },
+  
+  billingDetails: {
+    flex: 1,
+  },
+  
+  billingDescription: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  
+  billingDate: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
+  },
+  
+  billingAmount: {
+    fontSize: 14,
+    color: '#D32F2F',
+    alignSelf: 'center',
+  },
+  
 });
 
 export default BillingHistoryScreen;

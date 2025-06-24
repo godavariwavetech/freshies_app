@@ -23,7 +23,7 @@ const SplashScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#6A48D2'} />
+      <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
       <View style={styles.imgContainer}>
         <Image source={require('../daddy/tabassets/voiletsplash.png')} style={{ flex: 1, width: responsiveWidth(100), height: responsiveHeight(100) }} />
       </View>
@@ -35,7 +35,7 @@ export default SplashScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
   },
   imgContainer: {
     flex: 1,

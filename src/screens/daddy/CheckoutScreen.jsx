@@ -310,12 +310,12 @@ const CheckoutScreen = ({ navigation, route }) => {
 
       RazorpayCheckout.open(options)
         .then(async data => {
-          console.log("response from razorpay", data)
+          
           payload.payment_id = data.razorpay_payment_id;
           payload.razorpay_order_id = data.razorpay_payment_id;
           payload.order_status = 0;
           const updateOrderStatusResponse = await dispatch(updateOrderStatus({ paymentId: data.razorpay_payment_id, rzpId: data.razorpay_order_id, orderId: pacedResponse.payload.id }))
-          console.log("responselkmksdfkljas", updateOrderStatusResponse)
+          
           navigation.replace('OrderSuccess', { response: pacedResponse.payload });
         })
         .catch(error => {

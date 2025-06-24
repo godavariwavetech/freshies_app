@@ -11,7 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  TextInput
+  TextInput,
+  Modal
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -22,10 +23,12 @@ import {
 } from 'react-native-responsive-dimensions';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { applicationCharges as fetchApplicationCharges, placeOrder, updateOrderStatus } from '../../../services/services';
+import { checkAddressExistence, applicationCharges as fetchApplicationCharges, placeOrder, updateOrderStatus } from '../../../services/services';
 import RazorpayCheckout from "react-native-razorpay"
-import { setDeliveryInstructions } from '../../../redux/reducers/cartReducer';
+import { clearCart, setDeliveryInstructions } from '../../../redux/reducers/cartReducer';
 import { haversineDistance } from '../distanceCalculator';
+import { setLocation, setLocationId, setLocationName, setShopAddress } from '../../../redux/reducers/auth';
+
 
 
 
@@ -33,11 +36,12 @@ const paymentMethods = ['Pay Online', 'COD'];
 
 const BasketScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
+  
   const [cartItems, setCartItems] = useState([]);
-  const [showFullAddress, setShowFullAddress] = useState(false);
+  const [showFullAddress, setShowFullAddress] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Pay Online');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('COD');
   const [coupon, setCoupon] = useState(null);
   const [applicationCharges, setApplicationCharges] = useState({
     "id": 1,
@@ -51,18 +55,81 @@ const BasketScreen = ({ navigation, route }) => {
     "d_in": 0
   })
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
+  
   const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [tempInstruction, setTempInstruction] = useState(''); // NEW state
-  const orderDistance = haversineDistance(storedLocation.latitude,storedLocation.longitude, shopAddress.location_latitude,shopAddress.location_longitude)
+  const orderDistance =
+    storedLocation?.latitude &&
+      storedLocation?.longitude &&
+      shopAddress?.location_latitude &&
+      shopAddress?.location_longitude
+      ? haversineDistance(
+        storedLocation.latitude,
+        storedLocation.longitude,
+        shopAddress.location_latitude,
+        shopAddress.location_longitude
+      )
+      : null;
+  const [isCheckingAddress, setIsCheckingAddress] = useState(false);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+
+
+  useEffect(() => {
+    if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
+      checkAddressExistenceInList();
+    } else {
+      setShowServiceModal(true);
+      console.warn("Location not available. Permission may be denied.");
+      // Optionally show alert/modal or redirect user
+    }
+  }, []);
+
+  const checkAddressExistenceInList = async () => {
+    if (!storedLocation || !storedLocation.latitude || !storedLocation.longitude) {
+      console.warn("Cannot check address: Location data is missing.");
+      return;
+    }
+
+    try {
+      setIsCheckingAddress(true);
+      const response = await dispatch(
+        checkAddressExistence({
+          latitude: parseFloat(storedLocation.latitude),
+          longitude: parseFloat(storedLocation.longitude),
+        })
+      );
+
+      if (response.payload.data.length > 0) {
+        dispatch(
+          setLocation({
+            latitude: parseFloat(storedLocation.latitude),
+            longitude: parseFloat(storedLocation.longitude),
+            latitudeDelta: storedLocation.latitudeDelta,
+            longitudeDelta: storedLocation.longitudeDelta,
+          })
+        );
+        dispatch(setLocationName(response.payload.data[0].location_name));
+        dispatch(setLocationId(response.payload.data[0].id));
+        dispatch(setShopAddress(response.payload.data[0]));
+        // navigation.goBack();
+      } else {
+        setShowServiceModal(true);
+      }
+    } catch (error) {
+      console.error("Location confirmation error:", error);
+    } finally {
+      setIsCheckingAddress(false);
+    }
+  };
 
   useEffect(() => {
     const loadApplicationCharges = async () => {
       try {
         const data = await fetchApplicationCharges();
-        console.log(data)
+
         setApplicationCharges(data[0])
         // setState(data) if you're using state to store it
       } catch (error) {
@@ -87,6 +154,7 @@ const BasketScreen = ({ navigation, route }) => {
         const storedCartItems = await AsyncStorage.getItem('cartItems');
         if (storedCartItems) {
           const parsedCartItems = JSON.parse(storedCartItems);
+          
           setCartItems(parsedCartItems);
         }
 
@@ -128,7 +196,7 @@ const BasketScreen = ({ navigation, route }) => {
 
   // Calculate total price
   const calculateTotalPrice = () => {
-    const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const subtotal = cartItems.reduce((total, item) => total + (Number(item.variant.selling_price) * item.quantity), 0);
 
     // Apply coupon if available
     if (coupon) {
@@ -143,8 +211,6 @@ const BasketScreen = ({ navigation, route }) => {
 
     return subtotal;
   };
-
-  console.log("coupon", coupon)
 
   const handleQuantityChange = (id, action) => {
     const updatedCartItems = cartItems.map((item) =>
@@ -172,6 +238,7 @@ const BasketScreen = ({ navigation, route }) => {
   const handleClearCart = async () => {
     setCartItems([]);
     try {
+      dispatch(clearCart());
       await AsyncStorage.removeItem('cartItems');
     } catch (error) {
       console.error('Error clearing cart:', error);
@@ -180,6 +247,7 @@ const BasketScreen = ({ navigation, route }) => {
   const navigateToCategories = () => {
     navigation.navigate('CategoriesScreen');
   };
+
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image
@@ -192,10 +260,10 @@ const BasketScreen = ({ navigation, route }) => {
       />
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemWeight}>{item.defaultWeight || item.weight}</Text>
+        <Text style={styles.itemWeight}>{item.variant?.quantity_type || item.defaultWeight || item.weight}</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.itemPrice}>₹{(item.price * item.quantity).toFixed(2)}</Text>
-          <Text style={styles.originalPrice}>₹{(item.offer || item.originalPrice).toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>₹{(Number(item.variant.selling_price) * item.quantity).toFixed(2)}</Text>
+          <Text style={styles.originalPrice}>₹{(Number(item.variant.actual_price) || item.originalPrice || 0).toFixed(2)}</Text>
         </View>
       </View>
       <View style={styles.quantityContainer}>
@@ -259,27 +327,42 @@ const BasketScreen = ({ navigation, route }) => {
   );
 
 
+  const couponAmount = coupon?.discount
+    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
+    : "0.00";
+
+
+
   const handlePlaceOrder = async () => {
     try {
       setIsProcessingPayment(true);
-      const mappedItems = cartItems.map((item) => ({
-        item_name: item.name,
-        item_image: item.image,
-        item_id: item.id,
-        category_id: item.category_id?.toString() || "", // handle null
-        sub_category_id: item.subcategory_id?.toString() || "",
-        category_name: item.category_name || "",
-        sub_category_name: item.sub_category_name || "",
-        actualitem_price: item.variant.actual_price.toString(),
-        item_price: item.variant.selling_price.toString(),
-        sub_item_count: item.quantity.toString(),
-        item_total_amount: item.totalPrice.toString(),
-        item_description: item.description || "",
-        saving_price: (parseFloat(item.variant.actual_price) - parseFloat(item.variant.selling_price)).toString(),
-        filter_one: item.variant.filter_one || "",
-        quantity_type: item.variant.quantity_type || "",
-        shop_id: item.shop_id?.toString() || ""
-      }));
+      const mappedItems = cartItems.map((item) => {
+        // Determine which price values to use
+        const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
+        const sellingPrice = item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0;
+        const quantityType = item?.variant?.quantity_type ?? item?.quantity_type ?? "";
+        const filterOne = item?.variant?.filter_one ?? item?.filter_one ?? "";
+
+        return {
+          item_name: item?.name || "",
+          item_image: item?.image || "",
+          item_id: item?.id?.toString() || "",
+          category_id: item?.category_id?.toString() || "",
+          sub_category_id: item?.sub_category_id?.toString() || item?.subcategory_id?.toString() || "",
+          category_name: item?.category_name || "",
+          sub_category_name: item?.sub_category_name || "",
+          actualitem_price: actualPrice.toString(),
+          item_price: sellingPrice.toString(),
+          sub_item_count: (item?.quantity ?? 1).toString(),
+          item_total_amount: ((item?.totalPrice ?? sellingPrice * (item?.quantity ?? 1)) || 0).toString(),
+          item_description: item?.description || "",
+          saving_price: (parseFloat(actualPrice) - parseFloat(sellingPrice)).toString(),
+          filter_one: filterOne,
+          quantity_type: quantityType,
+          shop_id: item?.shop_id?.toString() || "",
+        };
+      });
+
 
       let payload = {
         "customer_id": customerId,
@@ -289,7 +372,7 @@ const BasketScreen = ({ navigation, route }) => {
         "item_count": cartItems.length,
         "total_amount": (calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2) || 0,
         "total_saving_amount": 0,
-        "coupon_amount": "",
+        "coupon_amount": (calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || "",
         "delivery_charges": applicationCharges.delivery_fixed_charges || 0,
         "grand_total": (calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2) || 0,
         "location_id": locationId,
@@ -297,19 +380,19 @@ const BasketScreen = ({ navigation, route }) => {
         "payment_type": selectedPaymentMethod,
         "payment_id": "",
         "razorpay_order_id": "",
-        "order_status": "1",
+        "order_status": 1,
         "order_instructions": "",
         "coupon_type": coupon?.coupon_type || "",
         "coupon_id": coupon?.id || "",
         "delivery_address": address,
         "order_latitude": storedLocation.latitude,
         "order_longitude": storedLocation.longitude,
-        "order_distance": orderDistance || shopAddress.distance_km ||  "",
-        "ext_del_charge": "",
+        "order_distance": orderDistance || shopAddress.distance_km || "",
+        "ext_del_charge": applicationCharges?.delivery_fixed_charges,
         "shop_id": shopAddress.id || "",
         "actual_total_amount": calculateTotalPrice() || 0,
         "order_type": "Online",
-        "delivery_charges_gst": "",
+        "delivery_charges_gst": gstCalculation().toFixed(2) || 0,
         "handling_charges": applicationCharges.handling_charges || 0,
         "packing_charges": "",
         "packing_charges_gst": "",
@@ -320,51 +403,100 @@ const BasketScreen = ({ navigation, route }) => {
 
       if (selectedPaymentMethod === 'COD') {
         const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
-        navigation.navigate('TrackOrder',);
-        // navigation.replace('OrderDetailsScreen', { response: responseCod.payload });
+        const orderDetails = {
+          orderId: responseCod?.payload?.id || "",
+          totalAmount: calculateTotalPrice() ,
+          grandTotal:
+            (
+              calculateTotalPrice() +
+              Number(applicationCharges?.delivery_fixed_charges || 0) +
+              Number(applicationCharges?.handling_charges || 0) +
+              gstCalculation()
+            ).toFixed(2) - (couponAmount || 0),
+          couponAmount: couponAmount || 0,
+          deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
+          totalSavings: 0,
+          paymentType: selectedPaymentMethod,
+          shopName: "",
+          orderDate: responseCod.payload.order_date,
+          orderTime: responseCod.payload.order_date,
+          deliveryAddress: address,
+          shopAddress: "",
+          shopPhoneNumber: "",
+          order_id: responseCod.payload.order_id,
+          delivery_charges_gst: gstCalculation().toFixed(2) || 0,
+          handling_charges: applicationCharges?.handling_charges || 0
+        };
+        
+        navigation.navigate("OrderSuccess", { orderDetails,status: 0 });
         return;
       }
 
       payload.order_status = 7;
-      console.log("payload:", payload)
       const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
-      console.log("pacedResponse", pacedResponse)
       if (!pacedResponse.payload) return
-      // const orderIdResponse = await dispatch(generateOrderId({ orderAmount: 100 }));
-      console.log(pacedResponse.payload.razorpay_order_id)
-
+      
       const options = {
         description: 'Order Payment',
         image: '',
         currency: 'INR',
-        key: 'rzp_live_tZgZCC254NtRmU',
+        key: pacedResponse.payload.key_id,
         order_id: pacedResponse.payload.razorpay_order_id,
         amount: 1000,
         name: 'Abhi 24',
         prefill: {
           // email: "test@gmail.com",
-          contact: selectedAddress?.customer_mobile_number,
+          contact: mobileNumber,
           name: selectedAddress?.customer_name,
         },
         theme: { color: '#8655d2' },
       };
 
+      // Prepare order details only once
+      const orderDetails = {
+        orderId: pacedResponse.payload.id,
+        totalAmount: calculateTotalPrice() ,
+        grandTotal:
+          (
+            calculateTotalPrice() +
+            Number(applicationCharges?.delivery_fixed_charges || 0) +
+            Number(applicationCharges?.handling_charges || 0) +
+            gstCalculation()
+          ).toFixed(2) - (couponAmount || 0),
+        couponAmount: couponAmount || 0,
+        deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
+        totalSavings: 0,
+        paymentType: selectedPaymentMethod,
+        shopName: "",
+        orderDate: pacedResponse.payload.order_date,
+        orderTime: pacedResponse.payload.order_date,
+        deliveryAddress: address,
+        shopAddress: "",
+        shopPhoneNumber: "",
+        order_id: pacedResponse.payload.order_id,
+        delivery_charges_gst: gstCalculation().toFixed(2) || 0,
+        handling_charges: applicationCharges?.handling_charges || 0
+      };
+     
+
       RazorpayCheckout.open(options)
         .then(async data => {
-          console.log("response from razorpay", data)
+          
           payload.payment_id = data.razorpay_payment_id;
-          payload.razorpay_order_id = data.razorpay_payment_id;
+          payload.razorpay_order_id = data.razorpay_order_id;
           payload.order_status = 0;
-          const updateOrderStatusResponse = await dispatch(updateOrderStatus({ paymentId: data.razorpay_payment_id, rzpId: data.razorpay_order_id, orderId: pacedResponse.payload.id, orderStatus: 1 }))
-          console.log("responselkmksdfkljas", updateOrderStatusResponse)
-          navigation.navigate('TrackOrder');
-          // navigation.replace('OrderDetailsScreen', { response: pacedResponse.payload });
+          
+          const updateOrderStatusResponse = await dispatch(updateOrderStatus({ paymentId: data.razorpay_payment_id, rzpId: data.razorpay_order_id, orderId: pacedResponse.payload.id, orderStatus: 0 }))
+
+         
+         navigation.navigate("OrderSuccess", { orderDetails,status: 0 });
+
         })
         .catch(error => {
-          console.log('Payment error:', error);
+          
         });
     } catch (error) {
-      console.log('Payment error:', error);
+      
     } finally {
       setIsProcessingPayment(false);
     }
@@ -407,12 +539,38 @@ const BasketScreen = ({ navigation, route }) => {
       <View style={styles.locationSection}>
         <Icon name="home" size={16} color={backgroundColor} style={styles.homeIcon} />
         <Text style={styles.locationName}>{locationName ? locationName : ""}</Text>
-        <TouchableOpacity onPress={() => setShowFullAddress(!showFullAddress)}>
+        {/* <TouchableOpacity onPress={() => setShowFullAddress(!showFullAddress)}>
           <Icon name={showFullAddress ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={backgroundColor} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       {showFullAddress && (
-        <Text style={styles.fullAddress}>{address || "Address Not Selected"}</Text>
+        <TouchableOpacity
+          onPress={() => {
+            try {
+              // Retrieve current location from AsyncStorage or Redux if possible
+              const currentLocation = {
+                latitude: storedLocation?.latitude,
+                longitude: storedLocation?.longitude,
+              };
+
+              navigation.navigate('SelectServiceFromLocation', {
+                previousScreen: 'ByOncescreen',
+                ...(currentLocation.latitude && currentLocation.longitude
+                  ? { selectedAddress: currentLocation }
+                  : {})
+              });
+            } catch (error) {
+              console.error('Navigation error:', error);
+              Alert.alert(
+                'Navigation Error',
+                'Unable to change address. Please try again later.',
+                [{ text: 'OK' }]
+              );
+            }
+          }}
+        >
+          <Text style={styles.fullAddress}>{address || "Address Not Selected"}</Text>
+        </TouchableOpacity>
       )}
       <TouchableOpacity
         onPress={() => {
@@ -479,7 +637,7 @@ const BasketScreen = ({ navigation, route }) => {
               cartItems,
               totalAmount: (calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2),
               status: route.params?.status,
-              
+
             })}
           >
             <View style={[styles.couponIcon, { backgroundColor: '#E8F5E9' }]}>
@@ -523,7 +681,7 @@ const BasketScreen = ({ navigation, route }) => {
           </TouchableOpacity>
 
           {showInstructionModal && (
-            <View style={styles.modalOverlay}>
+            <View style={styles.CustomModalOverlay}>
               <View style={styles.modalContainer}>
                 <Text style={styles.modalTitle}>Add Delivery Instructions</Text>
                 <TextInput
@@ -541,10 +699,10 @@ const BasketScreen = ({ navigation, route }) => {
                     <Text style={styles.cancelButtonText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                   onPress={() => {
-                    dispatch(setDeliveryInstructions(tempInstruction));
-                    setShowInstructionModal(false);
-                  }}
+                    onPress={() => {
+                      dispatch(setDeliveryInstructions(tempInstruction));
+                      setShowInstructionModal(false);
+                    }}
                     style={styles.saveButton}
                   >
                     <Text style={styles.saveButtonText}>Save</Text>
@@ -558,9 +716,9 @@ const BasketScreen = ({ navigation, route }) => {
           <View style={styles.orderSummary}>
             <View style={styles.summaryHeader}>
               <Text style={styles.summaryTitle}>ORDER SUMMARY</Text>
-              <TouchableOpacity>
+              {/* <TouchableOpacity>
                 <Text style={[styles.viewMore, { color: backgroundColor }]}>View more</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Item Total</Text>
@@ -580,12 +738,12 @@ const BasketScreen = ({ navigation, route }) => {
               <Text style={styles.summaryLabel}>Delivery Charge</Text>
               <Text style={[styles.summaryValue, { color: backgroundColor }]}>₹{applicationCharges?.delivery_fixed_charges}</Text>
             </View>
-            <View style={styles.summaryRow}>
+            {/* <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery Tip</Text>
               <TouchableOpacity>
                 <Text style={[styles.addTip, { color: backgroundColor }]}>Add tip</Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Platform fee</Text>
               <Text style={styles.summaryValue}>₹{applicationCharges?.handling_charges}</Text>
@@ -597,7 +755,7 @@ const BasketScreen = ({ navigation, route }) => {
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, styles.totalLabel]}>To Pay</Text>
               <Text style={[styles.summaryValue, styles.totalValue]}>
-                ₹{(calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2)}
+                ₹{(calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2) - couponAmount}
               </Text>
             </View>
           </View>
@@ -641,13 +799,60 @@ const BasketScreen = ({ navigation, route }) => {
           {/* Place Order Button */}
           < View style={{ paddingBottom: 60 }}>
             <TouchableOpacity
-              style={[styles.placeOrderButton, { backgroundColor }]}
+              style={[
+                styles.placeOrderButton,
+                { backgroundColor: isProcessingPayment ? '#ccc' : backgroundColor },
+              ]}
               onPress={handlePlaceOrder}
+              disabled={isProcessingPayment}
             >
-              <Text style={styles.placeOrderText}>Place Order</Text>
-            </TouchableOpacity></View>
+              {isProcessingPayment ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.placeOrderText}>Place Order</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       )}
+
+      <Modal
+        transparent
+        visible={showServiceModal}
+        animationType="fade"
+        onRequestClose={() => setShowServiceModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Service Unavailable</Text>
+            <Text style={styles.modalText}>
+              We currently do not provide service in your area. You can change your location or visit our app for more information.
+            </Text>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={styles.changeLocationBtn}
+                onPress={() => {
+                  setShowServiceModal(false);
+                  navigation.navigate('SelectServiceFromLocation'); // 👈 Navigate here
+                }}
+              >
+                <Text style={styles.buttonText}>Change Location</Text>
+              </TouchableOpacity>
+              {/* <TouchableOpacity
+                style={styles.visitAppBtn}
+                onPress={() => {
+                  setShowServiceModal(false);
+                  Linking.openURL("https://yourwebsite.com"); // Change to your app URL
+                }}
+              >
+                <Text style={styles.buttonText}>Visit Our App</Text>
+              </TouchableOpacity> */}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -668,7 +873,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomEndRadius: 25,
     borderBottomStartRadius: 25,
-    paddingVertical: "9%"
+    paddingVertical: "6%"
   },
   headerTitle: {
     color: '#fff',
@@ -1034,7 +1239,7 @@ const styles = StyleSheet.create({
 
 
 
-  modalOverlay: {
+  CustomModalOverlay: {
     position: 'absolute',
     top: 0,
     bottom: 0,
@@ -1086,6 +1291,55 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+
+
+
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    marginHorizontal: 30,
+    width: '85%',
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  changeLocationBtn: {
+    backgroundColor: '#f39c12',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 6,
+  },
+  visitAppBtn: {
+    backgroundColor: '#3498db',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 6,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  }
 
 });
 

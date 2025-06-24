@@ -18,7 +18,8 @@ const initialState = {
   reaturantDetails: null,
   orderOfferAmount: 0,
   address: "",
-  shopAddress: {}
+  shopAddress: {},
+  username: ""
 };
 
 export const verifyMobile = createAsyncThunk(
@@ -151,11 +152,11 @@ export const AuthSlice = createSlice({
       state.location = action.payload;
     },
     setLocationName: (state, action) => {
-      console.log("calling setLocationName", action.payload)
+      
       state.locationName = action.payload;
     },
     setLocationId: (state, action) => {
-      console.log("calling setLocationId", action.payload)
+      
       state.locationId = action.payload;
     },
     clearNavigationFlag: (state) => {
@@ -172,6 +173,9 @@ export const AuthSlice = createSlice({
     },
     setShopAddress: (state,action) => {
       state.shopAddress = action.payload
+    },
+    setUserName: (state,action) => {
+      state.username = action.payload
     }
   },
   extraReducers: builder => {
@@ -200,7 +204,7 @@ export const AuthSlice = createSlice({
     builder.addCase(verifyMobile.fulfilled, (state, action) => {
       state.loading = false;
       state.message = null;
-      console.log(">>>>>>>OTP", action.payload?.data[0]?.otp)
+      
       if (action.payload?.data[0]?.mobile) {
         state.mobileNumber = action.payload?.data[0]?.mobile;
       }
@@ -266,6 +270,6 @@ export const AuthSlice = createSlice({
   },
 });
 
-export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setRestaurnatDetails, setOrderOfferAmount, setAddress,setShopAddress } = AuthSlice.actions;
+export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setRestaurnatDetails, setOrderOfferAmount, setAddress,setShopAddress,setUserName } = AuthSlice.actions;
 
 export default AuthSlice.reducer;

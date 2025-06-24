@@ -18,13 +18,18 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { getItems, getSubCategories } from '../../services/services';
+import { getItems, getSubCategoriesById, removeFromWishlist, addToWishlist } from '../../services/services';
 import { Dropdown } from 'react-native-element-dropdown';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart, clearCart, updateQuantity, removeFromCart } from '../../redux/reducers/cartReducer';
+import { RootState } from '../../redux/store'; // adjust path
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+
 const { width, height } = Dimensions.get('window');
 const productCardWidth = (width * 0.8 - 32) / 2;
 const productAreaWidth = width * 0.55;
-const filterSortButtonWidth = (productAreaWidth - 32) / 2;
+const filterSortButtonWidth = (productAreaWidth - 32);
 
 // Define weight options
 const weightOptions = [
@@ -34,9 +39,10 @@ const weightOptions = [
 ];
 
 export default function GroceriesScreen({ navigation, route }) {
-  const { status = 0, categoryKey, subcategory_id, category_id, subcategory_name } = route.params || {};
+  const dispatch = useDispatch();
+  const { status = 0, subcategory_id, category_id, subcategory_name } = route.params || {};
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id);
-  const [subcategories, setSubcategories] = useState([]);
+  const [subtotalcategories, setSubtotalcategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -45,7 +51,7 @@ export default function GroceriesScreen({ navigation, route }) {
   const [filterOne, setFilterOne] = useState(null);
   const [sort, setSort] = useState(null);
   const [favorites, setFavorites] = useState([]);
-  const [cartItems, setCartItems] = useState([]);
+  const cartItems = useSelector((state) => state.cart.items);
   const [selectedFilterOneValues, setSelectedFilterOneValues] = useState([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
   const [activeFilterSection, setActiveFilterSection] = useState('Filter One');
@@ -54,6 +60,10 @@ export default function GroceriesScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [productWeights, setProductWeights] = useState({});
+  const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
+  const totalItems = useSelector((state) => state.cart.totalItems);
+  const walletData = useSelector((state) => state.wallet);
+
 
   const priceRangeOptions = [
     { label: '₹0 - ₹100', min: 0, max: 100 },
@@ -63,19 +73,22 @@ export default function GroceriesScreen({ navigation, route }) {
     { label: 'Above ₹1000', min: 1001, max: Infinity },
   ];
 
-  // Fetch subcategories
+  // Fetch subtotalcategories
   useEffect(() => {
     const fetchSubcategories = async () => {
       try {
-        const subCats = await getSubCategories();
-        console.log(subCats, "+++++++++++++++++subCats")
-        const filteredSubcategories = subCats.filter((sub) => sub.category_id === category_id);
-        setSubcategories(filteredSubcategories);
+        const subCats = await getSubCategoriesById({
+          sub_category_id: subcategory_id
+        });
+        // const filteredSubcategories = subCats.filter((sub) => sub.category_id === category_id);
+        
+        setSelectedSubcategoryId(subCats[0].id)
+        setSubtotalcategories(subCats);
       } catch (error) {
         Toast.show({
           type: 'error',
           text1: 'Error',
-          text2: 'Failed to load subcategories',
+          text2: 'Failed to load subtotalcategories',
           position: 'top',
           topOffset: Platform.OS === 'ios' ? 50 : 30,
         });
@@ -88,19 +101,20 @@ export default function GroceriesScreen({ navigation, route }) {
 
   // Fetch items
   useEffect(() => {
+    
     const fetchItems = async () => {
       if (!selectedSubcategoryId || !category_id) return;
       try {
         setIsLoading(true);
         setError(null);
-        const response = await getItems(selectedSubcategoryId, category_id);
-        console.log("hero", response)
+        const response = await getItems(selectedSubcategoryId, customerId);
+        
         const items = response.data || [];
 
         // Group items strictly by unique_id and sub_category_id
         const groupedItems = items.reduce((acc, item) => {
           // Only process items matching the selected subcategory
-          if (item.sub_category_id === selectedSubcategoryId) {
+          if (item.subtotal_category_id === selectedSubcategoryId) {
             // Find existing group or create new one
             let existingGroup = acc.find(group => group.unique_id == item.unique_id);
 
@@ -135,10 +149,12 @@ export default function GroceriesScreen({ navigation, route }) {
           }
           return acc;
         }, []);
-
         // Map grouped items to product structure
         const mappedProducts = groupedItems.map(item => ({
-          id: item.unique_id, // Use unique_id as the main identifier
+          id: item.id, // Use unique_id as the main identifier
+          category_id: item.category_id,
+          sub_category_id: item.sub_category_id,
+          subtotal_category_id: item.subtotal_category_id,
           unique_id: item.unique_id,
           name: item.item_name,
           brand: 'N/A',
@@ -150,9 +166,11 @@ export default function GroceriesScreen({ navigation, route }) {
           description: item.item_description,
           item_ind: item.variants[0].item_ind, // Add item_ind to the product
           variants: item.variants, // Include all variants
-          subscription: item.subscription
+          subscription: item.subscription,
+          wishlist_flag: item.wishlist_flag,
+          wishlistId: item.wishlistId
         }));
-
+        
         setProducts(mappedProducts);
       } catch (error) {
         setError('Failed to load items');
@@ -170,28 +188,6 @@ export default function GroceriesScreen({ navigation, route }) {
     fetchItems();
   }, [selectedSubcategoryId, category_id]);
 
-  // Load favorites and cart
-  const loadInitialData = useCallback(async () => {
-    try {
-      const storedFavorites = await AsyncStorage.getItem('favorites');
-      if (storedFavorites) setFavorites(JSON.parse(storedFavorites));
-      const storedCartItems = await AsyncStorage.getItem('cartItems');
-      if (storedCartItems) setCartItems(JSON.parse(storedCartItems));
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to load saved data',
-        position: 'top',
-        topOffset: Platform.OS === 'ios' ? 50 : 30,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
-
   const handleSearch = (text) => {
     setSearchQuery(text);
     const results = products.filter((product) =>
@@ -205,34 +201,38 @@ export default function GroceriesScreen({ navigation, route }) {
   };
 
   const toggleFavorite = async (item) => {
+    const isFavorited = !!item.wishlistId;
     try {
-      const itemKey = `${item.id}-${selectedSubcategoryId}`;
-      let updatedFavorites;
-      if (favorites.some((fav) => fav.key === itemKey)) {
-        updatedFavorites = favorites.filter((fav) => fav.key !== itemKey);
-        Toast.show({
-          type: 'error',
-          text1: 'Removed from Favorites',
-          text2: `${item.name} removed from favorites`,
-          position: 'top',
-          topOffset: Platform.OS === 'ios' ? 50 : 30,
+      if (isFavorited) {
+        const response = await removeFromWishlist({
+          wishlistId: item.wishlistId,
         });
+
+        const updatedProducts = products.map((product) =>
+          product.id === item.id
+            ? { ...product, wishlist_flag: 0, wishlistId: null }
+            : product
+        );
+        setProducts(updatedProducts);
+
       } else {
-        updatedFavorites = [
-          ...favorites,
-          { ...item, subcategory_id: selectedSubcategoryId, status, key: itemKey },
-        ];
-        Toast.show({
-          type: 'success',
-          text1: 'Added to Favorites',
-          text2: `${item.name} added to favorites`,
-          position: 'top',
-          topOffset: Platform.OS === 'ios' ? 50 : 30,
+        const response = await addToWishlist({
+          customer_id: customerId,
+          item_id: item.id,
+          unique_id: item.unique_id,
         });
+
+        const newWishlistId = response?.data?.wishlistId;
+
+        const updatedProducts = products.map((product) =>
+          product.id === item.id
+            ? { ...product, wishlist_flag: 1, wishlistId: newWishlistId }
+            : product
+        );
+        setProducts(updatedProducts);
       }
-      setFavorites(updatedFavorites);
-      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
     } catch (error) {
+      console.error('Wishlist API error:', error?.response?.data || error.message);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -243,10 +243,9 @@ export default function GroceriesScreen({ navigation, route }) {
     }
   };
 
-  const isFavorite = (item) => {
-    const itemKey = `${item.id}-${selectedSubcategoryId}`;
-    return favorites.some((fav) => fav.key === itemKey);
-  };
+
+
+  const isFavorite = (item) => item?.wishlist_flag === 1;
 
   const getAdjustedPrice = (product, weight) => {
     const weightOption = weightOptions.find((opt) => opt.value === weight);
@@ -255,66 +254,33 @@ export default function GroceriesScreen({ navigation, route }) {
 
   const handleBuyOnce = async (product) => {
     try {
-      // If multiple variants exist and item_ind is 0, use first variant
-      // If item_ind is 1 or only one variant, use that variant
-      const selectedVariant = product.variants.length > 1 && product.item_ind === 0
-        ? product.variants[0]
-        : product.variants[0];
+      // Get selected quantity type from productWeights or fallback to first
+      const selectedQuantityType = productWeights[product.id] || product.variants[0].quantity_type;
 
-      const adjustedPrice = parseFloat(selectedVariant.actual_price) || 0;
-      const adjustedOffer = parseFloat(selectedVariant.selling_price) || 0;
+      // Find the selected variant
+      const selectedVariant = product.variants.find(
+        (v) => v.quantity_type === selectedQuantityType
+      ) || product.variants[0]; // fallback for safety
 
-      const existingCartItems = await AsyncStorage.getItem('cartItems');
-      const cart = existingCartItems ? JSON.parse(existingCartItems) : [];
+      const adjustedPrice = parseFloat(selectedVariant.selling_price) || 0;
 
-      // Modify cart item finding logic to handle item_ind
-      const existingItemIndex = cart.findIndex(
-        (item) =>
-          item.id === product.unique_id &&
-          item.subcategory_id === selectedSubcategoryId &&
-          // If multiple variants and item_ind is 0, match by quantity_type
-          (product.variants.length > 1 && product.item_ind === 0
-            ? item.variant.quantity_type === selectedVariant.quantity_type
-            : true)
-      );
+      
 
-      let updatedCart;
-      if (existingItemIndex > -1) {
-        updatedCart = cart.map((item, index) =>
-          index === existingItemIndex
-            ? {
-              ...item,
-              quantity: (item.quantity || 1) + 1,
-              totalPrice: adjustedPrice * ((item.quantity || 1) + 1),
-              variant: selectedVariant
-            }
-            : item
-        );
-      } else {
-        updatedCart = [
-          ...cart,
-          {
-            ...product,
-            id: product.unique_id,
-            quantity: 1,
-            totalPrice: adjustedPrice,
-            price: adjustedPrice,
-            variant: selectedVariant,
-            subcategory_id: selectedSubcategoryId,
-            status,
-          },
-        ];
-      }
-      await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
-      setCartItems(updatedCart);
-      Toast.show({
-        type: 'success',
-        text1: 'Added to Cart',
-        text2: `${product.name} ${product.variants.length > 1 && product.item_ind === 0 ? `(${selectedVariant.quantity_type})` : ''}added to cart`,
-        position: 'top',
-        topOffset: Platform.OS === 'ios' ? 50 : 30,
-      });
+      const cartItem = {
+        ...product,
+        id: `${product.unique_id}_${selectedVariant.id}`, // 🔥 use composite id,
+        price: adjustedPrice,
+        quantity: 1,
+        variant: selectedVariant,
+        subcategory_id: selectedSubcategoryId,
+        category: product.category || '',
+        status,
+      };
+
+      dispatch(addToCart(cartItem));
+
     } catch (error) {
+      
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -324,100 +290,39 @@ export default function GroceriesScreen({ navigation, route }) {
       });
     }
   };
+  // Redux-friendly version (in your component file)
 
-  const handleIncrement = async (productId, quantityType) => {
-    try {
-      const existingCartItems = await AsyncStorage.getItem('cartItems');
-      const cart = existingCartItems ? JSON.parse(existingCartItems) : [];
-      const product = filteredProducts().find((p) => p.id === productId);
+  const dispatchIncrement = (compositeId, quantityType) => {
+    
 
-      // Modify finding logic to handle item_ind
-      const existingItemIndex = cart.findIndex(
-        (item) =>
-          item.id === productId &&
-          item.subcategory_id === selectedSubcategoryId &&
-          // If multiple variants and item_ind is 0, match by quantity_type
-          (product.variants.length > 1 && product.item_ind === 0
-            ? item.variant.quantity_type === quantityType
-            : true)
-      );
+    const existingItem = cartItems.find(
+      (item) => item.id === compositeId && item.variant?.quantity_type === quantityType
+    );
 
-      if (existingItemIndex > -1) {
-        const selectedVariant = product.variants.length > 1 && product.item_ind === 0
-          ? product.variants.find(v => v.quantity_type === quantityType)
-          : product.variants[0];
-
-        const adjustedPrice = parseFloat(selectedVariant.actual_price) || 0;
-
-        const newQuantity = (cart[existingItemIndex].quantity || 1) + 1;
-        cart[existingItemIndex] = {
-          ...cart[existingItemIndex],
-          quantity: newQuantity,
-          totalPrice: adjustedPrice * newQuantity,
-          price: adjustedPrice,
-          variant: selectedVariant
-        };
-        await AsyncStorage.setItem('cartItems', JSON.stringify(cart));
-        setCartItems([...cart]);
-      }
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to update cart',
-        position: 'top',
-        topOffset: Platform.OS === 'ios' ? 50 : 30,
-      });
+    if (existingItem) {
+      const newQuantity = Math.min(existingItem.quantity + 1, 10);
+      dispatch(updateQuantity({ id: compositeId, quantityType, quantity: newQuantity }));
+    } else {
+      console.warn("No matching item found for increment!");
     }
   };
 
-  const handleDecrement = async (productId, quantityType) => {
-    try {
-      const existingCartItems = await AsyncStorage.getItem('cartItems');
-      const cart = existingCartItems ? JSON.parse(existingCartItems) : [];
-      const product = filteredProducts().find((p) => p.id === productId);
+  const dispatchDecrement = (compositeId, quantityType) => {
+    
 
-      // Modify finding logic to handle item_ind
-      const existingItemIndex = cart.findIndex(
-        (item) =>
-          item.id === productId &&
-          item.subcategory_id === selectedSubcategoryId &&
-          // If multiple variants and item_ind is 0, match by quantity_type
-          (product.variants.length > 1 && product.item_ind === 0
-            ? item.variant.quantity_type === quantityType
-            : true)
-      );
+    const existingItem = cartItems.find(
+      (item) => item.id === compositeId && item.variant?.quantity_type === quantityType
+    );
 
-      if (existingItemIndex > -1) {
-        const selectedVariant = product.variants.length > 1 && product.item_ind === 0
-          ? product.variants.find(v => v.quantity_type === quantityType)
-          : product.variants[0];
-
-        const adjustedPrice = parseFloat(selectedVariant.actual_price) || 0;
-
-        const newQuantity = Math.max((cart[existingItemIndex].quantity || 1) - 1, 0);
-        if (newQuantity === 0) {
-          cart.splice(existingItemIndex, 1);
-        } else {
-          cart[existingItemIndex] = {
-            ...cart[existingItemIndex],
-            quantity: newQuantity,
-            totalPrice: adjustedPrice * newQuantity,
-            price: adjustedPrice,
-            variant: selectedVariant
-          };
-        }
-        await AsyncStorage.setItem('cartItems', JSON.stringify(cart));
-        setCartItems([...cart]);
+    if (existingItem) {
+      const newQuantity = Math.max(existingItem.quantity - 1, 0);
+      if (newQuantity === 0) {
+        dispatch(removeFromCart({ id: compositeId, quantityType }));
+      } else {
+        dispatch(updateQuantity({ id: compositeId, quantityType, quantity: newQuantity }));
       }
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to update cart',
-        position: 'top',
-        topOffset: Platform.OS === 'ios' ? 50 : 30,
-      });
+    } else {
+      console.warn("No matching item found for decrement!");
     }
   };
 
@@ -489,7 +394,7 @@ export default function GroceriesScreen({ navigation, route }) {
       onPress={() => setSelectedSubcategoryId(item.id)}
     >
       <Image
-        source={{ uri: item.sub_category_image || 'https://via.placeholder.com/30' }}
+        source={{ uri: item.subtotal_category_image || 'https://via.placeholder.com/30' }}
         style={[styles.categoryIcon, selectedSubcategoryId === item.id && styles.selectedCategoryIcon]}
         resizeMode="contain"
       />
@@ -497,26 +402,19 @@ export default function GroceriesScreen({ navigation, route }) {
         style={[styles.categoryText, selectedSubcategoryId === item.id && styles.selectedCategoryText]}
         numberOfLines={2}
       >
-        {item.sub_category_name}
+        {item.subtotal_category_name}
       </Text>
     </TouchableOpacity>
   );
 
   const renderProduct = ({ item }) => {
-    console.log(item);
-    const cartItem = cartItems.find(
-      (cartItem) =>
-        cartItem.id === item.unique_id &&
-        cartItem.subcategory_id === selectedSubcategoryId
-    );
-
-    // Use first variant as default or find selected variant
     const selectedQuantityType = productWeights[item.id] || item.variants[0].quantity_type;
     const selectedVariant = item.variants.find(v => v.quantity_type === selectedQuantityType) || item.variants[0];
+    const compositeId = `${item.unique_id}_${selectedVariant.id}`; // ✅ use same format as addToCart
 
+    const cartItem = cartItems.find(cart => cart.id === compositeId);
     const adjustedPrice = parseFloat(selectedVariant.actual_price) || 0;
     const adjustedOffer = parseFloat(selectedVariant.selling_price) || 0;
-
     // Create variant options 
     const variantOptions = item.variants.map(v => ({
       label: `${v.quantity_type}`, // Use quantity_type for dropdown
@@ -530,7 +428,13 @@ export default function GroceriesScreen({ navigation, route }) {
           onPress={() => toggleFavorite(item)}
           accessibilityLabel={isFavorite(item) ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <Icon name={isFavorite(item) ? 'favorite' : 'favorite-border'} size={18} color="#9010BF" />
+          <View style={styles.favoriteIconWrapper}>
+            <Icon
+              name={isFavorite(item) ? 'favorite' : 'favorite-border'}
+              size={20}
+              color="#9010BF"
+            />
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() =>
@@ -577,44 +481,58 @@ export default function GroceriesScreen({ navigation, route }) {
 
         {/* <Text style={styles.description}>{item.description}</Text> */}
         <View style={styles.priceRow}>
-          <Text style={styles.productPrice}>₹{adjustedPrice.toFixed(2)}</Text>
-          <Text style={styles.productOffer}>₹{adjustedOffer.toFixed(2)}</Text>
+          <Text style={styles.productPrice}>₹{adjustedOffer.toFixed(2)}</Text>
+          <Text style={styles.productOffer}>₹{adjustedPrice.toFixed(2)}</Text>
         </View>
         <View style={styles.buttonRow}>
-          {item.subscription === 1 && (
+          {item.subscription === "1" && (
             <TouchableOpacity
               style={[styles.subscribeBtn, { backgroundColor: '#FBEAEA', borderColor: '#9010BF' }]}
-              onPress={() =>
-                navigation.navigate('SubscriptionPage', {
-                  productDetails: {
-                    ...item,
-                    subcategory_id: selectedSubcategoryId,
-                    status,
-                    variant: selectedVariant
-                  },
-                })
-              }
+              onPress={() => {
+                const isAbhi24Category = item.id === category_id; // replace with actual category ID or condition
+
+                const balanceToCheck = isAbhi24Category
+                  ? parseFloat(walletData.abhi24_balanced_amount || '0')
+                  : parseFloat(walletData.user_balance_amount || '0');
+
+                if (balanceToCheck <= 0) {
+                  navigation.navigate('Wlletscreen'); // 👈 adjust route name
+                } else {
+                  navigation.navigate('EditSubscribe', {
+                    productDetails: {
+                      ...item,
+                      subcategory_id: selectedSubcategoryId,
+                      status,
+                      variant: selectedVariant,
+                    },
+                  });
+                }
+              }}
             >
               <Text style={styles.subscribeText}>Subscribe</Text>
             </TouchableOpacity>
+
           )}
 
           {cartItem ? (
             <View style={styles.quantityContainer}>
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleDecrement(item.id, selectedQuantityType)}
+                onPress={() => dispatchDecrement(compositeId, selectedVariant.quantity_type)}
               >
-                <Text style={styles.quantityText}>-</Text>
+                <Icon name="remove" size={18} color="#000" />
               </TouchableOpacity>
+
               <Text style={styles.quantity}>{cartItem.quantity}</Text>
+
               <TouchableOpacity
                 style={styles.quantityBtn}
-                onPress={() => handleIncrement(item.id, selectedQuantityType)}
+                onPress={() => dispatchIncrement(compositeId, selectedVariant.quantity_type)}
               >
-                <Text style={styles.quantityText}>+</Text>
+                <Icon name="add" size={17} color="#000" />
               </TouchableOpacity>
             </View>
+
           ) : (
             <TouchableOpacity
               style={[styles.buyBtn, { backgroundColor: '#8655d2' }]}
@@ -784,14 +702,6 @@ export default function GroceriesScreen({ navigation, route }) {
     </TouchableOpacity>
   );
 
-  // if (isLoading) {
-  //   return (
-  //     <View style={styles.loadingContainer}>
-  //       <ActivityIndicator size="large" color="#9010BF" />
-  //       <Text style={styles.loadingText}>Loading...</Text>
-  //     </View>
-  //   );
-  // }
 
   if (error) {
     return (
@@ -820,17 +730,31 @@ export default function GroceriesScreen({ navigation, route }) {
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {status === 0 ? 'Groceries' : status === 1 ? 'Fresh Meat' : 'Pickles'}
+          {subcategory_name}
         </Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => navigation.navigate('MyFavoritesScreen')}>
+          <TouchableOpacity style={[styles.supportButton, { marginRight: 1 }]} onPress={() => navigation.navigate('MyFavoritesScreen')}>
             <Icon name="favorite-border" size={24} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
-            <Icon name="shopping-cart" size={24} color="#000" />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ByOncescreen')}
+            style={styles.supportButton}
+          >
+            <View style={styles.iconWrapper}>
+              <Ionicons
+                name="cart-outline"
+                size={22}
+                color="#000"
+              />
+              {totalItems > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{totalItems}</Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('WalletScreen')}>
-            <Ionicons name="wallet-outline" size={21} color="#000" style={styles.searchIcon} />
+          <TouchableOpacity style={[styles.supportButton, { marginRight: 1 }]} onPress={() => navigation.navigate('Wlletscreen')}>
+            <Ionicons name="wallet-outline" size={21} color="#000" />
           </TouchableOpacity>
         </View>
       </View>
@@ -854,7 +778,7 @@ export default function GroceriesScreen({ navigation, route }) {
       <View style={styles.mainContent}>
         <View style={styles.sideMenu}>
           <FlatList
-            data={subcategories}
+            data={subtotalcategories}
             renderItem={renderSubcategory}
             keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
@@ -897,21 +821,45 @@ export default function GroceriesScreen({ navigation, route }) {
               </TouchableOpacity>
             </View>
           </View>
-          <FlatList
-            data={filteredProducts()}
-            renderItem={renderProduct}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={[styles.productList, { paddingBottom: cartItems.length > 0 ? 80 : 16 }]}
-            showsVerticalScrollIndicator={false}
-            columnWrapperStyle={styles.columnWrapper}
-            ListEmptyComponent={renderEmptyState}
-          />
+          {isLoading ? (
+            <SkeletonPlaceholder borderRadius={8}>
+              <View style={styles.skeletonWrapper}>
+                {/* 2 cards in a row */}
+                {[1, 2].map((_, index) => (
+                  <View key={index} style={styles.skeletonCard}>
+                    <View style={styles.skeletonImage} />
+                    <View style={styles.skeletonText} />
+                    <View style={styles.skeletonTextSmall} />
+                    <View style={styles.skeletonTextSmall} />
+                    <View style={styles.skeletonButtonsRow}>
+                      <View style={styles.skeletonButton} />
+                      <View style={styles.skeletonButton} />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </SkeletonPlaceholder>
+          ) : (
+            <FlatList
+              data={filteredProducts()}
+              renderItem={renderProduct}
+              keyExtractor={(item) => item.id.toString()}
+              numColumns={2}
+              contentContainerStyle={[
+                styles.productList,
+                { paddingBottom: cartItems.length > 0 ? 80 : 16 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              columnWrapperStyle={styles.columnWrapper}
+              ListEmptyComponent={renderEmptyState}
+            />
+          )}
+
         </View>
       </View>
 
       {cartItems.length > 0 && (
-        <View style={[styles.checkoutToast, { backgroundColor: '#9010BF' }]}>
+        <View style={[styles.checkoutToast, { backgroundColor: '#8655d2' }]}>
           <View style={styles.checkoutToastContent}>
             <View style={styles.checkoutToastLeft}>
               <Text style={styles.checkoutToastTitle}>
@@ -921,31 +869,20 @@ export default function GroceriesScreen({ navigation, route }) {
                 ₹{cartItems
                   .reduce((total, item) => total + (item.totalPrice || item.price) * (item.quantity || 1), 0)
                   .toFixed(2)}{' '}
-                • {cartItems.reduce((total, item) => total + (item.quantity || 1), 0)} items
+                • {cartItems.reduce((total, item) => total + (item.quantity || 1), 0)} SubItems
               </Text>
             </View>
             <View style={styles.checkoutToastRight}>
               <TouchableOpacity
                 style={styles.checkoutToastRemove}
-                onPress={async () => {
-                  try {
-                    await AsyncStorage.removeItem('cartItems');
-                    setCartItems([]);
-                    Toast.show({
-                      type: 'success',
-                      text1: 'Cart Cleared',
-                      position: 'top',
-                      topOffset: 50,
-                    });
-                  } catch (error) {
-                    Toast.show({
-                      type: 'error',
-                      text1: 'Error',
-                      text2: 'Failed to clear cart',
-                      position: 'top',
-                      topOffset: 50,
-                    });
-                  }
+                onPress={() => {
+                  dispatch(clearCart());
+                  Toast.show({
+                    type: 'success',
+                    text1: 'Cart Cleared',
+                    position: 'top',
+                    topOffset: 50,
+                  });
                 }}
               >
                 <Text style={styles.checkoutToastRemoveText}>Remove</Text>
@@ -1030,7 +967,7 @@ const styles = StyleSheet.create({
   },
   backButton: { padding: 5 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#000', flex: 1, textAlign: 'center' },
-  headerIcons: { flexDirection: 'row', width: 80, justifyContent: 'space-between', gap: 10 },
+  headerIcons: { flexDirection: 'row', justifyContent: 'space-between', gap: 1, alignItems: "center" },
   searchContainer: {
     marginTop: 10,
     backgroundColor: '#fff',
@@ -1111,7 +1048,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   filterBtnExpanded: {
-    width: filterSortButtonWidth,
+    width: "auto",
     paddingHorizontal: 10,
     justifyContent: 'space-between',
   },
@@ -1219,6 +1156,7 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 5
   },
   subscribeText: {
     color: '#9010BF',
@@ -1249,7 +1187,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     flex: 1,
-    height: 24,
+    height: 30,
   },
   quantityBtn: {
     flex: 1,
@@ -1259,13 +1197,13 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   quantity: {
-    fontSize: 10,
+    fontSize: 15,
     textAlign: 'center',
     flex: 1,
     fontWeight: '600',
   },
   quantityText: {
-    fontSize: 12,
+    fontSize: 15,
     color: '#333',
     textAlign: 'center',
     marginBottom: 5,
@@ -1273,9 +1211,21 @@ const styles = StyleSheet.create({
   },
   favoriteIcon: {
     position: 'absolute',
-    right: 8,
-    top: 8,
+    right: 3,
+    top: 3,
     zIndex: 1,
+  },
+  favoriteIconWrapper: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 3, // Android
+    shadowColor: '#000', // iOS
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   bottomModal: {
     justifyContent: 'flex-end',
@@ -1503,5 +1453,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 10,
+  },
+  iconWrapper: {
+    position: 'relative',
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  cartBadge: {
+    position: 'absolute',
+    top: -7,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+
+  cartBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  supportButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skeletonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  skeletonCard: {
+    width: '47%',
+    marginBottom: 20,
+  },
+  skeletonImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+  },
+  skeletonText: {
+    marginTop: 8,
+    width: '80%',
+    height: 16,
+  },
+  skeletonTextSmall: {
+    marginTop: 6,
+    width: '60%',
+    height: 12,
+  },
+  skeletonButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  skeletonButton: {
+    width: '48%',
+    height: 32,
+    borderRadius: 4,
   },
 });

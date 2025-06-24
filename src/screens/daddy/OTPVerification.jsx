@@ -23,10 +23,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 // import GoogleIcon from '../user/svgs/GoogleIcon';
 import { useDispatch } from 'react-redux';
-import { actionLogin, addCustomer, setMobile, verifyCustomerMobile, verifyCustomerOTP } from '../../redux/reducers/auth';
+import { actionLogin, addCustomer, setMobile,setUserName, verifyCustomerMobile, verifyCustomerOTP } from '../../redux/reducers/auth';
 import Geolocation from '@react-native-community/geolocation';
 import { checkAddressExistence } from '../../redux/reducers/daddy';
 import { customerLogin } from '../../services/services';
+
+
 
 export default function OTPVerification({ navigation, route }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -57,54 +59,34 @@ export default function OTPVerification({ navigation, route }) {
       setError('Please enter all 4 digits of the OTP');
       return;
     }
-
+  
+    const enteredOtp = otp.join('');
+    setLoader(true);
+   console.log(route.params?.otp.toString() , enteredOtp , route.params.otp.toString())
     try {
-      const enteredOtp = otp.join('');
-      setLoader(true);
-
-      // Check if OTP is from getuserloginotp endpoint
-      if (route.params?.otp && enteredOtp === route.params.otp.toString()) {
-        // Direct OTP verification from getuserloginotp
-        dispatch(addCustomer({
-          mobileNumber: route.params?.phoneNumber,
-          otp: enteredOtp
-        }));
-
-        dispatch(setMobile(route.params?.phoneNumber))
-
-        // // Navigate based on flow
-        if (route.params?.isFromCart) {
-          navigation.replace("CartScreen");
+      // Real API verification
+      if (route.params?.otp.toString() && enteredOtp === route.params.otp.toString()) {
+        const loginResponse = await customerLogin(parseInt(route.params?.phoneNumber, 10),route.params?.username);
+        console.log("loginRespone", loginResponse)
+        if (loginResponse.status === 200) {
+          dispatch(addCustomer({
+            mobileNumber: route.params?.phoneNumber,
+            otp: enteredOtp,
+            customerId: loginResponse.data.customer_id
+          }));
+          dispatch(setUserName(route.params?.username));
+          if (route.params?.isFromCart) {
+            navigation.replace("CartScreen");
+          } else {
+            dispatch(actionLogin());
+          }
         } else {
-          dispatch(actionLogin());
-          // navigation.replace('BottomNavigation');
+          setError('Invalid OTP. Please try again.');
+          setLoader(false);
         }
-        return;
-      }
-
-      // If not matched with route params OTP, try customer login
-      const loginResponse = await customerLogin(parseInt(route.params?.phoneNumber, 10));
-      
-      // Compare entered OTP with customer login OTP
-      if (loginResponse.status === 200 &&
-        enteredOtp === loginResponse.data.customer_otp.toString()) {
-
-        dispatch(addCustomer({
-          mobileNumber: route.params?.phoneNumber,
-          otp: enteredOtp,
-          customerId: loginResponse.data.customer_id
-        }));
-
-        // Navigate based on flow
-        if (route.params?.isFromCart) {
-          navigation.replace("CartScreen");
-        } else {
-          dispatch(actionLogin());
-          navigation.replace('BottomNavigation');
-        }
-      } else {
-        setError('Invalid OTP. Please try again.');
-        setLoader(false);
+      }else{
+         setError('Invalid OTP. Please try again.');
+          setLoader(false);
       }
     } catch (error) {
       setError('An error occurred. Please try again.');
@@ -112,6 +94,7 @@ export default function OTPVerification({ navigation, route }) {
       console.error(error);
     }
   };
+  
 
   const handleOTPChange = (value, index) => {
     let newOtp = [...otp];
@@ -152,7 +135,7 @@ export default function OTPVerification({ navigation, route }) {
           style={{
             width: responsiveWidth(100),
             height: responsiveHeight(30),
-            backgroundColor: '#6A48D2',
+            backgroundColor: '#8655d2',
             justifyContent: "flex-end"
           }}>
         </ImageBackground>
@@ -198,7 +181,7 @@ export default function OTPVerification({ navigation, route }) {
           <View style={{ marginTop: responsiveHeight(5) }}>
             {timer !== 0 && <Text style={{ color: "#3D3D3D", fontSize: 18, fontWeight: "700", textAlign: "center" }}>Resend OTP in {timer}s </Text>}
             <TouchableOpacity disabled={timer != 0} onPress={resendOtpHandler}>
-              <Text style={{ fontSize: 14, color: timer == 0 ? "#6A48D2" : "#8F8F8F", fontWeight: "700", textAlign: "center", marginTop: responsiveHeight(1) }}>Resend OTP</Text>
+              <Text style={{ fontSize: 14, color: timer == 0 ? "#8655d2" : "#8F8F8F", fontWeight: "700", textAlign: "center", marginTop: responsiveHeight(1) }}>Resend OTP</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity
@@ -280,7 +263,7 @@ const styles = StyleSheet.create({
   forgotPassword: {
     // marginLeft: "auto",
     fontSize: 14,
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: '400',
   },
   loginButton: {
@@ -341,7 +324,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     // backgroundColor: '#F5F9FF',
-    borderColor: '#6A48D2',
+    borderColor: '#8655d2',
   },
   timer: {
     color: 'gray',
@@ -362,7 +345,7 @@ const styles = StyleSheet.create({
   locationLoadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: '500',
   },
   locationErrorContainer: {
@@ -378,7 +361,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

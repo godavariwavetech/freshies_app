@@ -14,23 +14,50 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { responsiveFontSize, responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
+import { useDispatch, useSelector } from 'react-redux';
+import { getOrderItemsByOrderId } from '../../../services/services';
+import CustomAlert from '../../../components/CustomAlert';
+import CustomModal from '../../../components/CustomModal';
+import FocusAwareStatusBar from '../../../components/CustomStatusBar';
+
+
 
 const OrderDetailsScreen = ({ navigation, route }) => {
   // Get order details from route params
+  const dispatch = useDispatch();
   const { orderDetails, status } = route.params || {};
-  const backgroundColor = status === 1 ? '#D32F2F' : '#6A48D2';
+
+  
+  const backgroundColor = '#8655d2';
   const [storedOrders, setStoredOrders] = useState([]);
   const [viewSavedOrders, setViewSavedOrders] = useState(false);
+  const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
+  const [loadingItems, setLoadingItems] = useState(true);
+  const [isCancelAlertVisible, setCancelAlertVisible] = useState(false);
 
-  // Load stored orders when component mounts
+
   useEffect(() => {
-    loadStoredOrders();
+    const fetchOrderItems = async () => {
+      if (!orderDetails?.orderId) return;
 
-    // Save order details to storage if provided
-    if (orderDetails) {
-      saveOrderToStorage();
-    }
-  }, [orderDetails]);
+      setLoadingItems(true);
+      try {
+        const items = await getOrderItemsByOrderId(orderDetails.orderId);
+        
+        setStoredOrders(items);
+        orderDetails.items = items;
+
+      } catch (error) {
+        console.error('Failed to fetch order items:', error);
+      } finally {
+        setLoadingItems(false); // Done loading
+        await AsyncStorage.removeItem('cartItems');
+      }
+    };
+
+    fetchOrderItems();
+  }, [orderDetails?.orderId]);
+
 
   // Load stored orders
   const loadStoredOrders = async () => {
@@ -62,55 +89,55 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   };
 
   // Save order to local storage
-  const saveOrderToStorage = async () => {
-    try {
-      // Validate order details
-      if (!orderDetails || !validateOrderDetails(orderDetails)) {
-        throw new Error('Invalid order details');
-      }
+  // const saveOrderToStorage = async () => {
+  //   try {
+  //     // Validate order details
+  //     if (!orderDetails || !validateOrderDetails(orderDetails)) {
+  //       throw new Error('Invalid order details');
+  //     }
 
-      // Check if order already exists
-      const existingOrderIndex = storedOrders.findIndex(
-        order => order.orderId === orderDetails?.orderId
-      );
+  //     // Check if order already exists
+  //     const existingOrderIndex = storedOrders.findIndex(
+  //       order => order.orderId === orderDetails?.orderId
+  //     );
 
-      let updatedOrders;
-      if (existingOrderIndex > -1) {
-        // Update existing order
-        updatedOrders = [...storedOrders];
-        updatedOrders[existingOrderIndex] = orderDetails;
-      } else {
-        // Add new order
-        updatedOrders = [...storedOrders, orderDetails];
-      }
+  //     let updatedOrders;
+  //     if (existingOrderIndex > -1) {
+  //       // Update existing order
+  //       updatedOrders = [...storedOrders];
+  //       updatedOrders[existingOrderIndex] = orderDetails;
+  //     } else {
+  //       // Add new order
+  //       updatedOrders = [...storedOrders, orderDetails];
+  //     }
 
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('trackOrders', JSON.stringify(updatedOrders));
+  //     // Save to AsyncStorage
+  //     await AsyncStorage.setItem('trackOrders', JSON.stringify(updatedOrders));
 
-      // Update local state
-      setStoredOrders(updatedOrders);
+  //     // Update local state
+  //     setStoredOrders(updatedOrders);
 
-      // Show success toast
-      Toast.show({
-        type: 'success',
-        text1: 'Order Saved',
-        text2: 'Order details have been saved successfully',
-        visibilityTime: 3000,
-        autoHide: true,
-      });
-    } catch (error) {
-      console.error('Error saving order:', error);
+  //     // Show success toast
+  //     Toast.show({
+  //       type: 'success',
+  //       text1: 'Order Saved',
+  //       text2: 'Order details have been saved successfully',
+  //       visibilityTime: 3000,
+  //       autoHide: true,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error saving order:', error);
 
-      // Show error toast
-      Toast.show({
-        type: 'error',
-        text1: 'Save Failed',
-        text2: error.message || 'Unable to save order details',
-        visibilityTime: 3000,
-        autoHide: true,
-      });
-    }
-  };
+  //     // Show error toast
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Save Failed',
+  //       text2: error.message || 'Unable to save order details',
+  //       visibilityTime: 3000,
+  //       autoHide: true,
+  //     });
+  //   }
+  // };
 
   // Remove order from local storage
   const removeOrderFromStorage = async (orderIdToRemove) => {
@@ -199,29 +226,86 @@ const OrderDetailsScreen = ({ navigation, route }) => {
 
   // Render product items
   const renderProductItems = () => {
-    return orderDetails?.items?.map((item, index) => (
+    if (loadingItems) {
+      return renderSkeletonItems(); // Show loading skeleton
+    }
+
+    if (!orderDetails?.items?.length) {
+      return (
+        <Text style={{ textAlign: 'center', marginVertical: 20 }}>
+          No items found in this order.
+        </Text>
+      );
+    }
+
+    return orderDetails?.items.map((item, index) => (
       <View key={index} style={styles.productCard}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.productName}>{item.name}</Text>
-          <Text style={styles.productWeight}>{item.defaultWeight || item.weight}</Text>
-          <Text style={styles.productDetails}>Abhi24</Text>
-          <Text style={styles.seller}>Seller: {item.seller || 'Local Seller'}</Text>
+          <Text style={styles.productName}>{item?.item_name}</Text>
+          <Text style={styles.productWeight}>{item?.quantity_type || ''}</Text>
+          <Text style={styles.productDetails}>{item?.item_description || 'Abhi24'}</Text>
+          <Text style={styles.seller}>Seller: Local Seller</Text>
+
           <View style={styles.priceRow}>
-            <Text style={styles.price}>₹{(item.price * item.quantity).toFixed(2)}</Text>
-            <Text style={styles.originalPrice}>₹{(item.offer || item.originalPrice).toFixed(2)}</Text>
+            <Text style={styles.price}>₹{(parseFloat(item.item_price) * parseInt(item.sub_item_count)).toFixed(2)}</Text>
+            <Text style={styles.originalPrice}>
+              ₹{(parseFloat(item.actualitem_price) * parseInt(item.sub_item_count)).toFixed(2)}
+            </Text>
           </View>
         </View>
+
         <Image
-          source={item.image || require('../../daddy/tabassets/keema.png')}
+          source={
+            item.item_image
+              ? { uri: item.item_image }
+              : require('../../daddy/tabassets/keema.png')
+          }
           style={styles.productImage}
         />
       </View>
     ));
   };
 
+  const renderSkeletonItems = () => {
+    const skeletonArray = Array.from({ length: 3 });
+
+    return skeletonArray.map((_, index) => (
+      <View key={index} style={[styles.productCard, { opacity: 0.5 }]}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.skeletonBox} />
+          <View style={styles.skeletonLine} />
+          <View style={styles.skeletonLine} />
+          <View style={styles.skeletonLine} />
+        </View>
+        <View style={styles.skeletonImage} />
+      </View>
+    ));
+  };
+
+  const getOrderStatusLabel = (status) => {
+    switch (status) {
+      case 0:
+        return 'Placed';
+      case 1:
+        return 'Packed';
+      case 2:
+        return 'Shipped';
+      case 3:
+        return 'Accepted';
+      case 4:
+        return 'Delivered';
+      case 5:
+        return 'Cancelled';
+      default:
+        return 'Pending';
+    }
+  };
+
+
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={backgroundColor} />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.header}>
         <Ionicons
           name="arrow-back"
@@ -230,17 +314,38 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           onPress={() => navigation.navigate('BottomNavigation')}
         />
         <Text style={styles.headerTitle}>Order Details</Text>
-        <View style={styles.headerActions}>
+        {/* <View style={styles.headerActions}>
           <TouchableOpacity onPress={saveOrderToStorage}>
             <Ionicons name="save" size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setViewSavedOrders(true)}>
             <Ionicons name="list" size={24} color="white" />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.orderId}>Order ID - {orderDetails?.orderId || 'N/A'}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: responsiveHeight(2), }}>
+          <Text style={[styles.orderId, { flex: 1 }]} numberOfLines={1}>
+            Order ID - {orderDetails.order_id || 'N/A'}
+          </Text>
+          <Text
+            style={[
+              styles.shippingValue,
+              {
+                color:
+                  status === 0
+                    ? 'green'
+                    : status === 3
+                      ? '#FFA500'
+                      : '#FF3B30',
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {getOrderStatusLabel(status)}
+          </Text>
+        </View>
+
 
         {/* Dynamically render product items */}
         {renderProductItems()}
@@ -250,22 +355,22 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           <Text style={styles.sectionTitle}>Order Status</Text>
 
           <View style={styles.statusItem}>
-            <Ionicons name="checkmark-circle" size={18} color="#6A48D2" />
+            <Ionicons name="checkmark-circle" size={18} color="#8655d2" />
             <Text style={styles.statusText}>Order Confirmed, Oct 06</Text>
           </View>
           <View style={styles.statusItem}>
-            <Ionicons name="checkmark-circle" size={18} color="#6A48D2" />
+            <Ionicons name="checkmark-circle" size={18} color="#8655d2" />
             <Text style={styles.statusText}>Shipped</Text>
           </View>
           <Text style={styles.subStatus}>Your item has arrived at Facility, Mon 14th Oct</Text>
 
           <View style={styles.statusItem}>
-            <Ionicons name="ellipse-outline" size={18} color="#6A48D2" />
+            <Ionicons name="ellipse-outline" size={18} color="#8655d2" />
             <Text style={styles.statusText}>Out For Delivery</Text>
           </View>
 
           <View style={styles.statusItem}>
-            <Ionicons name="ellipse-outline" size={18} color="#6A48D2" />
+            <Ionicons name="ellipse-outline" size={18} color="#8655d2" />
             <Text style={styles.statusText}>
               Delivery, Sat Oct 19 (08:00 AM – 07:55 PM)
             </Text>
@@ -273,49 +378,116 @@ const OrderDetailsScreen = ({ navigation, route }) => {
         </View> */}
 
 
-
-        {/* Shipping Details */}
         <View style={styles.section}>
           <Text style={styles.shippingTitle}>Shipping Details</Text>
-          <Text style={styles.shippingText}>James</Text>
-          <Text style={styles.shippingText}>+91987654321</Text>
-          <Text style={styles.shippingText}>gmail@example.com</Text>
-          <Text style={styles.shippingText}>
-            Magadi Main Rd, next to Prasanna Theatre, Cholarupalya,{"\n"}
-            Bengaluru, Karnataka 560023
-          </Text>
+
+          {/* ✅ Add Order Status here */}
+          <View style={styles.shippingRow}>
+            <Text style={styles.shippingLabel}>Order Status:</Text>
+            <Text
+              style={[
+                styles.shippingValue,
+                {
+                  color:
+                    status === 0
+                      ? 'green'
+                      : status === 3
+                        ? '#FFA500'
+                        : '#FF3B30',
+                },
+              ]}
+            >
+              {getOrderStatusLabel(status)}
+
+            </Text>
+
+          </View>
+
+          <View style={styles.shippingRow}>
+            <Text style={styles.shippingLabel}>Customer ID:</Text>
+            <Text style={styles.shippingValue}>{customerId}</Text>
+          </View>
+
+          <View style={styles.shippingRow}>
+            <Text style={styles.shippingLabel}>Mobile:</Text>
+            <Text style={styles.shippingValue}>+91 {mobileNumber}</Text>
+          </View>
+
+          {shopAddress?.location_name && (
+            <View style={styles.shippingRow}>
+              <Text style={styles.shippingLabel}>Location:</Text>
+              <Text style={styles.shippingValue}>{shopAddress.location_name}</Text>
+            </View>
+          )}
+
+          <View style={styles.shippingRow}>
+            <Text style={styles.shippingLabel}>Address:</Text>
+            <Text style={styles.shippingValue}>{address}</Text>
+          </View>
         </View>
 
-        {/* Pricing Details */}
+
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pricing Details</Text>
+
+          {/* Show Total MRP from items if present, else use total_amount */}
           <View style={styles.priceRowBetween}>
-            <Text>Total MRP</Text>
-            <Text>₹{orderDetails?.totalPrice?.toFixed(2) || 'N/A'}</Text>
+            <Text style={styles.priceLabel}>Total MRP</Text>
+            <Text style={styles.priceValue}>
+              ₹{orderDetails?.items?.length
+                ? orderDetails.items.reduce((acc, item) => acc + parseFloat(item.item_price || 0) * parseInt(item.sub_item_count || 1), 0).toFixed(2)
+                : orderDetails?.totalAmount || 'N/A'}
+            </Text>
           </View>
-          {orderDetails?.coupon && (
+
+          {parseFloat(orderDetails?.couponAmount) > 0 && (
             <View style={styles.priceRowBetween}>
-              <Text>Coupon Discount</Text>
-              <Text style={{ color: 'green' }}>
-                {orderDetails.coupon.type === 'percentage'
-                  ? `${orderDetails.coupon.discount}%`
-                  : `₹${orderDetails.coupon.discount}`}
+              <Text style={styles.priceLabel}>Coupon Discount</Text>
+              <Text style={[styles.priceValue, { color: 'green' }]}>
+                ₹{parseFloat(orderDetails.couponAmount).toFixed(2)}
               </Text>
             </View>
           )}
+
+
+          {/* Platform Fee (if applicable) */}
+          {orderDetails?.handling_charges && (
+            <View style={styles.priceRowBetween}>
+              <Text style={styles.priceLabel}>Platform Fee</Text>
+              <Text style={styles.priceValue}>₹{orderDetails.handling_charges}</Text>
+            </View>
+          )}
+
+          {/* Delivery Charges */}
           <View style={styles.priceRowBetween}>
-            <Text>Platform Fee</Text>
-            <Text>10</Text>
+            <Text style={styles.priceLabel}>Delivery Charges</Text>
+            <Text style={styles.priceValue}>₹{orderDetails.deliveryCharges || 0}</Text>
           </View>
-          <View style={styles.priceRowBetween}>
-            <Text>Shipping Fee</Text>
-            <Text style={{ color: 'green' }}>FREE</Text>
-          </View>
+
+          {/* GST or Restaurant Charges */}
+          {orderDetails.delivery_charges_gst && (
+            <View style={styles.priceRowBetween}>
+              <Text style={styles.priceLabel}>GST & Restaurant Charges</Text>
+              <Text style={styles.priceValue}>₹{orderDetails.delivery_charges_gst}</Text>
+            </View>
+          )}
+
+          {/* Shipping Fee (optional static) */}
+          {/* <View style={styles.priceRowBetween}>
+            <Text style={styles.priceLabel}>Shipping Fee</Text>
+            <Text style={[styles.priceValue, { color: 'green' }]}>FREE</Text>
+          </View> */}
+
+          {/* Total */}
           <View style={[styles.priceRowBetween, { marginTop: responsiveHeight(1) }]}>
-            <Text style={{ fontWeight: 'bold' }}>Total Amount</Text>
-            <Text style={{ fontWeight: 'bold' }}>1839</Text>
+            <Text style={[styles.priceLabel, { fontWeight: 'bold' }]}>Total Amount</Text>
+            <Text style={[styles.priceValue, { fontWeight: 'bold' }]}>
+              ₹{orderDetails?.grandTotal || orderDetails?.totalPrice || 'N/A'}
+            </Text>
           </View>
         </View>
+
 
         {/* Footer Buttons */}
         <View style={styles.footer}>
@@ -325,11 +497,29 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           >
             <Text style={styles.footerBtnTextOutline}>View Track</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.footerBtnFilled}>
-            <Text style={styles.footerBtnTextFilled}>Chat with Us</Text>
+          <TouchableOpacity
+            style={styles.footerBtnFilled}
+            onPress={() => setCancelAlertVisible(true)}
+          >
+            <Text style={styles.footerBtnTextFilled}>Cancel Order</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <CustomModal
+        visible={isCancelAlertVisible}
+        title="Cancel Order"
+        message="Are you sure you want to cancel this order?"
+        confirmText="Yes, Cancel"
+        cancelText="No"
+        showCancel={true}
+        onConfirm={() => {
+          setCancelAlertVisible(false);
+          // TODO: Add your cancel order logic here
+          
+        }}
+        onCancel={() => setCancelAlertVisible(false)}
+      />
 
       {/* Saved Orders Modal/Overlay */}
       {viewSavedOrders && renderSavedOrdersList()}
@@ -348,7 +538,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: responsiveHeight(8),
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: responsiveWidth(4),
@@ -365,8 +555,7 @@ const styles = StyleSheet.create({
     paddingBottom: responsiveHeight(5),
   },
   orderId: {
-    color: '#6A48D2',
-    marginBottom: responsiveHeight(2),
+    color: '#8655d2',
     fontWeight: '500',
   },
   productCard: {
@@ -399,7 +588,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
-    color: '#6A48D2',
+    color: '#8655d2',
     fontSize: responsiveFontSize(2.2),
     fontWeight: 'bold',
     marginRight: responsiveWidth(2),
@@ -444,7 +633,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: responsiveFontSize(2),
     marginBottom: responsiveHeight(1),
-    color: '#6A48D2',
+    color: '#8655d2',
   },
   shippingText: {
     fontSize: responsiveFontSize(1.8),
@@ -465,19 +654,19 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     padding: responsiveHeight(1.2),
-    borderColor: '#6A48D2',
+    borderColor: '#8655d2',
     borderWidth: 1,
     borderRadius: 6,
     alignItems: 'center',
   },
   footerBtnTextOutline: {
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: 'bold',
   },
   footerBtnFilled: {
     flex: 1,
     padding: responsiveHeight(1.2),
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     borderRadius: 6,
     alignItems: 'center',
   },
@@ -569,4 +758,67 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+
+
+  shippingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+
+  shippingRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+    // flexWrap: 'wrap',
+  },
+
+  shippingLabel: {
+    fontWeight: '600',
+    color: '#555',
+    width: 100,
+    minWidth: 50,
+  },
+
+  shippingValue: {
+    color: '#333',
+    flexShrink: 1,
+  },
+  priceRowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+
+  priceLabel: {
+    fontSize: 14,
+    color: '#444',
+  },
+
+  priceValue: {
+    fontSize: 14,
+    color: '#000',
+  },
+  skeletonBox: {
+    width: '60%',
+    height: 16,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonLine: {
+    width: '80%',
+    height: 12,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonImage: {
+    width: 70,
+    height: 70,
+    backgroundColor: '#ccc',
+    borderRadius: 8,
+    marginLeft: 10,
+  }
+
 });

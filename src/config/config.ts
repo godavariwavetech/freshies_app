@@ -1,4 +1,4 @@
-export const baseURL = 'https://api.localdaddy.in/'; 
+export const baseURL = 'https://api.abhi24.in/'; 
 
 export const endpoints = {
   VERIFY_MOBILE:'customers/v1/loginCheck',

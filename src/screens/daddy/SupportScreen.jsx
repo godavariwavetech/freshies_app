@@ -11,7 +11,7 @@ const SupportScreen = ({ navigation }) => {
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:localdaddyweb@gmail.com');
+    Linking.openURL('mailto:abhi24web@gmail.com');
   };
 
   const handleWhatsApp = () => {
@@ -20,8 +20,8 @@ const SupportScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-        <StatusBar style="light" backgroundColor="#6A48D2"/>
-      <LinearGradient colors={['#6A48D2', '#F7F2F2']} style={styles.gradientContainer}>
+        <StatusBar style="light" backgroundColor="#8655d2"/>
+      <LinearGradient colors={['#8655d2', '#8655d2']} style={styles.gradientContainer}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
@@ -35,15 +35,15 @@ const SupportScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Contact Us</Text>
           <View style={styles.contactOptions}>
             <TouchableOpacity style={styles.contactOption} onPress={handleCall}>
-              <MaterialIcons name="phone" size={32} color="#6A48D2" />
+              <MaterialIcons name="phone" size={32} color="#8655d2" />
               <Text style={styles.contactText}>Call Support Team</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.contactOption} onPress={handleEmail}>
-              <MaterialIcons name="email" size={32} color="#6A48D2" />
+              <MaterialIcons name="email" size={32} color="#8655d2" />
               <Text style={styles.contactText}>Send Email</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.contactOption} onPress={handleWhatsApp}>
-              <FontAwesome6 name="whatsapp" size={32} color="#6A48D2" />
+              <FontAwesome6 name="whatsapp" size={32} color="#8655d2" />
               <Text style={styles.contactText}>Chat on WhatsApp</Text>
             </TouchableOpacity>
           </View>
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   gradientContainer: {
-    paddingVertical: responsiveHeight(5),
+    paddingVertical: responsiveHeight(3),
   },
   headerContainer: {
     flexDirection: 'row',

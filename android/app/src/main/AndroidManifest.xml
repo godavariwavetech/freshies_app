@@ -20,7 +20,17 @@ xmlns:tools="http://schemas.android.com/tools"
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
-      android:supportsRtl="true">
+      android:supportsRtl="true"> 
+
+      
+    <!-- ✅ OneSignal Required -->
+    <meta-data
+      android:name="onesignal_app_id"
+      android:value='2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14' />
+    <meta-data
+      android:name="onesignal_google_project_number"
+      android:value="REMOTE" />
+
     <meta-data
       android:name="com.google.android.geo.API_KEY"
       android:value="AIzaSyDaojSAqWjt4t_nxBX_PfQFVRfoi1kqu-Y"/>

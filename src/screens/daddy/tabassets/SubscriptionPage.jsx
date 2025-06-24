@@ -15,37 +15,9 @@ import {
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSubscriptionOrders } from '../../../services/services';
+import { useSelector } from 'react-redux';
 
-// Sample data for subscriptions with initial status
-const initialSubscriptions = [
-  {
-    id: '1',
-    category: 'Mutton',
-    name: 'Mince (Keema)',
-    weight: '500gms',
-    frequency: 'Alternate days',
-    image: require('../../daddy/tabassets/keema.png'),
-    status: 'paused',
-  },
-  {
-    id: '2',
-    category: 'Mutton',
-    name: 'Liver',
-    weight: '500gms',
-    frequency: 'Daily',
-    image: require('../../daddy/tabassets/keema.png'),
-    status: 'paused',
-  },
-  {
-    id: '3',
-    category: 'Mutton',
-    name: 'Boneless',
-    weight: '500gms',
-    frequency: 'Custom',
-    image: require('../../daddy/tabassets/keema.png'),
-    status: 'paused',
-  },
-];
 
 const MySubscriptionScreen = ({ navigation, route }) => {
   const backgroundColor = '#8655d2';
@@ -53,80 +25,63 @@ const MySubscriptionScreen = ({ navigation, route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [actionType, setActionType] = useState('resume');
-  const [isLoading, setIsLoading] = useState(true);
+  const { customerId } = useSelector(state => state.Auth);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-  // Load subscribed products from AsyncStorage
   useEffect(() => {
-    const loadSubscribedProducts = async () => {
-      try {
-        setIsLoading(true);
-        let existingSubscriptions = [];
-        const existingSubscriptionsJson = await AsyncStorage.getItem('subscribedProducts');
-        if (existingSubscriptionsJson) {
-          existingSubscriptions = JSON.parse(existingSubscriptionsJson);
-        }
-
-        let newSubscription = null;
-        const storedProductJson = await AsyncStorage.getItem('subscribedProduct');
-        
-        if (storedProductJson) {
-          const storedProduct = JSON.parse(storedProductJson);
-          
-          newSubscription = {
-            id: storedProduct.id,
-            category: route.params?.getCategories 
-              ? route.params.getCategories(storedProduct.category, storedProduct.status)
-              : storedProduct.category,
-            name: storedProduct.name,
-            weight: storedProduct.defaultWeight,
-            frequency: 'Select Frequency',
-            image: storedProduct.image,
-            status: 'paused',
-            brand: storedProduct.brand,
-            price: storedProduct.price,
-          };
-        } else if (route.params?.productDetails) {
-          const { productDetails, getCategories } = route.params;
-          newSubscription = {
-            id: productDetails.id,
-            category: getCategories(productDetails.category, productDetails.status),
-            name: productDetails.name,
-            weight: productDetails.defaultWeight,
-            frequency: 'Select Frequency',
-            image: productDetails.image,
-            status: 'paused',
-            brand: productDetails.brand,
-            price: productDetails.price,
-          };
-        }
-
-        if (newSubscription) {
-          const isAlreadySubscribed = existingSubscriptions.some(
-            sub => sub.id === newSubscription.id
-          );
-          
-          if (!isAlreadySubscribed) {
-            existingSubscriptions.push(newSubscription);
-            
-            await AsyncStorage.setItem(
-              'subscribedProducts',
-              JSON.stringify(existingSubscriptions)
-            );
-
-            await AsyncStorage.removeItem('subscribedProduct');
-          }
-        }
-
-        setSubscriptions(existingSubscriptions);
-      } catch (error) {
-        console.error('Error loading subscribed products:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSubscribedProducts();
+    loadSubscribedProductsFromAPI();
   }, [route.params]);
+
+  const loadSubscribedProductsFromAPI = async () => {
+    try {
+      setRefreshing(true);
+      const response = await getSubscriptionOrders({ customer_id: customerId });
+
+      if (response?.status === 200 && Array.isArray(response.data)) {
+        // Format data to match your local UI expectations if needed
+        
+        const subscriptions = response.data.map(item => ({
+          id: item.id,
+          name: item.item_name,
+          category: item.sub_category_name,
+          weight: item.quantity_type ?? '', // fallback if null
+          frequency: item.subscription_type,
+          image: item.item_image, // Add image if available in API
+          status: 'active', // Set status if your API returns it
+          brand: '', // Add brand if available
+          price: item.selling_price,
+          orderDate: item.orderdate,
+          startDate: item.startdate,
+        }));
+
+        setSubscriptions(subscriptions);
+      } else {
+        setSubscriptions([]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching subscriptions:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+
+  const handleDeleteSubscription = async (item) => {
+    try {
+      // Call your API or update local list
+      // await dispatch(deleteSubscriptionAPI(item.id)); // example
+
+      // Update local state if needed
+      setSubscriptions(prev => prev.filter(sub => sub.id !== item.id));
+
+      Toast.show({ type: 'success', text1: 'Subscription deleted!' });
+    } catch (error) {
+      Toast.show({ type: 'error', text1: 'Failed to delete subscription.' });
+    } finally {
+      setShowDeleteConfirm(null);
+    }
+  };
 
   // Handle Resume/Pause toggle
   const handleToggleStatus = (item) => {
@@ -153,9 +108,9 @@ const MySubscriptionScreen = ({ navigation, route }) => {
   // Render loading indicator
   const renderLoadingIndicator = () => (
     <View style={styles.loadingContainer}>
-      <ActivityIndicator 
-        size="large" 
-        color={backgroundColor} 
+      <ActivityIndicator
+        size="large"
+        color={backgroundColor}
         style={styles.loadingIndicator}
       />
       <Text style={styles.loadingText}>Loading Subscriptions...</Text>
@@ -166,7 +121,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
   const renderSubscriptionItem = ({ item }) => (
     <View style={styles.cardContainer}>
       {/* Image Section */}
-      <Image source={item.image} style={styles.cardImage} resizeMode="cover" />
+      <Image source={{uri: item.image}} style={styles.cardImage} resizeMode="cover" />
 
       {/* Details Section */}
       <View style={styles.cardDetails}>
@@ -210,16 +165,17 @@ const MySubscriptionScreen = ({ navigation, route }) => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, { borderColor: backgroundColor }]}
-            onPress={() => navigation.navigate('EditSubscribe', { subscription: item })}
+            style={[styles.actionButton, { borderColor: 'red' }]}
+            onPress={() => setShowDeleteConfirm(item)} // handle confirm
           >
-            <Icon name="edit" size={wp('4%')} color={backgroundColor} style={styles.buttonIcon} />
-            <Text style={[styles.buttonText, { color: backgroundColor }]}>Edit</Text>
+            <Icon name="delete" size={wp('4%')} color="red" style={styles.buttonIcon} />
+            <Text style={[styles.buttonText, { color: 'red' }]}>Delete</Text>
           </TouchableOpacity>
         </View>
       </View>
     </View>
-  );
+  ); 
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -231,27 +187,29 @@ const MySubscriptionScreen = ({ navigation, route }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Subscription</Text>
+        <Text style={styles.headerTitle}>My Subscriptions</Text>
         <View style={{ width: wp('6%') }} />
       </View>
 
       {/* Subscription List */}
-      {isLoading ? (
+      {refreshing ? (
         renderLoadingIndicator()
       ) : (
         <FlatList
           data={subscriptions}
           renderItem={renderSubscriptionItem}
+          contentContainerStyle={[styles.listContent, { paddingBottom: 80 }]}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={loadSubscribedProductsFromAPI}
           ListEmptyComponent={() => (
             <View style={styles.emptyStateContainer}>
               <Text style={styles.emptyStateTitle}>No Subscriptions</Text>
               <Text style={styles.emptyStateSubtitle}>
                 You haven't subscribed to any products yet.
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.exploreButton}
                 onPress={() => navigation.goBack()}
               >
@@ -260,6 +218,33 @@ const MySubscriptionScreen = ({ navigation, route }) => {
             </View>
           )}
         />
+      )}
+
+      {showDeleteConfirm && (
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmBox}>
+            <Text style={styles.confirmTitle}>⚠️ Are you sure?</Text>
+            <Text style={styles.confirmMessage}>
+              This will remove the subscription for "{showDeleteConfirm.name}".
+            </Text>
+
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                style={[styles.confirmButton, { backgroundColor: '#ccc' }]}
+                onPress={() => setShowDeleteConfirm(null)}
+              >
+                <Text style={styles.confirmButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.confirmButton, { backgroundColor: 'red' }]}
+                onPress={() => handleDeleteSubscription(showDeleteConfirm)}
+              >
+                <Text style={styles.confirmButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       )}
 
       {/* Modal for Confirmation */}
@@ -305,7 +290,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     paddingVertical: hp('4%'),
     paddingHorizontal: wp('4%'),
     flexDirection: 'row',
@@ -333,11 +318,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 4
   },
   cardImage: {
-    width: wp('22%'),
-    height: wp('22%'),
+    width: wp('24%'),
+    height: wp('29%'),
     borderRadius: 8,
     marginRight: wp('3%'),
     backgroundColor: '#f0f0f0',
@@ -404,7 +389,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#6A48D2',
+    borderColor: '#8655d2',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,7 +402,7 @@ const styles = StyleSheet.create({
     marginRight: wp('1.5%'),
   },
   buttonText: {
-    color: '#6A48D2',
+    color: '#8655d2',
     fontSize: wp('3.5%'),
     fontWeight: '600',
   },
@@ -462,7 +447,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
   },
   okButton: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
   },
   modalButtonText: {
     fontSize: wp('4%'),
@@ -510,6 +495,48 @@ const styles = StyleSheet.create({
   exploreButtonText: {
     color: 'white',
     fontSize: wp('4%'),
+    fontWeight: 'bold',
+  },
+  confirmOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 99
+  },
+  confirmBox: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
+  confirmTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#d32f2f'
+  },
+  confirmMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  confirmButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
 });

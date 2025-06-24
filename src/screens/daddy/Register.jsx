@@ -27,6 +27,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getUserLoginOTP } from '../../services/services';
 // import CustomModal from '../components/CustomModal';
 
+
+
 export default function Register({ navigation, route }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -38,14 +40,18 @@ export default function Register({ navigation, route }) {
   const [sendingOTP, setSendingOTP] = useState(false);
   const dispatch = useDispatch();
   const loading = useSelector(state => state.Auth.loading);
-
+  const [username, setUsername] = useState('');
 
   const showErrorModal = (title, message) => {
     setModalContent({ title, message });
     setModalVisible(true);
   };
 
-  const validatePhoneNumber = () => {
+  const validateForm = () => {
+    if (!username.trim()) {
+      showErrorModal('Validation Error', 'Username is required');
+      return false;
+    }
     if (!phoneNumber) {
       showErrorModal('Validation Error', 'Phone number is required');
       return false;
@@ -56,22 +62,20 @@ export default function Register({ navigation, route }) {
     return true;
   };
 
-  const handleGetOTP = async () => {
-    if (!phoneNumber || phoneNumber.length !== 10) {
-      Alert.alert('Invalid Phone Number', 'Please enter a valid 10-digit phone number');
-      return;
-    }
 
-    if (validatePhoneNumber()) {
-      setSendingOTP(true); // Set loading true
+  const handleGetOTP = async () => {
+    if (validateForm()) {
+      setSendingOTP(true);
       try {
         const response = await getUserLoginOTP(parseInt(phoneNumber, 10));
+        
         if (response.status === 200) {
           navigation.navigate(route.params?.isFromCart ? "OTPVerification1" : "OTPVerification", {
             phoneNumber: phoneNumber,
             otp: response.loginotp,
-            isFromCart: route.params?.isFromCart || null
-          });
+            isFromCart: route.params?.isFromCart || null,
+            username: username.trim()
+          });          
         } else {
           Alert.alert('Error', 'Failed to generate OTP');
         }
@@ -79,11 +83,10 @@ export default function Register({ navigation, route }) {
         Alert.alert('Error', 'Unable to get OTP. Please try again.');
         console.error(error);
       } finally {
-        setSendingOTP(false); // Set loading false
+        setSendingOTP(false);
       }
     }
   };
-
 
   useEffect(() => {
     dispatch(setInitial())
@@ -112,7 +115,7 @@ export default function Register({ navigation, route }) {
           style={{
             width: responsiveWidth(100),
             height: responsiveHeight(30),
-            backgroundColor: '#6A48D2',
+            backgroundColor: '#8655d2',
             justifyContent: "flex-end"
           }}>
         </ImageBackground>
@@ -133,8 +136,18 @@ export default function Register({ navigation, route }) {
               fontSize: 20,
               fontWeight: '500',
             }}>
-            Please enter your phone number to continue
+            Please enter your phone number and Name to continue
           </Text>
+          <View style={{ marginTop: responsiveHeight(3) }}>
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Username"
+              placeholderTextColor={'#3D3D3D'}
+              value={username}
+              onChangeText={(text) => setUsername(text)}
+            />
+          </View>
           <View style={{ marginTop: responsiveHeight(5) }}>
             <Text style={styles.label}>Phone Number</Text>
             <TextInput
@@ -289,13 +302,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#6A48D2',
+    borderColor: '#8655d2',
     backgroundColor: 'transparent',
     marginTop: responsiveHeight(2),
     marginHorizontal: responsiveWidth(1),
   },
   skipText: {
-    color: '#6A48D2',
+    color: '#8655d2',
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,

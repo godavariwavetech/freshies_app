@@ -76,7 +76,7 @@ const AddressListScreen = ({ navigation, route }) => {
         setShowAddressModal(true);
       }
     } catch (error) {
-      console.log("Error checking address:", error);
+      
       setShowAddressModal(true);
     } finally {
       setIsCheckingAddress(false);
@@ -139,7 +139,7 @@ const AddressListScreen = ({ navigation, route }) => {
             <Feather name="edit-2" size={20} color="#525252" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => handleDeletePress(item)}>
-            <Ionicons name="trash-outline" size={20} color="#6A48D2" />
+            <Ionicons name="trash-outline" size={20} color="#8655d2" />
           </TouchableOpacity>
         </View>
       </View>
@@ -152,7 +152,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="location-off" size={80} color="#6A48D2" />
+      <MaterialIcons name="location-off" size={80} color="#8655d2" />
       <Text style={styles.emptyTitle}>No Addresses Found</Text>
       <Text style={styles.emptyText}>You haven't added any delivery addresses yet.</Text>
       <TouchableOpacity style={styles.addAddressButton} onPress={handleAddAddress}>
@@ -169,7 +169,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#6A48D2"/>
+      <StatusBar style="light" backgroundColor="#8655d2"/>
       <View style={{ flex: 1 }}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -180,7 +180,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#6A48D2" />
+            <ActivityIndicator size="large" color="#8655d2" />
             <Text style={styles.loadingText}>Loading addresses...</Text>
           </View>
         ) : (
@@ -212,7 +212,7 @@ const AddressListScreen = ({ navigation, route }) => {
           onCancel={handleCancelDelete}
           confirmText="Delete"
           cancelText="Cancel"
-          confirmButtonColor="#6A48D2"
+          confirmButtonColor="#8655d2"
         />
       </View>
 
@@ -254,7 +254,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
       {isCheckingAddress && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#6A48D2" />
+          <ActivityIndicator size="large" color="#8655d2" />
         </View>
       )}
     </View>
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: responsiveHeight(2),
     fontSize: 16,
-    color: '#6A48D2',
+    color: '#8655d2',
     fontWeight: '500',
   },
   emptyContainer: {
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     marginBottom: responsiveHeight(3),
   },
   addAddressButton: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     paddingVertical: responsiveHeight(1.5),
     paddingHorizontal: responsiveWidth(10),
     borderRadius: 8,
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   header: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     height: responsiveHeight(15),
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     borderRadius: 50,
     padding: 10,
     elevation: 5,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#6A48D2',
+    color: '#8655d2',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   redButton: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
   },
   cancelButtonText: {
     color: '#666',

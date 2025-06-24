@@ -9,9 +9,6 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-
-
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import  AuthSlice from './reducers/auth';
 import userDahboard from './reducers/userDashboard';
@@ -19,9 +16,9 @@ import Dashboard from './reducers/daddy'
 import couponsReducer from './reducers/coupons'; 
 import addressReducer from './reducers/addressSlice';
 import cartReducer from "./reducers/cartReducer"
+import walletReducer from './reducers/walletSlice';
+
 // Import the coupons reducer
-// import { AuthSlice } from './reducers/auth';
-// import Auth from './reducers/auth';
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
@@ -41,13 +38,14 @@ export const store = configureStore({
     Dashboard: persistReducer(dashboardPersistConfig, Dashboard),
     coupons: couponsReducer,
     address: addressReducer,
-    cart: cartReducer, // ✅ <-- Add this line
+    cart: cartReducer,
+    wallet: walletReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
-      // serializableCheck: {
-      //   ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      // },
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
     }),
 });
 

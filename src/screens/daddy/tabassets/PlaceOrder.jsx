@@ -7,13 +7,13 @@ import { useNavigation } from '@react-navigation/native';
 const OrderSuccessScreen = () => {
   const navigation = useNavigation();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.navigate('TrackOrder'); // Replace with your actual screen name
-    }, 2000);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     navigation.navigate('TrackOrder'); // Replace with your actual screen name
+  //   }, 2000);
 
-    return () => clearTimeout(timer); // Cleanup
-  }, [navigation]);
+  //   return () => clearTimeout(timer); // Cleanup
+  // }, [navigation]);
 
   return (
     <View style={styles.container}>

@@ -18,6 +18,7 @@ import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimen
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { setLocation, setLocationId, setLocationName } from '../../redux/reducers/auth';
 import { getServices } from '../../services/services';
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
 
 const { width } = Dimensions.get('window');
 
@@ -34,7 +35,7 @@ const ServicesAvailableScreen = ({ navigation, route }) => {
     setLoading(true)
     const fetchData = async () => {
       const response = await dispatch(getServices());
-      console.log(response.payload.data); // This will contain the payload or error info
+       // This will contain the payload or error info
       setAvailableAreas(response.payload.data)
       setLoading(false)
     };
@@ -68,6 +69,7 @@ const ServicesAvailableScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
+       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -147,12 +149,13 @@ const styles = StyleSheet.create({
     // paddingTop: responsiveHeight(2),
   },
   header: {
-    backgroundColor: "#6A48D2",
+    backgroundColor: "#8655d2",
     height: responsiveHeight(10),
     flexDirection: "row",
     alignItems: "flex-end",
     paddingBottom: responsiveHeight(3),
-    paddingLeft: responsiveWidth(5)
+    paddingLeft: responsiveWidth(5),
+    gap:10
   },
   backButton: {
     width: responsiveWidth(7)

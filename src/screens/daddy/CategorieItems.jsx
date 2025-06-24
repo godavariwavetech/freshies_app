@@ -163,7 +163,7 @@
 //     }
 //   }
 
-//   console.log(activeSubCategory,"++++++++++++++ACTIVESUB CATEGORY")
+//   
 
 //   useFocusEffect(useCallback(()=>{
 //     getFilters()
@@ -756,7 +756,7 @@ export default function CategorieItems({ navigation, route }) {
     }
   };
 
-  console.log(activeSubCategory, '++++++++++++++ACTIVESUB CATEGORY');
+  
 
   useFocusEffect(
     useCallback(() => {

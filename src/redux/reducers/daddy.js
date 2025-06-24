@@ -597,7 +597,7 @@ export const Dashboard = createSlice({
     builder.addCase(getRestaurants.fulfilled, (state, action) => {
       state.loading.restaurants = false;
       state.message = null;
-      console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<",action.payload.data)
+      
       state.restaurants = action.payload.data[0];
       state.itemsFilter = action.payload.data[1];
     });

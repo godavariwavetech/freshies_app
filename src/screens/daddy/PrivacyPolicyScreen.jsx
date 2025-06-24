@@ -1,90 +1,91 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity,StatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons'; // Or 'AntDesign', 'MaterialIcons', etc.
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
 
-const PrivacyPolicyScreen = () => {
-  const navigation = useNavigation();
-
+// Make sure your component receives the 'navigation' prop
+const PrivacyPolicyScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#6A48D2" />
+    <ScrollView style={styles.container}>
+      {/* Custom Header with Back Navigation */}
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <AntDesign name="arrowleft" size={24} color="white" />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()} // Navigates back to the previous screen
+          style={styles.backButton}
+        >
+          <Icon name="arrow-back" size={28} color="white" />
         </TouchableOpacity>
-        <Text style={styles.title}>Privacy Policy</Text>
+        <Text style={styles.headerTitle}>Privacy Policy</Text>
       </View>
-      <ScrollView style={{ padding: 20, paddingBottom: 100 }}>
-        <Text style={styles.effectiveDate}>Effective Date: 4/3/2025</Text>
-        <Text style={styles.content}>
-          Welcome to Local Daddy! Your privacy is important to us. This Privacy Policy explains how Local Daddy ("we," "our," or "us") collects, uses, shares, and protects your information when you use our mobile application and services.
+
+      <View style={styles.content}>
+        <Text style={styles.effectiveDate}>Effective Date: 12/06/2025</Text>
+
+        <Text style={styles.paragraph}>
+          At Abhi24, we value your privacy and are committed to protecting your personal information. This policy outlines how we collect, use, share, and protect your data when you use our delivery services for food, groceries, and other products.
         </Text>
 
-        <Text style={styles.subtitle}>1. Information We Collect</Text>
-        <Text style={styles.subsectionTitle}>a. Information You Provide</Text>
-        <Text style={styles.content}>
-          • Personal details like name, email, phone number, and address{"\n"}
-          • Payment details (handled securely by third-party processors){"\n"}
-          • Communications and support requests
+        {/* Section 1: Information We Collect */}
+        <Text style={styles.sectionTitle}>1. Information We Collect</Text>
+        <Text style={styles.paragraph}>We collect the following types of information:</Text>
+        <View style={styles.bulletPointContainer}>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Personal Information:</Text> When you create an account or make a purchase, we collect details such as your name, contact information, and payment details.</Text>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Order Information:</Text> We collect information about the products you order, delivery address, and payment transactions.</Text>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Location Data:</Text> We may collect location data for order delivery purposes and to improve our services.</Text>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Device Information:</Text> We gather details about the device you use to access our services, including IP address and browser type.</Text>
+        </View>
+
+        {/* Section 2: How We Use Your Information */}
+        <Text style={styles.sectionTitle}>2. How We Use Your Information</Text>
+        <Text style={styles.paragraph}>We use your information for the following purposes:</Text>
+        <View style={styles.bulletPointContainer}>
+          <Text style={styles.bulletPoint}>• To process and deliver your orders efficiently.</Text>
+          <Text style={styles.bulletPoint}>• To personalize your shopping experience and recommend relevant products.</Text>
+          <Text style={styles.bulletPoint}>• To communicate with you about your orders, promotions, and service updates.</Text>
+          <Text style={styles.bulletPoint}>• To improve our services and ensure timely deliveries.</Text>
+        </View>
+
+        {/* Section 3: Sharing Your Information */}
+        <Text style={styles.sectionTitle}>3. Sharing Your Information</Text>
+        <View style={styles.bulletPointContainer}>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>With Service Providers:</Text> We may share your data with third-party providers who assist with payments, delivery, and customer support.</Text>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>For Legal Compliance:</Text> We may disclose your information if required by law or to protect our rights.</Text>
+        </View>
+
+        {/* Section 4: Data Security */}
+        <Text style={styles.sectionTitle}>4. Data Security</Text>
+        <Text style={styles.paragraph}>
+          We implement industry-standard security measures to protect your information, but we cannot guarantee absolute security.
         </Text>
 
-        <Text style={styles.subsectionTitle}>b. Information Collected Automatically</Text>
-        <Text style={styles.content}>
-          • Location data for restaurant options and delivery{"\n"}
-          • Device information (IP address, OS version, usage data){"\n"}
-          • Cookies and similar technologies for analytics
+        {/* Section 5: Your Choices and Rights */}
+        <Text style={styles.sectionTitle}>5. Your Choices and Rights</Text>
+        <View style={styles.bulletPointContainer}>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Access and Correction:</Text> You can access or update your personal information anytime.</Text>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Opt-Out:</Text> You can opt-out of promotional communications at any time.</Text>
+          <Text style={styles.bulletPoint}><Text style={styles.boldText}>Data Deletion:</Text> You may request to delete your account and data, subject to legal requirements.</Text>
+        </View>
+
+        {/* Section 6: Cookies */}
+        <Text style={styles.sectionTitle}>6. Cookies</Text>
+        <Text style={styles.paragraph}>
+          We use cookies to enhance your Browse experience and to remember your preferences.
         </Text>
 
-        <Text style={styles.subtitle}>2. How We Use Your Information</Text>
-        <Text style={styles.content}>
-          • Provide and personalize services{"\n"}
-          • Process orders and payments{"\n"}
-          • Improve user experience and support{"\n"}
-          • Prevent fraud and enhance security{"\n"}
-          • Send promotions (with consent)
+        {/* Section 7: Children's Privacy */}
+        <Text style={styles.sectionTitle}>7. Children's Privacy</Text>
+        <Text style={styles.paragraph}>
+          Our service is not intended for children under 18. We do not knowingly collect information from minors.
         </Text>
 
-        <Text style={styles.subtitle}>3. Sharing Your Information</Text>
-        <Text style={styles.content}>
-          • Partner restaurants and delivery personnel{"\n"}
-          • Payment processors for transactions{"\n"}
-          • Service providers for analytics and security{"\n"}
-          • Authorities when legally required{"\n\n"}
-          <Text style={styles.bold}>We do not sell your personal information.</Text>
+        {/* Section 8: Changes to This Privacy Policy */}
+        <Text style={styles.sectionTitle}>8. Changes to This Privacy Policy</Text>
+        <Text style={styles.paragraph}>
+          We may update this Privacy Policy periodically. Any changes will be posted on this page.
         </Text>
-
-        <Text style={styles.subtitle}>4. Your Choices and Rights</Text>
-        <Text style={styles.content}>
-          • Update account information anytime{"\n"}
-          • Opt-out of marketing communications{"\n"}
-          • Request data access or deletion
-        </Text>
-
-        <Text style={styles.subtitle}>5. Data Security</Text>
-        <Text style={styles.content}>
-          We implement strict security measures, though no method is 100% secure. We recommend users take precautions to protect their information.
-        </Text>
-
-        <Text style={styles.subtitle}>6. Third-Party Links</Text>
-        <Text style={styles.content}>
-          Our app may contain third-party links. We are not responsible for their privacy practices.
-        </Text>
-
-        <Text style={styles.subtitle}>7. Policy Changes</Text>
-        <Text style={styles.content}>
-          We may update this policy periodically. Changes will be communicated through our app or website.
-        </Text>
-
-        <Text style={styles.subtitle}>8. Contact Us</Text>
-        <Text style={[styles.content, { marginBottom: responsiveHeight(10) }]}>
-          For questions about this policy:{"\n"}
-          Email: localdaddyweb@gmail.com{"\n"}
-          Phone: 80747 09926
-        </Text>
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -92,53 +93,69 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 20
   },
   header: {
-    backgroundColor: '#6A48D2',
-    height: responsiveHeight(15),
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingBottom: responsiveHeight(3),
-    paddingLeft: responsiveWidth(5)
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 7,
+    paddingHorizontal: 15,
+    backgroundColor: '#8655d2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    // shadow properties for a subtle lift on iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1.5,
+    // elevation for Android
+    elevation: 3,
   },
   backButton: {
-    width: responsiveWidth(7),
+    marginRight: 15,
+    padding: 5, // Make the touchable area larger
   },
-  title: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-    marginLeft: 10,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    flex: 1, // Allows the title to take up remaining space
+  },
+  content: {
+    padding: 20,
   },
   effectiveDate: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 15,
-    fontStyle: 'italic'
+    marginBottom: 20,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 15,
-    color: '#6A48D2'
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 10,
   },
-  subsectionTitle: {
+  paragraph: {
     fontSize: 16,
-    fontWeight: '600',
-    marginTop: 10,
-    color: '#333'
-  },
-  content: {
-    fontSize: 14,
-    marginTop: 5,
     lineHeight: 24,
-    color: '#666'
+    color: '#555',
+    marginBottom: 10,
   },
-  bold: {
-    fontWeight: '700',
-    color: '#000'
-  }
+  bulletPointContainer: {
+    marginBottom: 10,
+  },
+  bulletPoint: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#555',
+    marginBottom: 5,
+    marginLeft: 10, // Indent bullet points
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
 });
 
 export default PrivacyPolicyScreen;

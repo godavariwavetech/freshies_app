@@ -462,7 +462,7 @@ const ProductsPage = ({ navigation, route }) => {
     PanResponder.create({
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        console.log('PanResponder Grant:', pan.x._value, pan.y._value);
+        
         pan.setOffset({ x: pan.x._value, y: pan.y._value });
         pan.setValue({ x: 0, y: 0 });
       },
@@ -474,7 +474,7 @@ const ProductsPage = ({ navigation, route }) => {
         { useNativeDriver: false }
       ),
       onPanResponderRelease: () => {
-        console.log('PanResponder Release:', pan.x._value, pan.y._value);
+        
         pan.flattenOffset();
       },
     })

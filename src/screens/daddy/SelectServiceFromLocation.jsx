@@ -20,8 +20,9 @@ import Geolocation from '@react-native-community/geolocation';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomModal from '../../components/CustomModal';
-import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux ,setShopAddress} from '../../redux/reducers/auth';
+import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux, setShopAddress } from '../../redux/reducers/auth';
 import { checkAddressExistence } from '../../services/services';
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
 
 const { width, height } = Dimensions.get('window');
 
@@ -50,16 +51,16 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
 
   const { loading } = useSelector(state => state.Dashboard);
   const { location: storedLocation, locationName, locationId } = useSelector(state => state.Auth);
-  console.log(storedLocation)
+  
 
 
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDaojSAqWjt4t_nxBX_PfQFVRfoi1kqu-Y`,
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM`,
       );
       const data = await response.json();
-      console.log("hellog", data)
+      
       if (data.results && data.results.length > 0) {
         const addr = data.results[0].formatted_address;
         const cityComponent = data.results[0].address_components.find(component =>
@@ -174,7 +175,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       };
-      console.log("FirstTime location capture:::", newRegion)
+      
       setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 1000);
       await getAddressFromCoordinates(newRegion.latitude, newRegion.longitude);
@@ -225,7 +226,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
             setSearchResults(data.predictions);
           } else {
             setSearchResults([]);
-            console.log('Google Places API error:', data.status);
+            
           }
         } catch (error) {
           console.error('Search error:', error);
@@ -279,7 +280,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           longitude: parseFloat(region.longitude),
         }),
       );
-      console.log("heroooooooooooooooo", response)
+      
       if (response.payload.data.length > 0) {
         dispatch(
           setLocation({
@@ -306,6 +307,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
@@ -335,7 +337,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         )}
         <View style={styles.markerOverlay}>
           <View style={styles.markerContainer}>
-            <MaterialIcons name="location-on" size={40} color="#6A48D2" />
+            <MaterialIcons name="location-on" size={40} color="#8655d2" />
           </View>
         </View>
         <TouchableOpacity
@@ -347,10 +349,10 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           onPress={getCurrentLocation}
           disabled={isLoadingLocation}>
           {isLoadingLocation ? (
-            <ActivityIndicator color="#6A48D2" size="small" />
+            <ActivityIndicator color="#8655d2" size="small" />
           ) : (
             <>
-              <MaterialIcons name="my-location" size={24} color="#6A48D2" />
+              <MaterialIcons name="my-location" size={24} color="#8655d2" />
               <Text style={styles.currentLocationText}>use current location</Text>
             </>
           )}
@@ -387,7 +389,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
                   key={result.place_id}
                   style={styles.searchResultItem}
                   onPress={() => handlePlaceSelect(result.place_id)}>
-                  <MaterialIcons name="location-on" size={20} color="#6A48D2" />
+                  <MaterialIcons name="location-on" size={20} color="#8655d2" />
                   <View style={styles.searchResultText}>
                     <Text style={styles.searchResultMain}>
                       {result.structured_formatting?.main_text}
@@ -406,7 +408,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       {!isKeyboardVisible && (
         <View style={styles.bottomContainer}>
           <View style={styles.locationInfo}>
-            <MaterialIcons name="location-on" size={24} color="#6A48D2" />
+            <MaterialIcons name="location-on" size={24} color="#8655d2" />
             <View style={styles.locationDetails}>
               <Text style={styles.locationTitle}>{city || 'Select Location'}</Text>
               <Text style={styles.locationSubtitle} numberOfLines={1}>
@@ -449,8 +451,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#6A48D2', // Changed from #065E2C
-    height: responsiveHeight(15),
+    backgroundColor: '#8655d2', // Changed from #065E2C
+    height: responsiveHeight(9),
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingBottom: responsiveHeight(3),
@@ -499,7 +501,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
   },
   currentLocationText: {
-    color: '#6A48D2', // Changed from #065E2C
+    color: '#8655d2', // Changed from #065E2C
     fontSize: 14,
     fontWeight: '500',
   },
@@ -518,7 +520,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#6A48D2', // Changed from #065E2C
+    borderColor: '#8655d2', // Changed from #065E2C
   },
   searchIcon: {
     marginRight: 10,
@@ -591,7 +593,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   confirmButton: {
-    backgroundColor: '#6A48D2', // Changed from #065E2C
+    backgroundColor: '#8655d2', // Changed from #065E2C
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',

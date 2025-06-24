@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "localdaddy.app"
-               BlueprintName = "localdaddy"
-               ReferencedContainer = "container:localdaddy.xcodeproj">
+               BuildableName = "abhi24.app"
+               BlueprintName = "abhi24"
+               ReferencedContainer = "container:abhi24.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "localdaddyTests.xctest"
-               BlueprintName = "localdaddyTests"
-               ReferencedContainer = "container:localdaddy.xcodeproj">
+               BuildableName = "abhi24Tests.xctest"
+               BlueprintName = "abhi24Tests"
+               ReferencedContainer = "container:abhi24.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "localdaddy.app"
-            BlueprintName = "localdaddy"
-            ReferencedContainer = "container:localdaddy.xcodeproj">
+            BuildableName = "abhi24.app"
+            BlueprintName = "abhi24"
+            ReferencedContainer = "container:abhi24.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "localdaddy.app"
-            BlueprintName = "localdaddy"
-            ReferencedContainer = "container:localdaddy.xcodeproj">
+            BuildableName = "abhi24.app"
+            BlueprintName = "abhi24"
+            ReferencedContainer = "container:abhi24.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

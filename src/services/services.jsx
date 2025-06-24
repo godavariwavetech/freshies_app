@@ -24,6 +24,20 @@ export const getSubCategories = async () => {
     console.error('Error fetching subcategories:', error.message);
     throw error; // Let the caller handle the error
   }
+}; 
+
+export const getSubCategoriesById = async (payload) => {
+  try {
+    const response = await api.post('/public_app/getsubtotalcategoriesbyid',payload);
+    if (response.data.status === 200) {
+      return response.data.data; // Return the array of subcategories
+    } else {
+      throw new Error('Unexpected response status: ' + response.data.status);
+    }
+  } catch (error) {
+    console.error('Error fetching subcategories:', error.message);
+    throw error; // Let the caller handle the error
+  }
 };
 
 // API call to fetch banners
@@ -42,21 +56,15 @@ export const getBanners = async () => {
 };
 
 // API call to fetch items by subcategory and category
-export const getItems = async (subcategory_id, category_id) => {
+export const getItems = async (subcategory_id,customerId) => {
   try {
-    console.log('Fetching items with params:', { subcategory_id, category_id });
     
-    if (!subcategory_id || !category_id) {
-      console.warn('Invalid parameters for getItems:', { subcategory_id, category_id });
-      throw new Error('Subcategory ID and Category ID are required');
-    }
-
     const response = await api.post('/public_app/getitems', {
-      subcategory_id: Number(subcategory_id),
-      category_id: Number(category_id),
+      subtotal_category_id: subcategory_id,
+      customer_id : customerId
     });
     
-    console.log('API Response:', response.data);
+    
 
     if (response.data.status === 200) {
       return response.data; // Return the full response
@@ -92,12 +100,13 @@ export const getUserLoginOTP = async (mobileNumber) => {
 };
 
 // Customer Login API call
-export const customerLogin = async (mobileNumber) => {
+export const customerLogin = async (mobileNumber,userName) => {
+  
   try {
     const response = await api.post('/public_app/customerlogin', {
-      customer_mobile_number: mobileNumber
+      customer_mobile_number: mobileNumber,
+      customer_user_name: userName
     });
-    
     return response.data;
   } catch (error) {
     console.error('Error in customer login:', error);
@@ -106,9 +115,12 @@ export const customerLogin = async (mobileNumber) => {
 };
 
 // Get Item Details by unique_id
-export const getItemDetails = async (uniqueId) => {
+export const getItemDetails = async (customerId,uniqueId) => {
+  console.log({customer_id : customerId,
+    unique_id: uniqueId})
   try {
     const response = await api.post('/public_app/getitemdetails', {
+      customer_id : customerId,
       unique_id: uniqueId
     });
     
@@ -195,7 +207,6 @@ export const placeOrder = createAsyncThunk(
 export const applicationCharges = async () => {
   try {
     const response = await api.get('/public_app/getapplicationdata');
-    console.log("0000", response)
     if (response.data.status === 200) {
       return response.data.data; // Return the array of coupons
     } else {
@@ -253,8 +264,8 @@ export const getServices = createAsyncThunk(
 
 export const getPreviousOrders = async (payload) => {
   try {
+    
     const response = await api.post('/public_app/getorderlist',payload);
-    console.log("0000", response)
     if (response.data.status === 200) {
       return response.data.data; // Return the array of coupons
     } else {
@@ -265,3 +276,169 @@ export const getPreviousOrders = async (payload) => {
     throw error;
   }
 };
+
+
+
+export const NestedItems = async (payload) => {
+  try {
+   
+    const response = await api.post('/public_app/getitems', payload);
+
+    if (response.data.status === 200) {
+      return response.data; // Return the full response
+    } else {
+      throw new Error(`Unexpected response status: ${response.data.status}`);
+    }
+  } catch (error) {
+    console.error('Error fetching items:', {
+      message: error.message,
+      subcategory_id,
+      category_id,
+      errorDetails: error
+    });
+    throw error;
+  }
+};
+
+
+export const getOrderItemsByOrderId = async (order_id) => {
+  const payload ={
+    order_id : order_id
+ };
+ 
+  const response = await api.post('/public_app/getorderdetails', payload);
+  return response.data?.data || [];
+};
+
+export const addToWishlist = async (payload) => {
+  
+  return await api.post('/public_app/addwishlist', payload);
+};
+
+export const removeFromWishlist = async (payload) => {
+  
+  return await api.post('/public_app/deletewishlist', payload);
+};
+  
+export const getWishlist = async (customerId) => {
+  try {
+    const response = await api.post(`/public_app/getuserwishlist`, {
+      customer_id: customerId
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
+    throw error;
+  }
+};     
+
+
+
+export const WalletAPI = {
+  getDefaultWalletAmounts: async () => {
+    try {
+      const response = await api.get('/public_app/getdefaultwalletamount');
+      return response.data.data; // return only the data array
+    } catch (error) {
+      console.error('Error fetching wallet amounts:', error);
+      return [];
+    }
+  },
+  insertUserWalletAmount: async ({ user_id, payment_amount }) => {
+    try {
+      const response = await api.post('/public_app/insertuserwalletamountinsub', {
+        user_id,
+        payment_amount,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Insert Wallet Amount Error:', error);
+      throw error;
+    }
+  },
+  updateUserWalletAmount: async ({ id, user_id, payment_id, payment_amount }) => {
+    const response = await api.post('/public_app/updateuserwalletamount', {
+      id,
+      user_id,
+      payment_id,
+      payment_amount,
+    });
+    return response.data;
+  },
+ getWalletAmounts : async (user_id) => {
+  
+    try {
+      const response = await api.post('/public_app/getwalletamounts', { user_id });
+      return response?.data?.data?.[0]; // return the first object directly
+    } catch (error) {
+      
+      console.error('Failed to fetch wallet amounts:', error);
+      return null;
+    }
+  },
+  getRechargeHistory: async (user_id) => {
+    try {
+      const response = await api.post('/public_app/getrechargehistorydetails', { user_id });
+      return response?.data?.data || [];
+    } catch (error) {
+      console.error('Error fetching recharge history:', error);
+      return [];
+    }
+  },
+  getBillingHistory: async (user_id) => {
+    try {
+      const res = await api.post('/public_app/getbillinghistorydetails', { user_id });
+      return res?.data?.data || [];
+    } catch (error) {
+      console.error('Billing history fetch error:', error);
+      return [];
+    }
+  },
+  getAbhi24WalletDetails: async (user_id) => {
+    try {
+      const response = await api.post('/public_app/getabhi24walletdetails', { user_id });
+      return response?.data?.data || [];
+    } catch (error) {
+      console.error('Error fetching Abhi24 wallet details:', error);
+      return [];
+    }
+  }
+};
+
+export const fetchOrderStatus = async (orderId) => {
+  try {
+    const response = await api.post('/public_app/getsingleorderdetails', {
+      order_id : orderId
+   });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching item details:', error);
+    throw error;
+  }
+};
+
+export const placeSubscriptionOrder = async (payload) => {
+  try {
+    const response = await api.post('/public_app/subscriptionorderplaced', payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Subscription order error:', error);
+    throw error;
+  }
+};
+
+
+export const getSubscriptionOrders = async (payload) => {
+  try {
+    const response = await api.post('/public_app/getsubscriptionorders', payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Subscription order error:', error);
+    throw error;
+  }
+ 
+};
+
+
+
+

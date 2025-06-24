@@ -9,7 +9,7 @@ const RefundPolicyScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#6A48D2" />
+      <StatusBar style="light" backgroundColor="#8655d2" />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -52,7 +52,7 @@ const RefundPolicyScreen = () => {
         <Text style={styles.sectionTitle}>5. Contact Us</Text>
         <Text style={[styles.content, { marginBottom: responsiveHeight(10) }]}>
           For refund-related queries:{"\n"}
-          Email: localdaddyweb@gmail.com{"\n"}
+          Email: abhi24web@gmail.com{"\n"}
           Phone: 80747 09926
         </Text>
       </ScrollView>
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    backgroundColor: '#6A48D2',
+    backgroundColor: '#8655d2',
     height: responsiveHeight(15),
     flexDirection: "row",
     alignItems: "flex-end",
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginTop: 15,
-    color: '#6A48D2',
+    color: '#8655d2',
   },
   subsectionTitle: {
     fontWeight: '600',

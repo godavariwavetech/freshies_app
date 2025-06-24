@@ -11,29 +11,35 @@ import {
 import {
   responsiveHeight,
   responsiveWidth,
+  responsiveFontSize
 } from 'react-native-responsive-dimensions';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearCart } from '../../redux/reducers/daddy';
 import { removeCoupon } from '../../redux/reducers/coupons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { clearCart } from '../../redux/reducers/cartReducer';
+
 
 const OrderSuccessScreen = ({ navigation, route }) => {
+  const { orderDetails } = route.params; // ✅ Get the passed data
   const { selectedAddress } = useSelector((state) => state.address);
   const dispatch = useDispatch();
-
-  const handleNavigate = () => {
-    navigation.replace('OrderDetailsScreen');
-  };
+ 
 
   useEffect(() => {
-    setTimeout(() => {
-      handleNavigate();
+    const timer = setTimeout(() => {
+      navigation.replace('TrackOrder', {
+        orderDetails,
+        status: 0
+      });
       dispatch(clearCart());
       dispatch(removeCoupon());
-    }, 500);
+    }, 1500);
+
+    return () => clearTimeout(timer); // Cleanup
   }, []);
 
-  console.log(route?.params, '+++++++++++>>>>>RESPONSE');
+  
 
   const handleBackPress = () => {
     navigation.navigate('OrderDetails', {
@@ -83,11 +89,9 @@ const OrderSuccessScreen = ({ navigation, route }) => {
         </View>
 
         {/* Reinstated the button with the new color */}
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => navigation.navigate('Categories')}
-        >
-          <Text style={styles.buttonText}>Back to Home</Text>
+        <TouchableOpacity style={styles.offerButton}>
+          <Ionicons name="pricetag" size={responsiveFontSize(2)} color="#348338" />
+          <Text style={styles.offerText}> ₹200 saved from this order</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -129,13 +133,11 @@ const styles = StyleSheet.create({
   addressType: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#dc143c',
     marginBottom: responsiveHeight(0.5),
   },
   
   addressText: {
     fontSize: 14,
-    color: '#dc143c',
     textAlign: 'center',
     lineHeight: 20,
     width: responsiveWidth(80),
@@ -153,6 +155,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  offerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#348338',
+    paddingVertical: responsiveHeight(1),
+    paddingHorizontal: responsiveWidth(5),
+    borderRadius: 8,
+    backgroundColor: '#fff5f5',
+  },
+  offerText: {
+    color: '#348338',
+    fontSize: responsiveFontSize(1.8),
   },
 });
 
