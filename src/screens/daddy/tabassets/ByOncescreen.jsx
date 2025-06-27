@@ -41,7 +41,7 @@ const BasketScreen = ({ navigation, route }) => {
   const [showFullAddress, setShowFullAddress] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('COD');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Pay Online');
   const [coupon, setCoupon] = useState(null);
   const [applicationCharges, setApplicationCharges] = useState({
     "id": 1,
@@ -755,7 +755,7 @@ const BasketScreen = ({ navigation, route }) => {
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, styles.totalLabel]}>To Pay</Text>
               <Text style={[styles.summaryValue, styles.totalValue]}>
-                ₹{(calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2) - couponAmount}
+                ₹{(calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()- couponAmount).toFixed(2) }
               </Text>
             </View>
           </View>

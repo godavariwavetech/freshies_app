@@ -194,10 +194,10 @@ export default function GroceriesScreen({ navigation, route }) {
       product.name.toLowerCase().includes(text.toLowerCase())
     );
     setSearchResults(results);
-    navigation.navigate('CategoriesScreen', {
-      searchResults: results,
-      searchQuery: text,
-    });
+    // navigation.navigate('CategoriesScreen', {
+    //   searchResults: results,
+    //   searchQuery: text,
+    // });
   };
 
   const toggleFavorite = async (item) => {

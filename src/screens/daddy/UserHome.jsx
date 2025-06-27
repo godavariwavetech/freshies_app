@@ -91,10 +91,10 @@ function UserHome() {
       product.category_name.toLowerCase().includes(text.toLowerCase())
     );
     setSearchResults(results);
-    navigation.navigate('CategoriesScreen', {
-      searchResults: results,
-      searchQuery: text,
-    });
+    // navigation.navigate('CategoriesScreen', {
+    //   searchResults: results,
+    //   searchQuery: text,
+    // });
   };
 
   const handleSubCategories = async (subcategory) => {
@@ -336,20 +336,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   categoriesGridSmall: {
+    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'flex-start',
     gap: 2,
   },
+
   categoryGridItemSmall: {
-    width: 100,
+    width: '30%', // or adjust based on screen width
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    margin: 5, // Instead of relying on gap
+    margin: 5,
+    marginBottom: 16
   },
   categoryGridItemContent: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
 
   imageWrapper: {

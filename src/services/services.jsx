@@ -463,6 +463,27 @@ export const toggleSubscriptionStatus = async (id, isResume) => {
   }
 };
 
+export const getUserData = async (payload) => {
+  try {
+    const response = await api.post('/public_app/getuserdata', payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Get user data error:', error);
+    throw error;
+  }
+};
+
+export const updateUserProfile = async (payload) => {
+  try {
+    const response = await api.post('/public_app/updateprofiledata', payload);
+    return response.data;
+  } catch (error) {
+    console.log("rees", error)
+    console.error('❌ Update profile error:', error);
+    throw error;
+  }
+};
+
 
 
 

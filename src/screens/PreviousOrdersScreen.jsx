@@ -16,14 +16,14 @@ const PreviousOrdersScreen = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       if (!customerId) return; // Avoid API call if customerId is missing
-
+   
       try {
         const payload = {
           customer_id: customerId,
           order_id: 0
         };
         const result = await getPreviousOrders(payload);
-        
+        console.log("result", payload)
         setOrders(result);
       } catch (err) {
         console.error(err);
