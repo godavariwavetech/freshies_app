@@ -21,4 +21,13 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        google() // Google's Maven repository
+        mavenCentral()
+        // Add OneSignal Maven repository
+        maven { url 'https://maven.onesignal.com/com/onesignal/OneSignal/maven-metadata.xml' }
+    }
+}
+
 apply plugin: "com.facebook.react.rootproject"

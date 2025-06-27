@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { panGestureHandlerCustomNativeProps } from 'react-native-gesture-handler/lib/typescript/handlers/PanGestureHandler';
-import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 // Base URL
 const API_BASE_URL = 'https://testapi.abhi24.in';
@@ -24,11 +24,11 @@ export const getSubCategories = async () => {
     console.error('Error fetching subcategories:', error.message);
     throw error; // Let the caller handle the error
   }
-}; 
+};
 
 export const getSubCategoriesById = async (payload) => {
   try {
-    const response = await api.post('/public_app/getsubtotalcategoriesbyid',payload);
+    const response = await api.post('/public_app/getsubtotalcategoriesbyid', payload);
     if (response.data.status === 200) {
       return response.data.data; // Return the array of subcategories
     } else {
@@ -56,15 +56,15 @@ export const getBanners = async () => {
 };
 
 // API call to fetch items by subcategory and category
-export const getItems = async (subcategory_id,customerId) => {
+export const getItems = async (subcategory_id, customerId) => {
   try {
-    
+
     const response = await api.post('/public_app/getitems', {
       subtotal_category_id: subcategory_id,
-      customer_id : customerId
+      customer_id: customerId
     });
-    
-    
+
+
 
     if (response.data.status === 200) {
       return response.data; // Return the full response
@@ -91,22 +91,19 @@ export const getUserLoginOTP = async (mobileNumber) => {
     const response = await api.post('/public_app/getuserloginotp', {
       customer_mobile_number: mobileNumber
     });
-    
+
     return response.data;
   } catch (error) {
     console.error('Error getting login OTP:', error);
     throw error;
-  } 
+  }
 };
 
 // Customer Login API call
-export const customerLogin = async (mobileNumber,userName) => {
-  
+export const customerLogin = async (payload) => {
+  console.log("payloard", payload)
   try {
-    const response = await api.post('/public_app/customerlogin', {
-      customer_mobile_number: mobileNumber,
-      customer_user_name: userName
-    });
+    const response = await api.post('/public_app/customerlogin', payload);
     return response.data;
   } catch (error) {
     console.error('Error in customer login:', error);
@@ -115,15 +112,17 @@ export const customerLogin = async (mobileNumber,userName) => {
 };
 
 // Get Item Details by unique_id
-export const getItemDetails = async (customerId,uniqueId) => {
-  console.log({customer_id : customerId,
-    unique_id: uniqueId})
+export const getItemDetails = async (customerId, uniqueId) => {
+  console.log({
+    customer_id: customerId,
+    unique_id: uniqueId
+  })
   try {
     const response = await api.post('/public_app/getitemdetails', {
-      customer_id : customerId,
+      customer_id: customerId,
       unique_id: uniqueId
     });
-    
+
     return response.data;
   } catch (error) {
     console.error('Error fetching item details:', error);
@@ -135,7 +134,7 @@ export const getItemDetails = async (customerId,uniqueId) => {
 export const getCoupons = async () => {
   try {
     const response = await api.get('/public_app/getcoupon');
-    
+
     if (response.data.status === 200) {
       return response.data.data; // Return the array of coupons
     } else {
@@ -150,7 +149,7 @@ export const getCoupons = async () => {
 export const recommendItems = async (subcategory_id) => {
   try {
     const response = await api.post('/public_app/getrecommendeditems', {
-      "subcategory_id":subcategory_id,
+      "subcategory_id": subcategory_id,
     });
 
     return response.data;
@@ -164,15 +163,15 @@ export const recommendItems = async (subcategory_id) => {
 
 export const checkAddressExistence = createAsyncThunk(
   "checkAddressExistence",
-  async(
-      {latitude,longitude},
-      {getState, rejectWithValue, fulfillWithValue}
-  ) =>{
-    const data={
+  async (
+    { latitude, longitude },
+    { getState, rejectWithValue, fulfillWithValue }
+  ) => {
+    const data = {
       "latitude": latitude,
       "longitude": longitude
     }
-    const response = await api.post('/public_app/getserviceavailability',data);
+    const response = await api.post('/public_app/getserviceavailability', data);
     if (response) {
       if (response.data) {
         return fulfillWithValue(response.data);
@@ -187,18 +186,18 @@ export const checkAddressExistence = createAsyncThunk(
 
 export const placeOrder = createAsyncThunk(
   "placeOrder",
-  async(
-      {orderDetails},
-      {getState, rejectWithValue, fulfillWithValue}
-  ) =>{
-      const response = await api.post("/public_app/orderplaced",orderDetails)
-      if (response) {
-          if (response.data) {
-            return fulfillWithValue(response.data);
-          } else {
-            return rejectWithValue('Something went wrong!');
-          }
-        }
+  async (
+    { orderDetails },
+    { getState, rejectWithValue, fulfillWithValue }
+  ) => {
+    const response = await api.post("/public_app/orderplaced", orderDetails)
+    if (response) {
+      if (response.data) {
+        return fulfillWithValue(response.data);
+      } else {
+        return rejectWithValue('Something went wrong!');
+      }
+    }
   }
 )
 
@@ -222,50 +221,50 @@ export const applicationCharges = async () => {
 
 export const updateOrderStatus = createAsyncThunk(
   "updateOrderStatus",
-  async(
-      {paymentId,rzpId,orderId,orderStatus},
-      {getState, rejectWithValue, fulfillWithValue}
-  ) =>{
-      const response = await api.post("/public_app/updatepaymentdetails", {
-        "payment_id":paymentId,
-        "razorpay_order_id": rzpId,
-        "id":orderId,
-        "order_status" : orderStatus,
-      })
-      if (response) {
-          if (response.data) {
-            return fulfillWithValue(response.data);
-          } else {
-            return rejectWithValue('Something went wrong!');
-          }
-        }
+  async (
+    { paymentId, rzpId, orderId, orderStatus },
+    { getState, rejectWithValue, fulfillWithValue }
+  ) => {
+    const response = await api.post("/public_app/updatepaymentdetails", {
+      "payment_id": paymentId,
+      "razorpay_order_id": rzpId,
+      "id": orderId,
+      "order_status": orderStatus,
+    })
+    if (response) {
+      if (response.data) {
+        return fulfillWithValue(response.data);
+      } else {
+        return rejectWithValue('Something went wrong!');
+      }
+    }
   }
 )
 
 
 export const getServices = createAsyncThunk(
   "getServices",
-  async(
-      _,
-      {getState, rejectWithValue, fulfillWithValue}
-  ) =>{
-      const response = await api.get("/public_app/getavailablelocations");
-      if (response) {
-          if (response.data) {
-            return fulfillWithValue(response.data);
-          } else {
-            return rejectWithValue('Something went wrong!');
-          }
-        }
+  async (
+    _,
+    { getState, rejectWithValue, fulfillWithValue }
+  ) => {
+    const response = await api.get("/public_app/getavailablelocations");
+    if (response) {
+      if (response.data) {
+        return fulfillWithValue(response.data);
+      } else {
+        return rejectWithValue('Something went wrong!');
+      }
+    }
   }
-)  
+)
 
 
 
 export const getPreviousOrders = async (payload) => {
   try {
-    
-    const response = await api.post('/public_app/getorderlist',payload);
+
+    const response = await api.post('/public_app/getorderlist', payload);
     if (response.data.status === 200) {
       return response.data.data; // Return the array of coupons
     } else {
@@ -281,7 +280,7 @@ export const getPreviousOrders = async (payload) => {
 
 export const NestedItems = async (payload) => {
   try {
-   
+
     const response = await api.post('/public_app/getitems', payload);
 
     if (response.data.status === 200) {
@@ -302,24 +301,24 @@ export const NestedItems = async (payload) => {
 
 
 export const getOrderItemsByOrderId = async (order_id) => {
-  const payload ={
-    order_id : order_id
- };
- 
+  const payload = {
+    order_id: order_id
+  };
+
   const response = await api.post('/public_app/getorderdetails', payload);
   return response.data?.data || [];
 };
 
 export const addToWishlist = async (payload) => {
-  
+
   return await api.post('/public_app/addwishlist', payload);
 };
 
 export const removeFromWishlist = async (payload) => {
-  
+
   return await api.post('/public_app/deletewishlist', payload);
 };
-  
+
 export const getWishlist = async (customerId) => {
   try {
     const response = await api.post(`/public_app/getuserwishlist`, {
@@ -330,7 +329,7 @@ export const getWishlist = async (customerId) => {
     console.error('Error fetching wishlist:', error);
     throw error;
   }
-};     
+};
 
 
 
@@ -365,13 +364,14 @@ export const WalletAPI = {
     });
     return response.data;
   },
- getWalletAmounts : async (user_id) => {
-  
+  getWalletAmounts: async (user_id) => {
+    console.log(user_id)
     try {
       const response = await api.post('/public_app/getwalletamounts', { user_id });
+      console.log("--", response)
       return response?.data?.data?.[0]; // return the first object directly
     } catch (error) {
-      
+
       console.error('Failed to fetch wallet amounts:', error);
       return null;
     }
@@ -408,8 +408,8 @@ export const WalletAPI = {
 export const fetchOrderStatus = async (orderId) => {
   try {
     const response = await api.post('/public_app/getsingleorderdetails', {
-      order_id : orderId
-   });
+      order_id: orderId
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching item details:', error);
@@ -436,8 +436,33 @@ export const getSubscriptionOrders = async (payload) => {
     console.error('❌ Subscription order error:', error);
     throw error;
   }
- 
+
 };
+
+export const deleteSubscriptionOrder = async (id) => {
+  try {
+    const response = await api.post('/public_app/deletesubscriptionorder', { id });
+    return response.data;
+  } catch (error) {
+    console.error('❌ Subscription order deletion:', error);
+    throw error;
+  }
+};
+
+export const toggleSubscriptionStatus = async (id, isResume) => {
+  const payload = {
+    id,
+    subscription_status: isResume ? 0 : 1, // 0: resume, 1: pause
+  };
+  try {
+    const response = await api.post('/public_app/resumesubscriptionorder', payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Subscription order resume:', error);
+    throw error;
+  }
+};
+
 
 
 

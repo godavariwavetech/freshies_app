@@ -2,6 +2,7 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply plugin: 'com.onesignal.androidsdk.onesignal-gradle-plugin'
+apply plugin: 'com.google.gms.google-services'
 
 
 /**
@@ -86,6 +87,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.1"
+        manifestPlaceholders = [
+        onesignal_app_id: "2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14", // 🔁 Replace this
+        onesignal_google_project_number: "REMOTE"
+    ]
     }
     signingConfigs {
         debug {
@@ -126,6 +131,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+     implementation 'com.google.android.gms:play-services-maps:18.1.0'
+     implementation 'com.google.android.gms:play-services-base:18.1.0'
 
     // implementation platform('com.google.firebase:firebase-bom:32.3.1')
     implementation project(':react-native-linear-gradient')
@@ -133,5 +140,5 @@ dependencies {
 }
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
-apply plugin: 'com.google.gms.google-services'
+
 

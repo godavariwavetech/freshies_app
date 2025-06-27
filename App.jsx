@@ -13,7 +13,7 @@ import { setIsNetworkConnected } from './src/redux/reducers/addressSlice';
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import RootNavigation from './src/navigation/AppNavigation';
-import {OneSignal} from 'react-native-onesignal';
+import {OneSignal, LogLevel} from 'react-native-onesignal'; // Import OneSignal
 
 // OneSignal App ID
 const ONESIGNAL_APP_ID = '2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14'; // 🔁 Replace this with your real App ID
@@ -74,30 +74,37 @@ const App = () => {
   useEffect(() => {
     SplashScreen.hide();
     checkForUpdate();
-    setupOneSignal();
     checkAndRequestPermissions();
   }, []);
 
-  const setupOneSignal = async () => {
-    OneSignal.Debug.setLogLevel(6);
+  useEffect(() => {
+    console.log("hello", OneSignal);
+    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+
+    // OneSignal Initialization
     OneSignal.initialize(ONESIGNAL_APP_ID);
-    
-    await OneSignal.Notifications.requestPermission(true);
-  
-    OneSignal.User.pushSubscription.addObserver((event) => {
-      
+
+    // **Delay the permission request**
+    setTimeout(() => {
+      OneSignal.Notifications.requestPermission(true);
+    }, 500); // Delay by 500 milliseconds (adjust if needed)
+
+
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+      console.log('OneSignal: notification will display in foreground:', event);
+      event.complete(event.notification);
     });
-  
-    const deviceState = await OneSignal.User.pushSubscription.getPushSubscription();
-    if (deviceState?.id) {
-      
-    } else {
-      
-    }
-  };
-  
-  
-  const checkAndRequestPermissions = async () => {
+
+    OneSignal.Notifications.addEventListener('opened', (event) => {
+      console.log('OneSignal: notification opened:', event);
+    });
+
+    OneSignal.User.addEmail('your_user_email@example.com');
+    OneSignal.User.addTag('user_type', 'premium');
+
+  }, []);
+
+   const checkAndRequestPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.request(

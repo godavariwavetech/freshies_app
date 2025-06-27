@@ -48,10 +48,10 @@ export default function Register({ navigation, route }) {
   };
 
   const validateForm = () => {
-    if (!username.trim()) {
-      showErrorModal('Validation Error', 'Username is required');
-      return false;
-    }
+    // if (!username.trim()) {
+    //   showErrorModal('Validation Error', 'Username is required');
+    //   return false;
+    // }
     if (!phoneNumber) {
       showErrorModal('Validation Error', 'Phone number is required');
       return false;
@@ -68,13 +68,15 @@ export default function Register({ navigation, route }) {
       setSendingOTP(true);
       try {
         const response = await getUserLoginOTP(parseInt(phoneNumber, 10));
-        
+        console.log(response)
         if (response.status === 200) {
-          navigation.navigate(route.params?.isFromCart ? "OTPVerification1" : "OTPVerification", {
+          navigation.navigate("OTPVerification", {
             phoneNumber: phoneNumber,
             otp: response.loginotp,
             isFromCart: route.params?.isFromCart || null,
-            username: username.trim()
+            user_ind : response.user_ind,
+            message: response.message
+            // username: username.trim()
           });          
         } else {
           Alert.alert('Error', 'Failed to generate OTP');
@@ -136,9 +138,9 @@ export default function Register({ navigation, route }) {
               fontSize: 20,
               fontWeight: '500',
             }}>
-            Please enter your phone number and Name to continue
+            Please enter your phone number to continue
           </Text>
-          <View style={{ marginTop: responsiveHeight(3) }}>
+          {/* <View style={{ marginTop: responsiveHeight(3) }}>
             <Text style={styles.label}>Username</Text>
             <TextInput
               style={styles.input}
@@ -147,7 +149,7 @@ export default function Register({ navigation, route }) {
               value={username}
               onChangeText={(text) => setUsername(text)}
             />
-          </View>
+          </View> */}
           <View style={{ marginTop: responsiveHeight(5) }}>
             <Text style={styles.label}>Phone Number</Text>
             <TextInput

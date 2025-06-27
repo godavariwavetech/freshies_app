@@ -15,8 +15,9 @@ import {
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getSubscriptionOrders } from '../../../services/services';
+import { deleteSubscriptionOrder, getSubscriptionOrders, toggleSubscriptionStatus } from '../../../services/services';
 import { useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
 
 
 const MySubscriptionScreen = ({ navigation, route }) => {
@@ -37,10 +38,10 @@ const MySubscriptionScreen = ({ navigation, route }) => {
     try {
       setRefreshing(true);
       const response = await getSubscriptionOrders({ customer_id: customerId });
-
+      console.log(response)
       if (response?.status === 200 && Array.isArray(response.data)) {
         // Format data to match your local UI expectations if needed
-        
+
         const subscriptions = response.data.map(item => ({
           id: item.id,
           name: item.item_name,
@@ -69,14 +70,16 @@ const MySubscriptionScreen = ({ navigation, route }) => {
 
   const handleDeleteSubscription = async (item) => {
     try {
-      // Call your API or update local list
-      // await dispatch(deleteSubscriptionAPI(item.id)); // example
-
-      // Update local state if needed
-      setSubscriptions(prev => prev.filter(sub => sub.id !== item.id));
-
-      Toast.show({ type: 'success', text1: 'Subscription deleted!' });
+      const res = await deleteSubscriptionOrder(item.id);
+      console.log("reson", res)
+      if (res.status === 200 && res.data.affectedRows > 0) {
+        setSubscriptions(prev => prev.filter(sub => sub.id !== item.id));
+        Toast.show({ type: 'success', text1: 'Subscription deleted!' });
+      } else {
+        Toast.show({ type: 'error', text1: 'Delete failed. Item might not exist.' });
+      }
     } catch (error) {
+      console.error('API delete error:', error);
       Toast.show({ type: 'error', text1: 'Failed to delete subscription.' });
     } finally {
       setShowDeleteConfirm(null);
@@ -92,17 +95,37 @@ const MySubscriptionScreen = ({ navigation, route }) => {
 
   // Confirm Resume/Pause action
   const confirmAction = async () => {
-    const updatedSubscriptions = subscriptions.map((sub) =>
-      sub.id === selectedSubscription.id
-        ? { ...sub, status: actionType === 'resume' ? 'resumed' : 'paused' }
-        : sub
-    );
-
-    setSubscriptions(updatedSubscriptions);
-    await AsyncStorage.setItem('subscribedProducts', JSON.stringify(updatedSubscriptions));
-
-    setModalVisible(false);
-    setSelectedSubscription(null);
+    try {
+      const isResume = actionType === 'resume';
+      const res = await toggleSubscriptionStatus(selectedSubscription.id, isResume);
+      console.log("res", res)
+      if (res.status === 200 || res.status === 202) {
+        const updatedStatus = isResume ? 'resumed' : 'paused';
+        // Update state
+        const updatedSubscriptions = subscriptions.map((sub) =>
+          sub.id === selectedSubscription.id ? { ...sub, status: updatedStatus } : sub
+        );
+        setSubscriptions(updatedSubscriptions);
+        Toast.show({
+          type: 'success',
+          text1: isResume ? 'Subscription resumed!' : 'Subscription paused!',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Action failed. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error('Toggle subscription error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'An error occurred.',
+      });
+    } finally {
+      setModalVisible(false);
+      setSelectedSubscription(null);
+    }
   };
 
   // Render loading indicator
@@ -119,63 +142,69 @@ const MySubscriptionScreen = ({ navigation, route }) => {
 
   // Render each subscription card
   const renderSubscriptionItem = ({ item }) => (
-    <View style={styles.cardContainer}>
-      {/* Image Section */}
-      <Image source={{uri: item.image}} style={styles.cardImage} resizeMode="cover" />
+    <TouchableOpacity onPress={() => navigation.navigate('SubscriptionDetails', { item })}>
+      <View style={styles.cardContainer}>
+        {/* Image Section */}
+        <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
 
-      {/* Details Section */}
-      <View style={styles.cardDetails}>
-        {/* Category and Frequency Row */}
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardCategory}>{item.category}</Text>
-          <View style={styles.frequencyWrapper}>
-            <View style={styles.frequencyDot} />
-            <Text style={styles.frequencyText}>{item.frequency}</Text>
+        {/* Details Section */}
+        <View style={styles.cardDetails}>
+          {/* Category and Frequency Row */}
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardCategory}>{item.category}</Text>
+            <View style={styles.frequencyWrapper}>
+              <View style={styles.frequencyDot} />
+              <Text style={styles.frequencyText}>{item.frequency}</Text>
+            </View>
+          </View>
+
+          {/* Name and Weight */}
+          <Text style={styles.cardName} numberOfLines={1} ellipsizeMode="tail">
+            {item.name}
+          </Text>
+          {/* <Text style={styles.cardWeight}>{item.weight}</Text> */}
+          <Text>
+            <Text style={styles.cardWeight}>Start Date: </Text>
+            <Text style={{ fontSize: 14, color: '#333' }}>{item.startDate}</Text>
+          </Text>
+
+          {item.brand && (
+            <Text style={styles.cardBrand} numberOfLines={1} ellipsizeMode="tail">
+              {item.brand}
+            </Text>
+          )}
+          {item.price && (
+            <Text style={styles.cardPrice}>₹{item.price.toFixed(2)}</Text>
+          )}
+
+          {/* Buttons */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={[styles.actionButton, { borderColor: backgroundColor }]}
+              onPress={() => handleToggleStatus(item)}
+            >
+              <Icon
+                name={item.status === 'paused' ? 'play-arrow' : 'pause'}
+                size={wp('4%')}
+                color={backgroundColor}
+                style={styles.buttonIcon}
+              />
+              <Text style={[styles.buttonText, { color: backgroundColor }]}>
+                {item.status === 'paused' ? 'Resume' : 'Pause'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, { borderColor: 'red' }]}
+              onPress={() => setShowDeleteConfirm(item)} // handle confirm
+            >
+              <Icon name="delete" size={wp('4%')} color="red" style={styles.buttonIcon} />
+              <Text style={[styles.buttonText, { color: 'red' }]}>Delete</Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* Name and Weight */}
-        <Text style={styles.cardName} numberOfLines={1} ellipsizeMode="tail">
-          {item.name}
-        </Text>
-        <Text style={styles.cardWeight}>{item.weight}</Text>
-        {item.brand && (
-          <Text style={styles.cardBrand} numberOfLines={1} ellipsizeMode="tail">
-            {item.brand}
-          </Text>
-        )}
-        {item.price && (
-          <Text style={styles.cardPrice}>₹{item.price.toFixed(2)}</Text>
-        )}
-
-        {/* Buttons */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.actionButton, { borderColor: backgroundColor }]}
-            onPress={() => handleToggleStatus(item)}
-          >
-            <Icon
-              name={item.status === 'paused' ? 'play-arrow' : 'pause'}
-              size={wp('4%')}
-              color={backgroundColor}
-              style={styles.buttonIcon}
-            />
-            <Text style={[styles.buttonText, { color: backgroundColor }]}>
-              {item.status === 'paused' ? 'Resume' : 'Pause'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, { borderColor: 'red' }]}
-            onPress={() => setShowDeleteConfirm(item)} // handle confirm
-          >
-            <Icon name="delete" size={wp('4%')} color="red" style={styles.buttonIcon} />
-            <Text style={[styles.buttonText, { color: 'red' }]}>Delete</Text>
-          </TouchableOpacity>
-        </View>
       </View>
-    </View>
-  ); 
-
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -380,6 +409,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222',
     marginBottom: hp('0.5%'),
+    marginTop: 4
   },
   buttonRow: {
     flexDirection: 'row',

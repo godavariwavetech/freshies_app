@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Animated, Easing
 } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import AuthBackground from './tabassets/AuthBackground';
@@ -23,15 +24,20 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 // import GoogleIcon from '../user/svgs/GoogleIcon';
 import { useDispatch } from 'react-redux';
-import { actionLogin, addCustomer, setMobile,setUserName, verifyCustomerMobile, verifyCustomerOTP } from '../../redux/reducers/auth';
+import { actionLogin, addCustomer, setCustormarId, setMobile, setReferalCode, setUserName, verifyCustomerMobile, verifyCustomerOTP } from '../../redux/reducers/auth';
 import Geolocation from '@react-native-community/geolocation';
 import { checkAddressExistence } from '../../redux/reducers/daddy';
 import { customerLogin } from '../../services/services';
 
 
 
+
 export default function OTPVerification({ navigation, route }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  console.log(route.params?.user_ind, route.params)
+  const modalOpacity = useRef(new Animated.Value(0)).current;
+  const modalScale = useRef(new Animated.Value(0.95)).current;
+
   const dispatch = useDispatch();
   const [otp, setOtp] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(60);
@@ -40,6 +46,30 @@ export default function OTPVerification({ navigation, route }) {
   const [loader, setLoader] = useState(false);
   const [location, setLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [showNewUserModal, setShowNewUserModal] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    if (showNewUserModal) {
+      Animated.parallel([
+        Animated.timing(modalOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }),
+        Animated.spring(modalScale, {
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      modalOpacity.setValue(0);
+      modalScale.setValue(0.95);
+    }
+  }, [showNewUserModal]);
 
   useEffect(() => {
     const countdown = setInterval(() => {
@@ -59,34 +89,44 @@ export default function OTPVerification({ navigation, route }) {
       setError('Please enter all 4 digits of the OTP');
       return;
     }
-  
     const enteredOtp = otp.join('');
     setLoader(true);
-   console.log(route.params?.otp.toString() , enteredOtp , route.params.otp.toString())
+    console.log(enteredOtp, route.params.otp.toString());
     try {
-      // Real API verification
-      if (route.params?.otp.toString() && enteredOtp === route.params.otp.toString()) {
-        const loginResponse = await customerLogin(parseInt(route.params?.phoneNumber, 10),route.params?.username);
-        console.log("loginRespone", loginResponse)
-        if (loginResponse.status === 200) {
-          dispatch(addCustomer({
-            mobileNumber: route.params?.phoneNumber,
-            otp: enteredOtp,
-            customerId: loginResponse.data.customer_id
-          }));
-          dispatch(setUserName(route.params?.username));
-          if (route.params?.isFromCart) {
-            navigation.replace("CartScreen");
+      if (enteredOtp === route.params.otp.toString()) {
+        if (route.params?.user_ind === 1) {
+          // ✅ Existing user 
+          const loginResponse = await customerLogin({
+            customer_mobile_number: parseInt(route.params?.phoneNumber, 10),
+            customer_user_name: newUsername,
+            player_id: route.params?.playerId || '',
+            location_id: route.params?.locationId || 1,
+            user_ind: 1,
+            referral_code: referralCode.trim() || '',
+          });
+    
+          if (loginResponse.status === 200) {
+            console.log("loginresponse", loginResponse)
+            dispatch(setCustormarId(loginResponse.data.customer_id))
+            dispatch(setUserName(loginResponse.data.customer_name));
+            dispatch(setMobile(route.params?.phoneNumber));
+            dispatch(setReferalCode(loginResponse.data.referral_code))
+            setShowNewUserModal(false);
+            route.params?.isFromCart
+              ? navigation.replace("CartScreen")
+              : dispatch(actionLogin());
           } else {
-            dispatch(actionLogin());
+            setFormError(loginResponse.msg || 'Login failed. Please try again.');
           }
+          setLoader(false);
         } else {
-          setError('Invalid OTP. Please try again.');
+          // 🆕 New user - show modal
+          setShowNewUserModal(true);
           setLoader(false);
         }
-      }else{
-         setError('Invalid OTP. Please try again.');
-          setLoader(false);
+      } else {
+        setError('Invalid OTP. Please try again.');
+        setLoader(false);
       }
     } catch (error) {
       setError('An error occurred. Please try again.');
@@ -94,7 +134,6 @@ export default function OTPVerification({ navigation, route }) {
       console.error(error);
     }
   };
-  
 
   const handleOTPChange = (value, index) => {
     let newOtp = [...otp];
@@ -106,7 +145,6 @@ export default function OTPVerification({ navigation, route }) {
     if (value && index < otp.length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
-
     // If the input is empty, move back to the previous field
     if (!value && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -124,6 +162,50 @@ export default function OTPVerification({ navigation, route }) {
     setOtp(['', '', '', '']);
     dispatch(verifyCustomerMobile({ customer_mobile_number: route.params?.phoneNumber }));
   };
+
+  const handleNewUserSubmit = async () => {
+    if (!newUsername.trim()) {
+      setFormError("Username is required");
+      return;
+    }
+    setFormError('');
+    setLoader(true);
+    try {
+      const loginResponse = await customerLogin({
+        customer_mobile_number: parseInt(route.params?.phoneNumber, 10),
+        customer_user_name: newUsername,
+        player_id: route.params?.playerId || '',
+        location_id: route.params?.locationId || 1,
+        user_ind: 0,
+        referral_code: referralCode.trim() || '',
+      });
+
+      if (loginResponse.status === 200) {
+        dispatch(setCustormarId(loginResponse.data.customer_id))
+        dispatch(setUserName(newUsername));
+        dispatch(setMobile(route.params?.phoneNumber));
+        dispatch(setReferalCode(loginResponse.data.referral_code))
+        setShowNewUserModal(false);
+        route.params?.isFromCart
+          ? navigation.replace("CartScreen")
+          : dispatch(actionLogin());
+      } else if (loginResponse.status === 202 && loginResponse.msg === "Invalid referral code") {
+        // 🛑 Handle referral code error
+        setFormError("Referral code is invalid. Please check and try again.");
+      } else {
+        setFormError(loginResponse.msg || 'Login failed. Please try again.');
+      }
+
+    } catch (err) {
+      setFormError('Something went wrong. Try again later.');
+      console.error(err);
+    } finally {
+      setLoader(false);
+    }
+  };
+
+
+
 
   return (
     <Pressable onPress={() => Keyboard.dismiss()} style={{ flex: 1 }}>
@@ -198,6 +280,86 @@ export default function OTPVerification({ navigation, route }) {
 
         </View>
       </View>
+      {showNewUserModal && (
+        <View style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "#8655d2", // Semi-transparent ABHI24 purple
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 999,
+          paddingHorizontal: 20,
+        }}>
+          <Animated.View style={{
+            width: '100%',
+            backgroundColor: 'white',
+            borderRadius: 20,
+            padding: 24,
+            alignItems: 'center',
+            opacity: modalOpacity,
+            transform: [{ scale: modalScale }],
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 6,
+          }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 12 }}>
+              Complete Your Signup
+            </Text>
+
+            <Text style={{ fontSize: 14, color: '#555', marginBottom: 20, textAlign: 'center' }}>
+              Please provide your username to continue. Referral code is optional.
+            </Text>
+
+            <TextInput
+              placeholder="Enter Username"
+              value={newUsername}
+              onChangeText={setNewUsername}
+              style={{
+                width: '100%',
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 12,
+              }}
+            />
+
+            <TextInput
+              placeholder="Referral Code (Optional)"
+              value={referralCode}
+              onChangeText={setReferralCode}
+              style={{
+                width: '100%',
+                borderWidth: 1,
+                borderColor: formError.includes("Referral") ? 'red' : '#ccc',
+                borderRadius: 8,
+                padding: 12,
+                marginBottom: 16,
+              }}
+            />
+
+            {formError ? (
+              <Text style={{ color: 'red', marginBottom: 10 }}>{formError}</Text>
+            ) : null}
+
+            <TouchableOpacity
+              onPress={handleNewUserSubmit}
+              style={{
+                backgroundColor: "#8655d2",
+                width: '100%',
+                paddingVertical: 14,
+                borderRadius: 8,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Submit</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      )}
+
     </Pressable>
   );
 }

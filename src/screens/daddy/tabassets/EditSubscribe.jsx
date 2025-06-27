@@ -23,9 +23,9 @@ import Toast from 'react-native-toast-message';
 
 const EditSubscriptionScreen = ({ navigation, route }) => {
   const { productDetails } = route.params;
-  
+  const today = dayjs().format('YYYY-MM-DD');
   const [scheduleType, setScheduleType] = useState('Custom');
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(dayjs().add(1, 'day').toDate());
   const [quantity, setQuantity] = useState(1);
   const [markedDates, setMarkedDates] = useState({});
   const [refreshing, setRefreshing] = useState(false);
@@ -35,6 +35,10 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
   const dispatch = useDispatch();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(dayjs().add(1, 'day').format('YYYY-MM-DD'));
+  const [calendarKey, setCalendarKey] = useState(0);
+
 
   useEffect(() => {
     if (startDate) {
@@ -44,15 +48,8 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
 
   const updateMarkedDates = (type, startDate) => {
     const newMarks = {};
-
-    const start = dayjs(startDate); // ✅ instead of moment()
-    const today = start;
-
-    newMarks[start.format('YYYY-MM-DD')] = {
-      selected: true,
-      selectedColor: backgroundColor,
-      startingDay: true,
-    };
+    const start = dayjs(startDate);
+    let firstSelectedDate = null;
 
     if (type === 'Weekly') {
       for (let i = 1; i <= 4; i++) {
@@ -61,32 +58,45 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           selected: true,
           selectedColor: backgroundColor,
         };
+        if (!firstSelectedDate) firstSelectedDate = date;
       }
     } else if (type === 'Alternate Days') {
-      for (let i = 2; i <= 8; i += 2) {
+      for (let i = 1; i <= 13; i += 2) {
         const date = start.add(i, 'day').format('YYYY-MM-DD');
         newMarks[date] = {
           selected: true,
           selectedColor: backgroundColor,
         };
+        if (!firstSelectedDate) firstSelectedDate = date;
       }
     }
+
     setMarkedDates(newMarks);
+
+    if (firstSelectedDate) {
+      setCurrentMonth(firstSelectedDate); // Scroll to first marked date
+      setCalendarKey(prev => prev + 1);   // Force re-render to apply
+    }
   };
+
 
   const onRefresh = async () => {
     setRefreshing(true);
 
-    // ✅ Refresh logic — re-fetch data or reset values here
-    // Example: reset marked dates (optional)
-    updateMarkedDates(scheduleType, startDate);
-
-    // Add any data refetching logic if needed...
+    const today = dayjs().add(1, 'day').toDate();
+    setStartDate(today);
+    setCurrentMonth(dayjs(today).format('YYYY-MM-DD')); // update month
+    setCalendarKey(prev => prev + 1); // 🔁 force Calendar to remount
+    setScheduleType('Custom');
+    setQuantity(1);
+    setMarkedDates({});
 
     setTimeout(() => {
-      setRefreshing(false); // simulate async refresh complete
-    }, 1000); // or await real API call
+      setRefreshing(false);
+    }, 1000);
   };
+
+
 
   const handleSubscribe = async () => {
     if (!storedLocation || !storedLocation.latitude || !storedLocation.longitude) {
@@ -103,7 +113,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           longitude: parseFloat(storedLocation.longitude),
         })
       );
-      
+
       if (response?.payload?.data?.length > 0) {
         // ✅ Location is serviceable
         const locationData = response.payload.data[0];
@@ -123,7 +133,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         } else {
           // Proceed to place order
 
-          placeSubscriptionOrderHandler();
+          setShowConfirmationModal(true);
         }
 
       } else {
@@ -163,14 +173,14 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         subscription_type: scheduleType,
         selecteddates: Object.keys(markedDates),
       };
-      
+
       const res = await placeSubscriptionOrder(payload);
-      
+      // console.log("payload", payload)
       if (res.status === 200) {
         setShowSuccessModal(true); // Show success modal
         setTimeout(() => {
           setShowSuccessModal(false); // Hide modal before navigating
-          navigation.navigate('BottomNavigation');
+          navigation.navigate('SubscriptionPage');
         }, 2000);
       } else {
         Toast.show({
@@ -179,7 +189,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         });
       }
     } catch (error) {
-      
+
       Toast.show({
         type: 'error',
         text1: 'Something went wrong!',
@@ -187,7 +197,6 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
       });
     }
   };
-
 
   // Define the background color
   const backgroundColor = '#8655d2';
@@ -214,16 +223,19 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
             style={styles.productImage}
             resizeMode="cover"
           />
-
           <View style={styles.productDetails}>
             <Text style={styles.productCategory}>{productDetails.filter_one || 'Category'}</Text>
             <Text style={styles.productName}>{productDetails.name?.trim()}</Text>
             <Text style={styles.productWeight}>{productDetails.variant?.quantity_type}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.productPrice}>₹{productDetails.variant?.selling_price}</Text>
+              <Text style={styles.productPrice}>
+                ₹{parseFloat(productDetails.variant?.selling_price || 0) * quantity}
+              </Text>
               {productDetails.variant?.actual_price &&
                 productDetails.variant?.actual_price !== productDetails.variant?.selling_price && (
-                  <Text style={styles.actualPrice}>₹{productDetails.variant?.actual_price}</Text>
+                  <Text style={styles.actualPrice}>
+                    ₹{parseFloat(productDetails.variant.actual_price || 0)}
+                  </Text>
                 )}
             </View>
 
@@ -282,28 +294,33 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           <Text style={styles.scheduleSubtitle}>Your deliveries will begin from this date</Text>
 
           <Calendar
-            minDate={new Date().toISOString().split('T')[0]}
+            markingType={'custom'}
+            key={calendarKey} // 🔁 force full re-render
+            current={currentMonth} // scroll to correct month
+            hideExtraDays={true} // ✅ hides previous/next month dates
+            minDate={dayjs().add(1, 'day').format('YYYY-MM-DD')}
             onDayPress={(day) => {
               const selected = day.dateString;
+
+              // Block selection if user somehow taps today's date
+              const today = dayjs().format('YYYY-MM-DD');
+              if (selected === today) return;
 
               if (scheduleType === 'Custom') {
                 setMarkedDates((prev) => {
                   const newMarks = { ...prev };
-
                   if (newMarks[selected]) {
-                    delete newMarks[selected]; // toggle off
+                    delete newMarks[selected];
                   } else {
                     newMarks[selected] = {
                       selected: true,
                       selectedColor: backgroundColor,
                     };
                   }
-
                   return newMarks;
                 });
               } else {
-                const newDate = new Date(selected);
-                setStartDate(newDate);
+                setStartDate(new Date(selected));
               }
             }}
             markedDates={markedDates}
@@ -312,6 +329,8 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
               selectedDayTextColor: '#fff',
               todayTextColor: backgroundColor,
               arrowColor: backgroundColor,
+              disabledDayTextColor: '#A9A9A9', // light gray
+              textDisabledColor: '#B0B0B0',
             }}
           />
         </View>
@@ -415,6 +434,81 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
+
+
+      <Modal
+        visible={showConfirmationModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfirmationModal(false)}
+      >
+        <View style={styles['subscribeConfirm-overlay']}>
+          <View style={styles['subscribeConfirm-modal']}>
+            <Text style={styles['subscribeConfirm-title']}>📦 Confirm Your Subscription</Text>
+
+            <Text style={styles['subscribeConfirm-info']}>
+              You've selected <Text style={{ fontWeight: 'bold' }}>{Object.keys(markedDates).length}</Text> delivery date(s):
+            </Text>
+
+            {/* Scrollable Date List */}
+            <ScrollView
+              style={styles['subscribeConfirm-dateScroll']}
+              horizontal={true}
+              showsHorizontalScrollIndicator={true}
+            >
+              <View style={styles['subscribeConfirm-dateList']}>
+                {Object.keys(markedDates)
+                  .sort((a, b) => new Date(a) - new Date(b))
+                  .map((date) => (
+                    <View key={date} style={styles['subscribeConfirm-dateBadge']}>
+                      <Text style={styles['subscribeConfirm-dateText']}>
+                        {dayjs(date).format('ddd, MMM DD YYYY')}
+                      </Text>
+                    </View>
+                  ))}
+              </View>
+            </ScrollView>
+
+
+            {/* Summary */}
+            <View style={styles['subscribeConfirm-summaryBox']}>
+              <Text style={styles['subscribeConfirm-summaryText']}>
+                Your subscription will be delivered on the selected days.
+              </Text>
+              <Text style={styles['subscribeConfirm-summaryText']}>
+                - Your wallet must have at least ₹{productDetails.variant?.selling_price * quantity} on each delivery date.
+              </Text>
+              <Text style={styles['subscribeConfirm-summaryText']}>
+                - If your balance is insufficient, the delivery will be <Text style={{ fontWeight: 'bold' }}>automatically paused</Text>.
+              </Text>
+            </View>
+
+            {/* Actions */}
+            <View style={styles['subscribeConfirm-actions']}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowConfirmationModal(false);
+                  placeSubscriptionOrderHandler();
+                }}
+                style={styles['subscribeConfirm-confirmBtn']}
+              >
+                <Text style={styles['subscribeConfirm-confirmText']}>✅ Confirm & Subscribe</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setShowConfirmationModal(false)}
+                style={styles['subscribeConfirm-cancelBtn']}
+              >
+                <Text style={styles['subscribeConfirm-cancelText']}>❌ Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
+
+
 
     </SafeAreaView>
   );
@@ -819,6 +913,133 @@ const styles = StyleSheet.create({
   },
   successIcon: {
     marginBottom: 12,
+  },
+  'subscribeConfirm-overlay': {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  'subscribeConfirm-modal': {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '88%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  'subscribeConfirm-title': {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  'subscribeConfirm-info': {
+    fontSize: 14,
+    color: '#374151',
+    marginBottom: 10,
+  },
+  'subscribeConfirm-dateScroll': {
+    height: 60,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#f9fafb',
+  },
+
+  'subscribeConfirm-dateList': {
+    flexDirection: 'row', // must be row for horizontal scroll
+    alignItems: 'center',
+  },
+
+  'subscribeConfirm-dateBadge': {
+    backgroundColor: '#e0f2fe',
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginRight: 8,
+  },
+
+  'subscribeConfirm-dateText': {
+    fontSize: 13,
+    color: '#0369a1',
+  },
+  'subscribeConfirm-dateText': {
+    fontSize: 13,
+    color: '#0369a1',
+  },
+
+  'subscribeConfirm-summaryBox': {
+    backgroundColor: '#fff7ed',
+    borderLeftWidth: 4,
+    borderLeftColor: '#f59e0b',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+
+  'subscribeConfirm-summaryText': {
+    fontSize: 13,
+    color: '#78350f',
+    marginBottom: 6,
+  },
+  'subscribeConfirm-dateText': {
+    fontSize: 13,
+    color: '#065f46',
+    fontWeight: '500',
+  },
+  'subscribeConfirm-warningBox': {
+    backgroundColor: '#fff7ed',
+    borderLeftWidth: 4,
+    borderLeftColor: '#f97316',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  'subscribeConfirm-warningText': {
+    fontSize: 13,
+    color: '#7c2d12',
+    marginBottom: 6,
+  },
+  'subscribeConfirm-actions': {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  'subscribeConfirm-confirmBtn': {
+    flex: 1,
+    backgroundColor: '#10b981',
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginRight: 8,
+    justifyContent: 'center',       // ✅ Center vertically
+    alignItems: 'center',           // ✅ Center horizontally
+  },
+  'subscribeConfirm-cancelBtn': {
+    flex: 1,
+    backgroundColor: '#d1d5db',
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginLeft: 8,
+    justifyContent: 'center',       // ✅ Center vertically
+    alignItems: 'center',           // ✅ Center horizontally
+  },
+  'subscribeConfirm-confirmText': {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  'subscribeConfirm-cancelText': {
+    color: '#1f2937',
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 14,
   },
 
 });

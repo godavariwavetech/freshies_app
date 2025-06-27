@@ -124,18 +124,18 @@ export default function BottomNavigation() {
         name="Reorder"
         component={SubscriptionPage}
         options={{
-          tabBarLabel: 'Subscribe',
+          tabBarLabel: 'Subscriptions',
           contentStyle: {},
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Categories"
         component={CategoriesScreen}
         options={{
           tabBarLabel: 'Categories',
           contentStyle: {},
         }}
-      />
+      /> */}
       {/* <Tab.Screen
         name="Cart"
         component={BuyOncescreen}

@@ -46,6 +46,8 @@ import AboutUsScreen from '../screens/AboutUs';
 import { WalletAPI } from '../services/services';
 import { setWalletData } from '../redux/reducers/walletSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import SubscriptionDetailsScreen from '../screens/SubscriptionDetailsScreen';
+import UserProfileScreen from '../screens/user/ProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -66,6 +68,7 @@ export default function RentalNavigation() {
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName='BottomNavigation'>
       <Stack.Screen name='BottomNavigation' component={BottomNavigation} />
       <Stack.Screen name='RestaurantScreen' component={RestaurantScreen} />
+      <Stack.Screen name='UserProfileScreen' component={UserProfileScreen} />
       <Stack.Screen name='CategorieItems' component={CategorieItems} />
       <Stack.Screen name='AddressList' component={AddressListScreen} />
       <Stack.Screen name='AddAddress' component={AddAddressScreen} />
@@ -93,6 +96,7 @@ export default function RentalNavigation() {
       <Stack.Screen name='UserHome' component={UserHome} />
       <Stack.Screen name='Categories' component={Categories} />
       <Stack.Screen name='SubscriptionPage' component={SubscriptionPage} />
+      <Stack.Screen name="SubscriptionDetails" component={SubscriptionDetailsScreen} />
       <Stack.Screen name='EditSubscribe' component={EditSubscribe} />
       <Stack.Screen name='FullviewofCategoriesTab' component={FullviewofCategoriesTab} />
       <Stack.Screen name='Wlletscreen' component={Wlletscreen} />

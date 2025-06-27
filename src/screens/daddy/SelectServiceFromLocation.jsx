@@ -23,6 +23,7 @@ import CustomModal from '../../components/CustomModal';
 import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux, setShopAddress } from '../../redux/reducers/auth';
 import { checkAddressExistence } from '../../services/services';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
+import { useIsFocused } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,19 +49,39 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
-
   const { loading } = useSelector(state => state.Dashboard);
   const { location: storedLocation, locationName, locationId } = useSelector(state => state.Auth);
+  const [shouldRenderMap, setShouldRenderMap] = useState(true);
+  const isMountedRef = useRef(true);
+  const [mapReady, setMapReady] = useState(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const timeout = setTimeout(() => {
+        setMapReady(true);
+      }, 300); // let the screen settle first
   
-
-
+      return () => {
+        clearTimeout(timeout);
+        setMapReady(false); // unmount on blur
+      };
+    }, [])
+  );
+  
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM`,
       );
       const data = await response.json();
-      
+
       if (data.results && data.results.length > 0) {
         const addr = data.results[0].formatted_address;
         const cityComponent = data.results[0].address_components.find(component =>
@@ -83,7 +104,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     const newRegion = {
       latitude: route?.params?.selectedAddress?.customer_latitude ||
         storedLocation?.latitude ||
-        DEFAULT_REGION.latitude,
+        DEFAULT_REGION?.latitude,
       longitude: route?.params?.selectedAddress?.customer_longitude ||
         storedLocation?.longitude ||
         DEFAULT_REGION.longitude,
@@ -91,15 +112,9 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       longitudeDelta: 0.005,
     };
 
-    console.log(">>>>>>>>>>>>>>>CALLING", {
-      routeParams: route.params,
-      storedLocation,
-      newRegion
-    });
-
     // Only update region if coordinates are valid
-    if (newRegion.latitude && newRegion.longitude) {
-      setRegion(newRegion);
+    if (isMountedRef.current && mapRef.current?.animateToRegion) {
+      mapRef.current.animateToRegion(newRegion, 1000);
 
       // Try to get address for the coordinates
       getAddressFromCoordinates(newRegion.latitude, newRegion.longitude)
@@ -160,6 +175,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
 
   const getCurrentLocation = useCallback(async () => {
     setIsLoadingLocation(true);
+    let isMounted = true;
     try {
       const position = await new Promise((resolve, reject) => {
         Geolocation.getCurrentPosition(resolve, reject, {
@@ -175,9 +191,11 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       };
-      
+
       setRegion(newRegion);
-      mapRef.current?.animateToRegion(newRegion, 1000);
+      if (mapRef.current && region.latitude && region.longitude) {
+        mapRef.current.animateToRegion(region, 1000);
+      }
       await getAddressFromCoordinates(newRegion.latitude, newRegion.longitude);
 
       // Update Redux with new current location
@@ -189,6 +207,9 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     } finally {
       setIsLoadingLocation(false);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [dispatch]);
 
   const handleSearch = useCallback(
@@ -226,7 +247,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
             setSearchResults(data.predictions);
           } else {
             setSearchResults([]);
-            
+
           }
         } catch (error) {
           console.error('Search error:', error);
@@ -280,7 +301,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           longitude: parseFloat(region.longitude),
         }),
       );
-      
+
       if (response.payload.data.length > 0) {
         dispatch(
           setLocation({
@@ -316,14 +337,13 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       </View>
 
       <View style={styles.mapContainer}>
-        {region && (
+      {mapReady && region && (
           <MapView
             key={`map-${region.latitude}-${region.longitude}`}
             ref={mapRef}
             provider={PROVIDER_GOOGLE}
-            style={styles.map}
-            region={region}
             initialRegion={region}
+            style={styles.map}
             onPanDrag={() => setIsDragging(true)}
             onRegionChangeComplete={newRegion => {
               if (isDragging) {
@@ -335,11 +355,13 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
             moveOnMarkerPress={false}
           />
         )}
+
         <View style={styles.markerOverlay}>
           <View style={styles.markerContainer}>
             <MaterialIcons name="location-on" size={40} color="#8655d2" />
           </View>
         </View>
+
         <TouchableOpacity
           style={[
             styles.currentLocationButton,
@@ -347,7 +369,8 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
             isKeyboardVisible && { bottom: 20 },
           ]}
           onPress={getCurrentLocation}
-          disabled={isLoadingLocation}>
+          disabled={isLoadingLocation}
+        >
           {isLoadingLocation ? (
             <ActivityIndicator color="#8655d2" size="small" />
           ) : (
@@ -358,6 +381,10 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           )}
         </TouchableOpacity>
       </View>
+
+
+
+
 
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>

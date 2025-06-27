@@ -33,11 +33,13 @@ import { actionLogout } from '../../redux/reducers/auth';
 import { clearCart, getOrders } from '../../redux/reducers/daddy';
 import VersionCheck from 'react-native-version-check';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
+import UserProfileScreen from '../user/ProfileScreen';
+
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { customerId,username } = useSelector(state => state.Auth);
+  const { customerId, username } = useSelector(state => state.Auth);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +47,7 @@ const ProfileScreen = () => {
   const [orders, setOrders] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [appVersion, setAppVersion] = useState('');
-  
+
   // Favorites state
   const [favorites, setFavorites] = useState([]);
 
@@ -84,10 +86,10 @@ const ProfileScreen = () => {
     const getVersion = async () => {
       try {
         const version = await VersionCheck.getCurrentVersion();
-        
+
         setAppVersion(version);
       } catch (error) {
-        
+
       }
     };
     getVersion();
@@ -130,7 +132,7 @@ const ProfileScreen = () => {
         'https://play.google.com/store/apps/details?id=com.Abhi24',
       );
     } catch (error) {
-      
+
     } finally {
       setShowUpdateModal(false);
     }
@@ -160,7 +162,7 @@ const ProfileScreen = () => {
         setShowUpdateModal(false); // Ensure update modal is hidden
       }
     } catch (error) {
-      
+
       setUpdateModalVisible(true); // Show error message
       setShowUpdateModal(false);
     }
@@ -237,24 +239,25 @@ const ProfileScreen = () => {
   */
 
   const menuItems = [
-    {
-      id: '1',
-      title: 'About Us',
-      icon: (
-        <MaterialCommunityIcons
-          name="information-outline"
-          size={24}
-          color="#8655d2"
-        />
-      ),
-      onPress: () => navigation.navigate('AboutUsScreen'),
-    },
+
     // {
     //   id: '2',
     //   title: 'Address List',
     //   icon: <Ionicons name="clipboard-outline" size={24} color="#8655d2" />,
     //   onPress: () => navigation.navigate('AddressList'),
     // },
+    {
+      id: '2',
+      title: 'Account',
+      icon: (
+        <MaterialCommunityIcons
+          name="account-circle-outline" // 👈 better suited for 'Account'
+          size={24}
+          color="#8655d2"
+        />
+      ),
+      onPress: () => navigation.navigate('UserProfileScreen'),
+    },
     {
       id: '3',
       title: 'My Favorites',
@@ -279,6 +282,7 @@ const ProfileScreen = () => {
       ),
       onPress: () => navigation.navigate('Feedback'),
     },
+
     {
       id: '6',
       title: 'Privacy Policy',
@@ -320,17 +324,31 @@ const ProfileScreen = () => {
       title: 'Check for Updates',
       icon: <MaterialCommunityIcons name="update" size={24} color="#8655d2" />,
       onPress: handleCheckForUpdate,
-    }, {
-          id: '10',
-          title: 'Logout',
-          icon: <Feather name="log-out" size={24} color="#8655d2" />,
-          onPress: () => setLogoutModalVisible(true),
-        }
-      
+    },
+    {
+      id: '1',
+      title: 'About Us',
+      icon: (
+        <MaterialCommunityIcons
+          name="information-outline"
+          size={24}
+          color="#8655d2"
+        />
+      ),
+      onPress: () => navigation.navigate('AboutUsScreen'),
+    },
+    {
+      id: '10',
+      title: 'Logout',
+      icon: <Feather name="log-out" size={24} color="#8655d2" />,
+      onPress: () => setLogoutModalVisible(true),
+    },
+    
+
   ];
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl
@@ -395,7 +413,7 @@ const ProfileScreen = () => {
             </Text>
           </View>
         </View>
-        
+
       </ScrollView>
       <CustomModal
         visible={updateModalVisible}
@@ -448,7 +466,7 @@ const styles = StyleSheet.create({
   ordersHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 15, 
+    padding: 15,
   },
   ordersTitle: { fontSize: 18, fontWeight: 'bold' },
   viewAll: { color: '#8655d2', fontWeight: 'bold' },

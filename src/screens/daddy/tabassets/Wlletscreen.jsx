@@ -22,6 +22,7 @@ import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import RazorpayCheckout from 'react-native-razorpay';
 import { useDispatch, useSelector } from 'react-redux';
 import { setWalletData } from '../../../redux/reducers/walletSlice';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 
 const radioProps = [
@@ -38,7 +39,7 @@ const autoRechargeOptions = [
 
 
 const WalletPage = ({ navigation }) => {
-  const [selectedAmount, setSelectedAmount] = useState(null);
+  const [selectedAmount, setSelectedAmount] = useState(250);
   const [rechargeOption, setRechargeOption] = useState('one-time');
   const [autoRechargeAmount, setAutoRechargeAmount] = useState(2000);
   const [selectedWallet, setSelectedWallet] = useState('User Wallet');
@@ -47,15 +48,18 @@ const WalletPage = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [walletData, setWalletDataState] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
-  const {  customerId, mobileNumber } = useSelector(state => state.Auth);
+  const { customerId, mobileNumber, referralCode } = useSelector(state => state.Auth);
   const [transactions, setTransactions] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const dispatch = useDispatch();
+  const [rechargeSuccessfull, setRechargeSuccessfull] = useState(false)
+  console.log("customar ID", customerId, referralCode)
 
   useEffect(() => {
     const fetchAmounts = async () => {
       setLoading(true);
       const data = await WalletAPI.getDefaultWalletAmounts();
+
       const formatted = data.map(item => ({
         label: `₹${item.wallet_amount}`,
         value: parseInt(item.wallet_amount),
@@ -65,26 +69,26 @@ const WalletPage = ({ navigation }) => {
     };
 
     fetchAmounts();
-  }, []);
+  }, [rechargeSuccessfull]);
 
   useEffect(() => {
     const fetchWallet = async () => {
       setWalletLoading(true);
       const data = await WalletAPI.getWalletAmounts(customerId);
-      
-      dispatch(setWalletData(data)); 
-      
+      console.log("walleter amounts", data)
+      dispatch(setWalletData(data));
+
       setWalletDataState(data);
       setWalletLoading(false);
     };
     fetchWallet();
-  }, []);
+  }, [rechargeSuccessfull]);
 
   useEffect(() => {
     const fetchWalletData = async () => {
       setLoading(true);
       const data = await WalletAPI.getAbhi24WalletDetails(customerId);
-
+      console.log("herlo", data)
       const formattedData = data.map((item) => ({
         id: item.id.toString(),
         type:
@@ -93,7 +97,7 @@ const WalletPage = ({ navigation }) => {
               ? 'Cashback'
               : 'Referral'
             : 'Used',
-        description: `Txn ID: ${item.razorpay_order_id || 'N/A'}`,
+        description: `${item.description || 'N/A'}`,
         date: item.formatted_datetime,
         amount:
           item.payment_type_text === 'Credited'
@@ -104,13 +108,13 @@ const WalletPage = ({ navigation }) => {
         color:
           item.payment_type_text === 'Credited' ? '#00C853' : '#8655d2',
       }));
-      
+
       setTransactions(formattedData);
       setLoading(false);
     };
 
     fetchWalletData();
-  }, []);
+  }, [rechargeSuccessfull]);
 
   const handleWalletPress = (wallet) => {
     setSelectedWallet(wallet);
@@ -156,7 +160,13 @@ const WalletPage = ({ navigation }) => {
 
       {/* Description + date */}
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#000' }}>{item.description}</Text>
+        <Text
+          style={{ fontSize: 13, fontWeight: '600', color: '#000' }}
+          numberOfLines={2} // Limit to 2 lines
+          ellipsizeMode="tail" // Default, shows ... at end
+        >
+          {item.description}
+        </Text>
         <Text style={{ fontSize: 13, color: '#666', marginTop: 4 }}>{item.date}</Text>
       </View>
 
@@ -198,7 +208,7 @@ const WalletPage = ({ navigation }) => {
 
         RazorpayCheckout.open(options)
           .then(async (paymentResult) => {
-            
+
 
             const updateRes = await WalletAPI.updateUserWalletAmount({
               id, // ID from insert response
@@ -208,7 +218,9 @@ const WalletPage = ({ navigation }) => {
             });
 
             if (updateRes.status === 200) {
-              Alert.alert('Success', 'Money added successfully!');
+              setRechargeSuccessfull((prev) => !prev)
+              // Alert.alert('Success', 'Money added successfully!');
+
             } else {
               Alert.alert('Error', 'Payment verification failed.');
             }
@@ -231,7 +243,10 @@ const WalletPage = ({ navigation }) => {
     }
   };
 
+  const copyToClipboard = () => {
+    Clipboard.setString(referralCode);
 
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -303,21 +318,83 @@ const WalletPage = ({ navigation }) => {
 
         {/* Actions */}
         <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => navigation.navigate('RechargeHistoryScreen')}
-          >
-            <Icon name="arrow-upward" size={wp('5%')} color="#fff" />
-            <Text style={styles.optionText}>Recharge History</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => navigation.navigate('BillingHistory')}
-          >
-            <Icon name="arrow-downward" size={wp('5%')} color="#fff" />
-            <Text style={styles.optionText}>Billing History</Text>
-          </TouchableOpacity>
+          {selectedWallet === 'User Wallet' ? (
+            <>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => navigation.navigate('RechargeHistoryScreen')}
+              >
+                <Icon name="arrow-upward" size={wp('5%')} color="#fff" />
+                <Text style={styles.optionText}>Recharge History</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => navigation.navigate('BillingHistory')}
+              >
+                <Icon name="arrow-downward" size={wp('5%')} color="#fff" />
+                <Text style={styles.optionText}>Billing History</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View
+              style={{
+                flex: 1,                     // fills available space
+                justifyContent: 'center',   // center vertically
+                alignItems: 'center',       // center horizontally
+              
+              }}
+            >
+              <View
+                style={{
+                  width: '100%',               // full width within padded container
+                  maxWidth: 320,               // optional: limit width on large screens
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: '#fff',
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: '#333',
+                      fontSize: 14,
+                      fontWeight: '600',
+                      flex: 1,
+                    }}
+                  >
+                    {referralCode || '--'}
+                  </Text>
+
+                  <TouchableOpacity onPress={copyToClipboard}>
+                    <Icon name="content-copy" size={20} color="#8E44AD" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#eee',
+                    marginTop: 8,
+                    textAlign: 'center',
+                  }}
+                >
+                  Refer a friend and earn wallet cash!
+                </Text>
+              </View>
+            </View>
+
+
+          )}
         </View>
+
+
       </View>
 
 

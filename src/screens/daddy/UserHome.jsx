@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   categoryGridTextSmall: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#000',
     fontWeight: '500',
     textAlign: 'center',

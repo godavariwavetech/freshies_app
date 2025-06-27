@@ -1,120 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Image, 
-  ScrollView, 
-  SafeAreaView 
+import React, { useState } from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  ScrollView,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
+import FocusAwareStatusBar from '../../components/CustomStatusBar';
 
-const ProfileScreen = ({ navigation }) => {
-  const [favorites, setFavorites] = useState([]);
 
-  useEffect(() => {
-    const loadFavorites = async () => {
-      try {
-        const storedFavorites = await AsyncStorage.getItem('favorites');
-        if (storedFavorites) {
-          const parsedFavorites = JSON.parse(storedFavorites);
-          // Limit to first 3 favorites for preview
-          setFavorites(parsedFavorites.slice(0, 3));
-        }
-      } catch (error) {
-        console.error('Error loading favorites:', error);
-      }
-    };
+const UserProfileScreen = () => {
+  const navigation = useNavigation();
+  const { customerId, mobileNumber, referralCode, username, address } = useSelector(state => state.Auth);
 
-    loadFavorites();
-    const unsubscribe = navigation.addListener('focus', loadFavorites);
-    return unsubscribe;
-  }, [navigation]);
+  const [editMode, setEditMode] = useState(false);
+  const [editedUsername, setEditedUsername] = useState(username);
 
-  const renderFavoritePreview = () => {
-    return favorites.map((item) => (
-      <TouchableOpacity 
-        key={item.id} 
-        style={styles.favoriteItemContainer}
-        onPress={() => navigation.navigate('ProductDetails', { product: item })}
-      >
-        <Image source={{ uri: item.image }} style={styles.favoriteItemImage} />
-        <Text style={styles.favoriteItemName} numberOfLines={1}>
-          {item.name}
-        </Text>
-      </TouchableOpacity>
-    ));
+  const handleSave = () => {
+    // Save logic (dispatch to Redux or API call)
+    setEditMode(false);
+    // Dispatch an update if needed
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        {/* Profile Header */}
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Icon name="arrow-back" size={28} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Account</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {/* Profile Info */}
         <View style={styles.profileHeader}>
-          <Image 
-            source={require('../../assets/profile-placeholder.png')} 
-            style={styles.profileImage} 
+          <Image
+            source={{ uri: 'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png' }}
+            style={styles.profileImage}
           />
-          <Text style={styles.profileName}>John Doe</Text>
-          <Text style={styles.profileEmail}>john.doe@example.com</Text>
+          {!editMode ? (
+            <Text style={styles.profileName}>{username}</Text>
+          ) : (
+            <TextInput
+              style={styles.input}
+              value={editedUsername}
+              onChangeText={setEditedUsername}
+              placeholder="Enter your name"
+            />
+          )}
+          <Text style={styles.profileEmail}>{mobileNumber}</Text>
         </View>
 
-        {/* Favorites Preview */}
-        <View style={styles.favoritesSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Favorites</Text>
-            <TouchableOpacity 
-              style={styles.seeAllButton} 
-              onPress={() => navigation.navigate('MyFavoritesScreen')}
-            >
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.favoritesPreview}>
-            {favorites.length > 0 ? (
-              renderFavoritePreview()
-            ) : (
-              <Text style={styles.noFavoritesText}>No favorites yet</Text>
-            )}
-          </View>
+        {/* Address */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('SelectServiceFromLocation')}
+          style={styles.infoRow}
+        >
+          <MaterialIcons name="location-on" size={22} color="#8655d2" />
+          <Text style={styles.infoText}>{address || 'Tap to select address'}</Text>
+          <Icon name="chevron-forward" size={20} color="#aaa" />
+        </TouchableOpacity>
+
+        {/* Referral */}
+        <View style={styles.infoRow}>
+          <MaterialIcons name="card-giftcard" size={22} color="#8655d2" />
+          <Text style={styles.infoText}>Referral Code: {referralCode || '-'}</Text>
         </View>
 
-        {/* Menu Items */}
-        <View style={styles.menuSection}>
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => navigation.navigate('MyFavoritesScreen')}
+        {/* Edit/Save Button */}
+        <View style={{ marginTop: 20 }}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={editMode ? handleSave : () => setEditMode(true)}
           >
-            <View style={styles.menuItemContent}>
-              <Icon name="heart" size={24} color="#FF6B6B" />
-              <Text style={styles.menuItemText}>My Favorites</Text>
-            </View>
-            <Icon name="chevron-forward" size={24} color="#888" />
-          </TouchableOpacity>
-
-          {/* Other existing menu items */}
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => navigation.navigate('OrderHistory')}
-          >
-            <View style={styles.menuItemContent}>
-              <Icon name="list" size={24} color="#4A90E2" />
-              <Text style={styles.menuItemText}>Order History</Text>
-            </View>
-            <Icon name="chevron-forward" size={24} color="#888" />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.menuItem} 
-            onPress={() => navigation.navigate('Settings')}
-          >
-            <View style={styles.menuItemContent}>
-              <Icon name="settings" size={24} color="#8E44AD" />
-              <Text style={styles.menuItemText}>Settings</Text>
-            </View>
-            <Icon name="chevron-forward" size={24} color="#888" />
+            <Text style={styles.editButtonText}>{editMode ? 'Save Changes' : 'Edit Profile'}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -122,10 +90,37 @@ const ProfileScreen = ({ navigation }) => {
   );
 };
 
+export default UserProfileScreen;
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 7,
+    paddingHorizontal: 15,
+    backgroundColor: '#8655d2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1.5,
+    elevation: 3,
+  },
+  backButton: {
+    marginRight: 15,
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    flex: 1,
   },
   profileHeader: {
     alignItems: 'center',
@@ -147,68 +142,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
   },
-  favoritesSection: {
-    padding: 15,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  seeAllButton: {},
-  seeAllText: {
-    color: '#4A90E2',
-    fontWeight: '600',
-  },
-  favoritesPreview: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  favoriteItemContainer: {
-    alignItems: 'center',
-    width: '30%',
-  },
-  favoriteItemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    width: '80%',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    fontSize: 16,
     marginBottom: 5,
   },
-  favoriteItemName: {
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  noFavoritesText: {
-    color: '#888',
-    textAlign: 'center',
-    width: '100%',
-  },
-  menuSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  menuItem: {
+  infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    gap: 10,
   },
-  menuItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuItemText: {
-    marginLeft: 15,
+  infoText: {
+    flex: 1,
     fontSize: 16,
+    color: '#333',
+  },
+  editButton: {
+    backgroundColor: '#8655d2',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginHorizontal: 20,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
-
-export default ProfileScreen; 
