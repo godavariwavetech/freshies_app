@@ -39,7 +39,7 @@ const autoRechargeOptions = [
 
 
 const WalletPage = ({ navigation }) => {
-  const [selectedAmount, setSelectedAmount] = useState(250);
+  const [selectedAmount, setSelectedAmount] = useState("");
   const [rechargeOption, setRechargeOption] = useState('one-time');
   const [autoRechargeAmount, setAutoRechargeAmount] = useState(2000);
   const [selectedWallet, setSelectedWallet] = useState('User Wallet');
@@ -48,7 +48,7 @@ const WalletPage = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [walletData, setWalletDataState] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
-  const { customerId, mobileNumber, referralCode } = useSelector(state => state.Auth);
+  const { customerId, mobileNumber, referralCode,username } = useSelector(state => state.Auth);
   const [transactions, setTransactions] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const dispatch = useDispatch();
@@ -64,6 +64,8 @@ const WalletPage = ({ navigation }) => {
         label: `₹${item.wallet_amount}`,
         value: parseInt(item.wallet_amount),
       }));
+      console.log("eloo", formatted)
+      setSelectedAmount(formatted[0].value)
       setAmountOptions(formatted);
       setLoading(false);
     };
@@ -107,8 +109,8 @@ const WalletPage = ({ navigation }) => {
           item.payment_type_text === 'Credited' ? 'arrow-downward' : 'arrow-upward',
         color:
           item.payment_type_text === 'Credited' ? '#00C853' : '#8655d2',
+        payment_ind: item.payment_ind, // ✅ add this
       }));
-
       setTransactions(formattedData);
       setLoading(false);
     };
@@ -128,7 +130,12 @@ const WalletPage = ({ navigation }) => {
   const filteredTransactions =
     selectedFilter === 'All'
       ? transactions
-      : transactions.filter((item) => item.type === selectedFilter);
+      : selectedFilter === 'Referral'
+        ? transactions.filter((item) => item.payment_ind === 1)
+        : selectedFilter === 'Refund'
+          ? transactions.filter((item) => item.payment_ind === 2)
+          : transactions;
+
 
   const renderTransaction = ({ item }) => (
     <View
@@ -157,7 +164,6 @@ const WalletPage = ({ navigation }) => {
       >
         <Icon name={item.icon} size={24} color="#8655d2" />
       </View>
-
       {/* Description + date */}
       <View style={{ flex: 1 }}>
         <Text
@@ -186,10 +192,8 @@ const WalletPage = ({ navigation }) => {
         user_id: customerId,
         payment_amount: amount,
       });
-
       if (response.status === 200) {
         const { razorpay_order_id, key_id, id } = response;
-
         // Step 2: Open Razorpay
         const options = {
           description: 'Add Money to Wallet',
@@ -201,15 +205,12 @@ const WalletPage = ({ navigation }) => {
           prefill: {
             email: 'user@example.com',
             contact: mobileNumber,
-            name: 'User Name',
+            name: username,
           },
           theme: { color: '#8655d2' },
         };
-
         RazorpayCheckout.open(options)
           .then(async (paymentResult) => {
-
-
             const updateRes = await WalletAPI.updateUserWalletAmount({
               id, // ID from insert response
               user_id: customerId,
@@ -220,18 +221,35 @@ const WalletPage = ({ navigation }) => {
             if (updateRes.status === 200) {
               setRechargeSuccessfull((prev) => !prev)
               // Alert.alert('Success', 'Money added successfully!');
-
             } else {
               Alert.alert('Error', 'Payment verification failed.');
             }
-
             setIsLoading(false);
-          })
-          .catch((error) => {
+          }).catch((error) => {
             setIsLoading(false);
+          
+            let errorMessage = 'Transaction was not completed.';
+          
+            // Handle user cancel case explicitly
+            if (error?.code === 0 || error?.description === 'The payment was cancelled') {
+              console.log('User exited Razorpay payment screen.');
+              return; // Don’t show alert for user cancel
+            }
+          
+            // Handle API or Razorpay failures
+            if (typeof error === 'object') {
+              if (error.description) {
+                errorMessage = error.description;
+              } else if (error.error && error.error.description) {
+                errorMessage = error.error.description;
+              } else if (error.reason) {
+                errorMessage = error.reason.replace(/_/g, ' ');
+              }
+            }
+          
             console.error('Payment failed:', error);
-            Alert.alert('Payment Failed', error.description || 'Transaction was not completed.');
-          });
+            Alert.alert('Payment Failed', errorMessage);
+          });        
       } else {
         setIsLoading(false);
         Alert.alert('Error', 'Failed to create payment order.');
@@ -245,7 +263,6 @@ const WalletPage = ({ navigation }) => {
 
   const copyToClipboard = () => {
     Clipboard.setString(referralCode);
-
   };
 
   return (
@@ -293,12 +310,6 @@ const WalletPage = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Balance Info */}
-        {/* <Text style={styles.balanceLabel}>
-          {selectedWallet === 'User Wallet' ? 'User Cash' : 'Abhi24 Cash'}
-        </Text> */}
-
         <Text style={styles.balanceAmount}>
           {walletLoading ? (
             '₹ --.--'
@@ -341,7 +352,7 @@ const WalletPage = ({ navigation }) => {
                 flex: 1,                     // fills available space
                 justifyContent: 'center',   // center vertically
                 alignItems: 'center',       // center horizontally
-              
+
               }}
             >
               <View
@@ -385,16 +396,12 @@ const WalletPage = ({ navigation }) => {
                     textAlign: 'center',
                   }}
                 >
-                  Refer a friend and earn wallet cash!
+                  Share your code with friends. When they make their first payment, you’ll earn wallet cash!
                 </Text>
               </View>
             </View>
-
-
           )}
         </View>
-
-
       </View>
 
 
@@ -402,33 +409,6 @@ const WalletPage = ({ navigation }) => {
       <View style={styles.addMoneyContainer}>
         {selectedWallet === 'User Wallet' ? (
           <>
-            {/* {walletLoading ? (
-              <SkeletonPlaceholder>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 }}>
-                  {[1, 2, 3].map((_, index) => (
-                    <View key={index} style={{ width: 100, height: 40, borderRadius: 8 }} />
-                  ))}
-                </View>
-              </SkeletonPlaceholder>
-            ) 
-            : walletData ? (
-              <View style={styles.walletTabs}>
-                <View style={styles.walletTabItem}>
-                  <Text style={styles.walletTabTitle}>Total</Text>
-                  <Text style={styles.walletTabValue}>₹{walletData.user_wallet_amount}</Text>
-                </View>
-                <View style={styles.walletTabItem}>
-                  <Text style={styles.walletTabTitle}>Used</Text>
-                  <Text style={styles.walletTabValue}>₹{walletData.user_used_amount}</Text>
-                </View>
-                <View style={styles.walletTabItem}>
-                  <Text style={styles.walletTabTitle}>Balance</Text>
-                  <Text style={styles.walletTabValue}>₹{walletData.user_balance_amount}</Text>
-                </View>
-              </View>
-            ) : (
-              <Text style={{ textAlign: 'center', color: 'red' }}>Failed to load wallet data</Text>
-            )} */}
             {/* Add Money Title */}
             <Text style={styles.addMoneyTitle}>Add Money</Text>
             {/* Input Field for Amount */}
@@ -475,42 +455,6 @@ const WalletPage = ({ navigation }) => {
                 ))}
               </View>
             )}
-            {/* Recharge Options */}
-            {/* <RadioForm
-              radio_props={radioProps}
-              initial={0}
-              onPress={(value) => setRechargeOption(value)}
-              formHorizontal={false}
-              labelStyle={styles.radioLabel}
-              buttonColor="#8655d2"
-              selectedButtonColor="#8655d2"
-              buttonSize={wp('4%')}
-              buttonOuterSize={wp('6%')}
-              style={styles.radioForm}
-            /> */}
-            {/* Auto Recharge Picker */}
-            {rechargeOption === 'auto' && (
-              <View style={styles.autoRechargeContainer}>
-                <Text style={styles.autoRechargeText}>
-                  Every time wallet goes below
-                </Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={autoRechargeAmount}
-                    onValueChange={(itemValue) => setAutoRechargeAmount(itemValue)}
-                    style={styles.picker}
-                  >
-                    {autoRechargeOptions.map((option) => (
-                      <Picker.Item
-                        key={String(option.value)}
-                        label={option.label}
-                        value={option.value}
-                      />
-                    ))}
-                  </Picker>
-                </View>
-              </View>
-            )}
             {/* Add Money Button */}
             <TouchableOpacity
               style={[
@@ -538,7 +482,7 @@ const WalletPage = ({ navigation }) => {
         ) : (
           <>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginVertical: 10 }}>
-              {['All', 'Cashback', 'Referral', 'Used'].map((filter) => (
+              {['All', 'Referral', "Refund"].map((filter) => (
                 <TouchableOpacity
                   key={filter}
                   onPress={() => handleFilterPress(filter)}
@@ -553,9 +497,14 @@ const WalletPage = ({ navigation }) => {
                 </TouchableOpacity>
               ))}
             </View>
-            {/* Transaction List */}
             {loading ? (
               <ActivityIndicator size="large" color="#8655d2" style={{ marginTop: 30 }} />
+            ) : filteredTransactions.length === 0 ? (
+              <View style={{ alignItems: 'center', marginTop: 40 }}>
+                <Text style={{ color: '#888', fontSize: 16 }}>
+                  No {selectedFilter === 'All' ? 'transactions' : selectedFilter.toLowerCase()} found.
+                </Text>
+              </View>
             ) : (
               <FlatList
                 data={filteredTransactions}
@@ -873,3 +822,5 @@ const styles = StyleSheet.create({
 });
 
 export default WalletPage;
+
+

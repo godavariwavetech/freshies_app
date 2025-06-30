@@ -46,7 +46,7 @@ function UserHome() {
     try {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
-      
+    console.log("helooiiii", fetchedSubCategories)
       setSubCategories(fetchedSubCategories);
       const uniqueCategories = [
         ...new Map(
@@ -98,7 +98,6 @@ function UserHome() {
   };
 
   const handleSubCategories = async (subcategory) => {
-    
     navigation.navigate('GroceriesScreen', {
       subcategory_id: parseInt(subcategory.id),
       subcategory_name: subcategory.category_name,
@@ -349,7 +348,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     margin: 5,
-    marginBottom: 16
+    marginBottom: 10,
+    // backgroundColor: "green"
   },
   categoryGridItemContent: {
     flex: 1,
@@ -371,13 +371,14 @@ const styles = StyleSheet.create({
     // ✅ Overflow settings
     marginBottom: 5,
     overflow: Platform.OS === 'ios' ? 'visible' : 'hidden',
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center"
   },
-
-
-
   categoryGridImageSmall: {
-    width: '100%',
-    height: '100%',
+    width: '90%',
+    height: '90%',
     borderRadius: 8,
   },
   categoryGridTextSmall: {

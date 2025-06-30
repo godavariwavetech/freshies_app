@@ -48,21 +48,24 @@ import { setWalletData } from '../redux/reducers/walletSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import SubscriptionDetailsScreen from '../screens/SubscriptionDetailsScreen';
 import UserProfileScreen from '../screens/user/ProfileScreen';
+import ReferAndEarnScreen from '../screens/ReferAndEarnScreen';
+
 
 const Stack = createStackNavigator();
 
 export default function RentalNavigation() {
   const dispatch = useDispatch();
   const { customerId } = useSelector(state => state.Auth);
-
+ 
   useEffect(() => {
     const fetchWallet = async () => {
       const data = await WalletAPI.getWalletAmounts(customerId);
-      
       dispatch(setWalletData(data)); 
     };
     fetchWallet();
   }, []);
+
+
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName='BottomNavigation'>
@@ -109,6 +112,7 @@ export default function RentalNavigation() {
       <Stack.Screen name='ViewTrack' component={ViewTrack} />
       <Stack.Screen name='MyFavoritesScreen' component={MyFavoritesScreen}/>
       <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
+      <Stack.Screen name="ReferAndEarnScreen" component={ReferAndEarnScreen} />    
       <Stack.Screen
         name="CategoriesScreen"
         component={CategoriesScreen}

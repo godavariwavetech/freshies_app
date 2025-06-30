@@ -20,7 +20,8 @@ const initialState = {
   address: "",
   shopAddress: {},
   username: "",
-  referralCode: ""
+  referralCode: "",
+  userDetails: {}
 };
 
 export const verifyMobile = createAsyncThunk(
@@ -183,6 +184,9 @@ export const AuthSlice = createSlice({
     },
     setReferalCode: (state,action) => {
       state.referralCode = action.payload
+    },
+    setUseDetails: (state,action) => {
+      state.userDetails = action.payload
     }
 
     
@@ -279,6 +283,6 @@ export const AuthSlice = createSlice({
   },
 });
 
-export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setRestaurnatDetails, setOrderOfferAmount,setReferalCode, setAddress,setShopAddress,setUserName,setCustormarId } = AuthSlice.actions;
+export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag,setUseDetails, setRestaurnatDetails, setOrderOfferAmount,setReferalCode, setAddress,setShopAddress,setUserName,setCustormarId } = AuthSlice.actions;
 
 export default AuthSlice.reducer;

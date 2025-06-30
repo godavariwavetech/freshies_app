@@ -36,12 +36,12 @@ const paymentMethods = ['Pay Online', 'COD'];
 
 const BasketScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
-  
+
   const [cartItems, setCartItems] = useState([]);
   const [showFullAddress, setShowFullAddress] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Pay Online');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('COD');
   const [coupon, setCoupon] = useState(null);
   const [applicationCharges, setApplicationCharges] = useState({
     "id": 1,
@@ -55,7 +55,7 @@ const BasketScreen = ({ navigation, route }) => {
     "d_in": 0
   })
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
-  
+
   const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
@@ -154,7 +154,7 @@ const BasketScreen = ({ navigation, route }) => {
         const storedCartItems = await AsyncStorage.getItem('cartItems');
         if (storedCartItems) {
           const parsedCartItems = JSON.parse(storedCartItems);
-          
+
           setCartItems(parsedCartItems);
         }
 
@@ -196,7 +196,7 @@ const BasketScreen = ({ navigation, route }) => {
 
   // Calculate total price
   const calculateTotalPrice = () => {
-    const subtotal = cartItems.reduce((total, item) => total + (Number(item.variant.selling_price) * item.quantity), 0);
+    const subtotal = cartItems.reduce((total, item) => total + (Number(item.variant?.selling_price || 0) * item.quantity), 0);
 
     // Apply coupon if available
     if (coupon) {
@@ -244,10 +244,9 @@ const BasketScreen = ({ navigation, route }) => {
       console.error('Error clearing cart:', error);
     }
   };
-  const navigateToCategories = () => {
-    navigation.navigate('CategoriesScreen');
+  const navigateToHomeTab = () => {
+    navigation.navigate('BottomNavigation', { screen: 'Home' });
   };
-
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image
@@ -262,8 +261,8 @@ const BasketScreen = ({ navigation, route }) => {
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemWeight}>{item.variant?.quantity_type || item.defaultWeight || item.weight}</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.itemPrice}>₹{(Number(item.variant.selling_price) * item.quantity).toFixed(2)}</Text>
-          <Text style={styles.originalPrice}>₹{(Number(item.variant.actual_price) || item.originalPrice || 0).toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>₹{(Number(item.variant?.selling_price || 0) * item.quantity).toFixed(2)}</Text>
+          <Text style={styles.originalPrice}>₹{(Number(item.variant?.actual_price || 0) || item.originalPrice || 0).toFixed(2)}</Text>
         </View>
       </View>
       <View style={styles.quantityContainer}>
@@ -318,7 +317,7 @@ const BasketScreen = ({ navigation, route }) => {
         Looks like you haven't added anything yet. Let's fix that!
       </Text>
       <TouchableOpacity
-        onPress={navigateToCategories}
+        onPress={navigateToHomeTab}
         style={[styles.exploreButton, { backgroundColor }]}
       >
         <Text style={styles.exploreButtonText}>Explore Items</Text>
@@ -400,12 +399,13 @@ const BasketScreen = ({ navigation, route }) => {
         "delivery_instruction": deliveryInstructions,
         "sub_order_array": mappedItems
       };
-
+     
+      console.log("----------------", payload)
       if (selectedPaymentMethod === 'COD') {
         const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
         const orderDetails = {
           orderId: responseCod?.payload?.id || "",
-          totalAmount: calculateTotalPrice() ,
+          totalAmount: calculateTotalPrice(),
           grandTotal:
             (
               calculateTotalPrice() +
@@ -427,35 +427,20 @@ const BasketScreen = ({ navigation, route }) => {
           delivery_charges_gst: gstCalculation().toFixed(2) || 0,
           handling_charges: applicationCharges?.handling_charges || 0
         };
-        
-        navigation.navigate("OrderSuccess", { orderDetails,status: 0 });
+
+        navigation.navigate("OrderSuccess", { orderDetails, status: 0 });
         return;
       }
 
       payload.order_status = 7;
       const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
       if (!pacedResponse.payload) return
-      
-      const options = {
-        description: 'Order Payment',
-        image: '',
-        currency: 'INR',
-        key: pacedResponse.payload.key_id,
-        order_id: pacedResponse.payload.razorpay_order_id,
-        amount: 1000,
-        name: 'Abhi 24',
-        prefill: {
-          // email: "test@gmail.com",
-          contact: mobileNumber,
-          name: selectedAddress?.customer_name,
-        },
-        theme: { color: '#8655d2' },
-      };
+
 
       // Prepare order details only once
       const orderDetails = {
         orderId: pacedResponse.payload.id,
-        totalAmount: calculateTotalPrice() ,
+        totalAmount: calculateTotalPrice(),
         grandTotal:
           (
             calculateTotalPrice() +
@@ -476,33 +461,68 @@ const BasketScreen = ({ navigation, route }) => {
         order_id: pacedResponse.payload.order_id,
         delivery_charges_gst: gstCalculation().toFixed(2) || 0,
         handling_charges: applicationCharges?.handling_charges || 0
-      };
-     
+      }
 
+      const options = {
+        description: 'Order Payment',
+        image: '',
+        currency: 'INR',
+        key: pacedResponse.payload.key_id,
+        order_id: pacedResponse.payload.razorpay_order_id,
+        amount: 1000,
+        name: 'Abhi 24',
+        prefill: {
+          contact: mobileNumber,
+          name: selectedAddress?.customer_name,
+        },
+        theme: { color: '#8655d2' },
+      };
+    
       RazorpayCheckout.open(options)
         .then(async data => {
-          
           payload.payment_id = data.razorpay_payment_id;
           payload.razorpay_order_id = data.razorpay_order_id;
           payload.order_status = 0;
-          
-          const updateOrderStatusResponse = await dispatch(updateOrderStatus({ paymentId: data.razorpay_payment_id, rzpId: data.razorpay_order_id, orderId: pacedResponse.payload.id, orderStatus: 0 }))
-
-         
-         navigation.navigate("OrderSuccess", { orderDetails,status: 0 });
-
+    
+          await dispatch(updateOrderStatus({
+            paymentId: data.razorpay_payment_id,
+            rzpId: data.razorpay_order_id,
+            orderId: pacedResponse.payload.id,
+            orderStatus: 0
+          }));
+    
+          navigation.navigate("OrderSuccess", { orderDetails, status: 0 });
         })
         .catch(error => {
-          
+          let errorMessage = 'Transaction was not completed.';
+    
+          // Handle user cancel case explicitly
+          if (error?.code === 0 || error?.description === 'The payment was cancelled') {
+            console.log('User exited Razorpay payment screen.');
+            return; // Don’t show alert for user cancel
+          }
+    
+          // Extract more specific error messages if available
+          if (typeof error === 'object') {
+            if (error.description) {
+              errorMessage = error.description;
+            } else if (error.error?.description) {
+              errorMessage = error.error.description;
+            } else if (error.reason) {
+              errorMessage = error.reason.replace(/_/g, ' ');
+            }
+          }
+    
+          console.error('Payment failed:', error);
+          Alert.alert('Payment Failed', errorMessage);
         });
     } catch (error) {
-      
+      console.error('Order Payment Error:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setIsProcessingPayment(false);
     }
-  };
-
-
+ }
 
   if (isLoading) {
     return (
@@ -716,14 +736,15 @@ const BasketScreen = ({ navigation, route }) => {
           <View style={styles.orderSummary}>
             <View style={styles.summaryHeader}>
               <Text style={styles.summaryTitle}>ORDER SUMMARY</Text>
-              {/* <TouchableOpacity>
-                <Text style={[styles.viewMore, { color: backgroundColor }]}>View more</Text>
-              </TouchableOpacity> */}
             </View>
+
+            {/* Item Total - always show */}
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Item Total</Text>
               <Text style={styles.summaryValue}>₹{calculateTotalPrice().toFixed(2)}</Text>
             </View>
+
+            {/* Coupon */}
             {coupon && (
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: backgroundColor }]}>Coupon Applied</Text>
@@ -734,33 +755,50 @@ const BasketScreen = ({ navigation, route }) => {
                 </Text>
               </View>
             )}
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Delivery Charge</Text>
-              <Text style={[styles.summaryValue, { color: backgroundColor }]}>₹{applicationCharges?.delivery_fixed_charges}</Text>
-            </View>
-            {/* <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Delivery Tip</Text>
-              <TouchableOpacity>
-                <Text style={[styles.addTip, { color: backgroundColor }]}>Add tip</Text>
-              </TouchableOpacity>
-            </View> */}
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Platform fee</Text>
-              <Text style={styles.summaryValue}>₹{applicationCharges?.handling_charges}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>GST & Restaurant Charges</Text>
-              <Text style={styles.summaryValue}>₹{gstCalculation().toFixed(2)}</Text>
-            </View>
+
+            {/* Delivery Charge */}
+            {Number(applicationCharges?.delivery_fixed_charges) > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Delivery Charge</Text>
+                <Text style={[styles.summaryValue, { color: backgroundColor }]}>
+                  ₹{applicationCharges?.delivery_fixed_charges}
+                </Text>
+              </View>
+            )}
+
+            {/* Platform Fee */}
+            {Number(applicationCharges?.handling_charges) > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Platform fee</Text>
+                <Text style={styles.summaryValue}>₹{applicationCharges?.handling_charges}</Text>
+              </View>
+            )}
+
+            {/* GST */}
+            {applicationCharges?.gst_percentage > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>GST & Restaurant Charges</Text>
+                <Text style={styles.summaryValue}>₹{gstCalculation().toFixed(2)}</Text>
+              </View>
+            )}
+
+            {/* Final To Pay */}
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, styles.totalLabel]}>To Pay</Text>
               <Text style={[styles.summaryValue, styles.totalValue]}>
-                ₹{(calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()- couponAmount).toFixed(2) }
+                ₹{(
+                  calculateTotalPrice() +
+                  Number(applicationCharges?.delivery_fixed_charges || 0) +
+                  Number(applicationCharges?.handling_charges || 0) +
+                  gstCalculation() -
+                  (couponAmount || 0)
+                ).toFixed(2)}
               </Text>
             </View>
           </View>
 
-          {/* <View style={styles.Paymentcontainer}>
+
+          <View style={styles.Paymentcontainer}>
             <TouchableOpacity
               style={styles.selectedMethodBox}
               onPress={() => setPaymentMenuVisible(prev => !prev)}
@@ -794,7 +832,7 @@ const BasketScreen = ({ navigation, route }) => {
                 ))}
               </View>
             )}
-          </View> */}
+          </View>
 
           {/* Place Order Button */}
           < View style={{ paddingBottom: 60 }}>

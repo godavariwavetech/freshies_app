@@ -13,6 +13,7 @@ import {
   Linking,
   RefreshControl,
   Alert,
+  LayoutAnimation, UIManager
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -39,15 +40,20 @@ import UserProfileScreen from '../user/ProfileScreen';
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { customerId, username } = useSelector(state => state.Auth);
+  const { customerId, username,userDetails } = useSelector(state => state.Auth);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { userDetails } = useSelector(state => state.address);
   const [orders, setOrders] = useState([]);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [appVersion, setAppVersion] = useState('');
-
+  const [isPoliciesExpanded, setIsPoliciesExpanded] = useState(false);
+  console.log("userDetails", userDetails)
+  useEffect(() => {
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
   // Favorites state
   const [favorites, setFavorites] = useState([]);
 
@@ -66,22 +72,6 @@ const ProfileScreen = () => {
     loadFavorites();
   }, []);
 
-  // const getOrdersData = async () => {
-  //   try {
-  //     setIsLoading(true);
-  //     const response = await dispatch(getOrders({ orderId: 0 }));
-  //     response.payload.data.length > 0 && setOrders([response.payload.data[0]]);
-  //   } catch (error) {
-  //     console.error('Error loading orders:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   getOrdersData();
-  // }, []);
-
   useEffect(() => {
     const getVersion = async () => {
       try {
@@ -95,36 +85,6 @@ const ProfileScreen = () => {
     getVersion();
   }, []);
 
-  const STATUS_MAP = {
-    0: 'Order Placed',
-    1: 'Order Accepted',
-    2: 'Preparing Your Order',
-    3: 'Order Completed',
-    4: 'Order Cancelled by You',
-    5: 'Order Rejected by Restaurant',
-    6: 'Order Not Received',
-    7: 'Waiting for Payment',
-    8: 'Delivery Partner Assigned',
-  };
-
-  const getOrderStatus = status => {
-    return STATUS_MAP[status] || 'Unknown Status';
-  };
-
-  const getStatusColor = status => {
-    const colorMap = {
-      0: '#8655d2', // Order Placed - Yellow
-      1: '#8655d2', // Order Accepted - Green
-      2: '#8655d2', // Preparing - Green
-      3: '#8655d2', // Completed - Green
-      4: '#FF4B4B', // Cancelled - Red
-      5: '#FF4B4B', // Rejected - Red
-      6: '#FF4B4B', // Not Received - Red
-      7: '#8655d2', // Waiting Payment - Yellow
-      8: '#8655d2', // Delivery Assigned - Green
-    };
-    return colorMap[status] || '#666'; // Default gray
-  };
 
   const handleUpdate = async () => {
     try {
@@ -167,185 +127,9 @@ const ProfileScreen = () => {
       setShowUpdateModal(false);
     }
   };
-  // Commented out renderOrder function
-  /*
-  const renderOrder = ({ item }) => (
-    <View style={styles.orderCard}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          marginBottom: responsiveHeight(0.5),
-        }}>
-        <Text style={styles.orderId}>Order ID: {item?.order_id}</Text>
-        <Text
-          style={[
-            styles.orderStatus,
-            { color: getStatusColor(item?.order_status) },
-          ]}>
-          {getOrderStatus(item?.order_status)}
-        </Text>
-      </View>
 
-      <Text style={styles.orderDetails} numberOfLines={1}>
-        Delivered to:{' '}
-        <Text style={{ fontWeight: '400' }} numberOfLines={1}>
-          {item?.delivery_address}
-        </Text>
-      </Text>
 
-      <Text style={styles.orderDate}>
-        {item?.order_date} at {item?.order_time}
-      </Text>
 
-      <View style={styles.restaurantInfo}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: responsiveHeight(1),
-          }}>
-          <Image
-            source={require('../daddy/tabassets/restaurant.png')}
-            style={styles.restaurantIcon}
-          />
-          <Text style={styles.restaurantName} numberOfLines={1}>
-            {item?.restaurant_name}
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.reorderButton}
-          onPress={() =>
-            navigation.navigate('ReorderScreen', {
-              orderDetails: item,
-            })
-          }>
-          <Text style={styles.reorderButtonText}>Reorder</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.viewDetailsButton}
-        onPress={() =>
-          navigation.navigate('OrderDetailsScreen', {
-            orderDetails: item,
-          })
-        }>
-        <Text style={styles.viewDetailsButtonText}>View Details</Text>
-        <Icon name="chevron-right" size={20} color="#666" />
-      </TouchableOpacity>
-    </View>
-  );
-  */
-
-  const menuItems = [
-
-    // {
-    //   id: '2',
-    //   title: 'Address List',
-    //   icon: <Ionicons name="clipboard-outline" size={24} color="#8655d2" />,
-    //   onPress: () => navigation.navigate('AddressList'),
-    // },
-    {
-      id: '2',
-      title: 'Account',
-      icon: (
-        <MaterialCommunityIcons
-          name="account-circle-outline" // 👈 better suited for 'Account'
-          size={24}
-          color="#8655d2"
-        />
-      ),
-      onPress: () => navigation.navigate('UserProfileScreen'),
-    },
-    {
-      id: '3',
-      title: 'My Favorites',
-      icon: <Icon name="favorite" size={24} color="#8655d2" />,
-      onPress: () => navigation.navigate('MyFavoritesScreen'),
-    },
-    {
-      id: '4',
-      title: 'Support',
-      icon: <Feather name="user" size={24} color="#8655d2" />,
-      onPress: () => navigation.navigate('Support'),
-    },
-    {
-      id: '5',
-      title: 'Give Feedback',
-      icon: (
-        <MaterialCommunityIcons
-          name="card-bulleted-outline"
-          size={24}
-          color="#8655d2"
-        />
-      ),
-      onPress: () => navigation.navigate('Feedback'),
-    },
-
-    {
-      id: '6',
-      title: 'Privacy Policy',
-      icon: (
-        <MaterialCommunityIcons
-          name="shield-account"
-          size={24}
-          color="#8655d2"
-        />
-      ),
-      onPress: () => navigation.navigate('PrivacyPolicy'),
-    },
-    {
-      id: '7',
-      title: 'Terms and Conditions',
-      icon: (
-        <MaterialCommunityIcons
-          name="file-document"
-          size={24}
-          color="#8655d2"
-        />
-      ),
-      onPress: () => navigation.navigate('TermsConditions'),
-    },
-    // {
-    //   id: '8',
-    //   title: 'Refund Policy',
-    //   icon: (
-    //     <MaterialCommunityIcons
-    //       name="credit-card-refund-outline"
-    //       size={24}
-    //       color="#8655d2"
-    //     />
-    //   ),
-    //   onPress: () => navigation.navigate('RefundPolicy'),
-    // },
-    {
-      id: '9',
-      title: 'Check for Updates',
-      icon: <MaterialCommunityIcons name="update" size={24} color="#8655d2" />,
-      onPress: handleCheckForUpdate,
-    },
-    {
-      id: '1',
-      title: 'About Us',
-      icon: (
-        <MaterialCommunityIcons
-          name="information-outline"
-          size={24}
-          color="#8655d2"
-        />
-      ),
-      onPress: () => navigation.navigate('AboutUsScreen'),
-    },
-    {
-      id: '10',
-      title: 'Logout',
-      icon: <Feather name="log-out" size={24} color="#8655d2" />,
-      onPress: () => setLogoutModalVisible(true),
-    },
-    
-
-  ];
 
   return (
     <ScrollView
@@ -369,16 +153,18 @@ const ProfileScreen = () => {
             gap: 10,
             marginLeft: responsiveWidth(2),
           }}>
-          <Image
-            source={{
-              uri: 'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png',
-            }}
-            style={{
-              width: responsiveWidth(10),
-              height: responsiveWidth(10),
-              borderRadius: 100,
-            }}
-          />
+          <TouchableOpacity onPress={() => navigation.navigate('UserProfileScreen')}>
+            <Image
+              source={{
+                uri: userDetails?.profile_image  || 'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png',
+              }}
+              style={{
+                width: responsiveWidth(10),
+                height: responsiveWidth(10),
+                borderRadius: 100,
+              }}
+            />
+          </TouchableOpacity>
           <Text style={styles.profileName}>
             {username || userDetails?.name || 'Hello User'}
           </Text>
@@ -395,24 +181,106 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.menuOptions}>
-          {menuItems.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.menuItemMain}
-              onPress={item.onPress}>
-              <View style={styles.menuItemLeft}>
-                {item.icon}
-                <Text style={[styles.menuText]}>{item.title}</Text>
-              </View>
-              <Icon name="chevron-right" size={24} color="#666" />
-            </TouchableOpacity>
-          ))}
+          {/* Account */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('UserProfileScreen')}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Account</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          {/* My Favorites */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('MyFavoritesScreen')}>
+            <View style={styles.menuItemLeft}>
+              <Icon name="favorite" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>My Favorites</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          {/* Support */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('Support')}>
+            <View style={styles.menuItemLeft}>
+              <Feather name="user" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Support</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          {/* Refer & Earn */}
+          <TouchableOpacity
+            style={styles.menuItemMain}
+            onPress={() => navigation.navigate('ReferAndEarnScreen')}
+          >
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="gift-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Refer & Earn</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+
+          {/* Policies Section */}
+          <TouchableOpacity
+            style={styles.menuItemMain}
+            onPress={() => {
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              setIsPoliciesExpanded(prev => !prev);
+            }}
+          >
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="shield-lock-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Policies</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+
+          {isPoliciesExpanded && (
+            <>
+              <TouchableOpacity style={[styles.menuItemMain, { paddingLeft: 40 }]} onPress={() => navigation.navigate('PrivacyPolicy')}>
+                <Text style={styles.menuText}>Privacy Policy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.menuItemMain, { paddingLeft: 40 }]} onPress={() => navigation.navigate('TermsConditions')}>
+                <Text style={styles.menuText}>Terms and Conditions</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* Check for Updates */}
+          {/* <TouchableOpacity style={styles.menuItemMain} onPress={handleCheckForUpdate}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="update" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Check for Updates</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity> */}
+
+          {/* About Us */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('AboutUsScreen')}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="information-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>About Us</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          {/* Logout */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => setLogoutModalVisible(true)}>
+            <View style={styles.menuItemLeft}>
+              <Feather name="log-out" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Logout</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          {/* App Version */}
           <View style={styles.versionContainer}>
-            <Text style={styles.versionText}>
-              App Version: {appVersion || '1.0.0'}
-            </Text>
+            <Text style={styles.versionText}>App Version: {appVersion || '1.0.0'}</Text>
           </View>
         </View>
+
 
       </ScrollView>
       <CustomModal

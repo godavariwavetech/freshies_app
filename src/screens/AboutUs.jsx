@@ -12,7 +12,7 @@ const AboutUsScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()} // This will navigate back
           style={styles.backButton}
         >
-          <Icon name="arrow-back" size={28} color="white" /> {/* Choose your desired icon name */}
+          <Icon name="arrow-back" size={28} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>About Us</Text>
       </View>
@@ -22,7 +22,7 @@ const AboutUsScreen = ({ navigation }) => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Our Philosophy</Text>
         <Text style={styles.paragraph}>
-          At **Abhi24**, we believe that quality food is the foundation of a healthy and happy life. We are a dedicated online delivery service bringing the freshest meat, organic produce, traditional pickles, and other natural food products right to your doorstep.
+          At Abhi24, we believe that quality food is the foundation of a healthy and happy life. We are a dedicated online delivery service bringing the freshest meat, organic produce, traditional pickles, and other natural food products right to your doorstep.
         </Text>
       </View>
 

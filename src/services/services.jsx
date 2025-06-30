@@ -3,7 +3,7 @@ import { panGestureHandlerCustomNativeProps } from 'react-native-gesture-handler
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 // Base URL
-const API_BASE_URL = 'https://testapi.abhi24.in';
+const API_BASE_URL = 'https://api.abhi24.in';
 
 // Create Axios instance
 const api = axios.create({
@@ -56,16 +56,22 @@ export const getBanners = async () => {
 };
 
 // API call to fetch items by subcategory and category
-export const getItems = async (subcategory_id, customerId) => {
+export const getItems = async (subcategory_id, customerId,filter_one) => {
   try {
+    let payload = {
+      customer_id: customerId,
+    };
 
-    const response = await api.post('/public_app/getitems', {
-      subtotal_category_id: subcategory_id,
-      customer_id: customerId
-    });
-
-
-
+    if (!filter_one) {
+      // No brand filter, include subcategory
+      payload.subtotal_category_id = subcategory_id;
+    } else {
+      // Brand filter present, use only brand
+      payload.filter_one = filter_one;
+    }
+    console.log("payload 88888888", payload)
+    const response = await api.post('/public_app/getitems', payload);
+    console.log("final response", response.data.data)
     if (response.data.status === 200) {
       return response.data; // Return the full response
     } else {
@@ -74,8 +80,7 @@ export const getItems = async (subcategory_id, customerId) => {
   } catch (error) {
     console.error('Error fetching items:', {
       message: error.message,
-      subcategory_id,
-      category_id,
+      subcategory_id, 
       errorDetails: error
     });
     throw error;
@@ -122,7 +127,7 @@ export const getItemDetails = async (customerId, uniqueId) => {
       customer_id: customerId,
       unique_id: uniqueId
     });
-
+   
     return response.data;
   } catch (error) {
     console.error('Error fetching item details:', error);

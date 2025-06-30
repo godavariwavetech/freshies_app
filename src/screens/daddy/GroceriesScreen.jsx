@@ -40,7 +40,7 @@ const weightOptions = [
 
 export default function GroceriesScreen({ navigation, route }) {
   const dispatch = useDispatch();
-  const { status = 0, subcategory_id, category_id, subcategory_name } = route.params || {};
+  const { status = 0, subcategory_id, category_id, subcategory_name,filter_one } = route.params || {};
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id);
   const [subtotalcategories, setSubtotalcategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -64,7 +64,6 @@ export default function GroceriesScreen({ navigation, route }) {
   const totalItems = useSelector((state) => state.cart.totalItems);
   const walletData = useSelector((state) => state.wallet);
 
-
   const priceRangeOptions = [
     { label: '₹0 - ₹100', min: 0, max: 100 },
     { label: '₹101 - ₹250', min: 101, max: 250 },
@@ -81,7 +80,7 @@ export default function GroceriesScreen({ navigation, route }) {
           sub_category_id: subcategory_id
         });
         // const filteredSubcategories = subCats.filter((sub) => sub.category_id === category_id);
-        
+
         setSelectedSubcategoryId(subCats[0].id)
         setSubtotalcategories(subCats);
       } catch (error) {
@@ -98,19 +97,15 @@ export default function GroceriesScreen({ navigation, route }) {
       fetchSubcategories();
     }
   }, [category_id]);
-
   // Fetch items
   useEffect(() => {
-    
     const fetchItems = async () => {
       if (!selectedSubcategoryId || !category_id) return;
       try {
         setIsLoading(true);
         setError(null);
-        const response = await getItems(selectedSubcategoryId, customerId);
-        
+        const response = await getItems(selectedSubcategoryId, customerId,filter_one);
         const items = response.data || [];
-
         // Group items strictly by unique_id and sub_category_id
         const groupedItems = items.reduce((acc, item) => {
           // Only process items matching the selected subcategory
@@ -170,7 +165,7 @@ export default function GroceriesScreen({ navigation, route }) {
           wishlist_flag: item.wishlist_flag,
           wishlistId: item.wishlistId
         }));
-        
+
         setProducts(mappedProducts);
       } catch (error) {
         setError('Failed to load items');
@@ -264,8 +259,6 @@ export default function GroceriesScreen({ navigation, route }) {
 
       const adjustedPrice = parseFloat(selectedVariant.selling_price) || 0;
 
-      
-
       const cartItem = {
         ...product,
         id: `${product.unique_id}_${selectedVariant.id}`, // 🔥 use composite id,
@@ -276,11 +269,8 @@ export default function GroceriesScreen({ navigation, route }) {
         category: product.category || '',
         status,
       };
-
       dispatch(addToCart(cartItem));
-
     } catch (error) {
-      
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -293,8 +283,6 @@ export default function GroceriesScreen({ navigation, route }) {
   // Redux-friendly version (in your component file)
 
   const dispatchIncrement = (compositeId, quantityType) => {
-    
-
     const existingItem = cartItems.find(
       (item) => item.id === compositeId && item.variant?.quantity_type === quantityType
     );
@@ -308,8 +296,6 @@ export default function GroceriesScreen({ navigation, route }) {
   };
 
   const dispatchDecrement = (compositeId, quantityType) => {
-    
-
     const existingItem = cartItems.find(
       (item) => item.id === compositeId && item.variant?.quantity_type === quantityType
     );
@@ -396,7 +382,7 @@ export default function GroceriesScreen({ navigation, route }) {
       <Image
         source={{ uri: item.subtotal_category_image || 'https://via.placeholder.com/30' }}
         style={[styles.categoryIcon, selectedSubcategoryId === item.id && styles.selectedCategoryIcon]}
-        resizeMode="contain"
+
       />
       <Text
         style={[styles.categoryText, selectedSubcategoryId === item.id && styles.selectedCategoryText]}
@@ -758,7 +744,7 @@ export default function GroceriesScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity style={styles.searchContainer}>
+      {/* <TouchableOpacity style={styles.searchContainer}>
         <Image
           source={require('./tabassets/searchhome.png')}
           style={styles.searchIcon}
@@ -773,7 +759,7 @@ export default function GroceriesScreen({ navigation, route }) {
           onFocus={() => setSearchQuery('')}
           accessibilityLabel="Search products"
         />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <View style={styles.mainContent}>
         <View style={styles.sideMenu}>
@@ -794,7 +780,7 @@ export default function GroceriesScreen({ navigation, route }) {
                 onPress={() => setFilterModalVisible(true)}
               >
                 <Icon name="filter-list" size={16} color="#333" style={styles.filterIcon} />
-                <Text style={styles.filterText}>Filter {filterOne ? `(${filterOne})` : ''}</Text>
+                <Text style={styles.filterText}>Filter By{filterOne ? `(${filterOne})` : ''}</Text>
                 {filterOne && (
                   <TouchableOpacity
                     style={styles.deleteIconContainer}
@@ -921,8 +907,8 @@ export default function GroceriesScreen({ navigation, route }) {
             <Text style={styles.modalOptionText}>Clear Filter</Text>
           </TouchableOpacity>
         </View>
-
       </Modal>
+
       <Modal
         isVisible={sortModalVisible}
         onBackdropPress={() => setSortModalVisible(false)}
@@ -996,16 +982,15 @@ const styles = StyleSheet.create({
   mainContent: { flex: 1, flexDirection: 'row' },
   sideMenu: {
     width: width * 0.2,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white',
     borderRightWidth: 1,
     borderRightColor: '#e0e0e0',
   },
   categoryList: { flex: 1 },
-  categoryListContent: { paddingVertical: 10 },
+  categoryListContent: { paddingVertical: 1 },
   categoryItem: {
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 10,
-    paddingVertical: 15,
+    backgroundColor: 'white',
+    paddingVertical: 10,
     alignItems: 'center',
   },
   selectedCategoryItem: {
@@ -1013,8 +998,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: '#9010BF',
   },
-  categoryIcon: { width: 30, height: 30, marginBottom: 8 },
-  selectedCategoryIcon: { width: 30, height: 30, marginBottom: 8 },
+  categoryIcon: { width: 60, height: 40, marginBottom: 5, borderRadius: 2 },
+  selectedCategoryIcon: { width: 60, height: 40, marginBottom: 5 },
   categoryText: {
     color: '#000',
     fontWeight: '500',

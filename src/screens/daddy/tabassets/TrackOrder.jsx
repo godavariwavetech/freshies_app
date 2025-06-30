@@ -27,7 +27,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const { orderDetails, status } = route.params || {};
 
-  
+
   const backgroundColor = '#8655d2';
   const [storedOrders, setStoredOrders] = useState([]);
   const [viewSavedOrders, setViewSavedOrders] = useState(false);
@@ -43,7 +43,6 @@ const OrderDetailsScreen = ({ navigation, route }) => {
       setLoadingItems(true);
       try {
         const items = await getOrderItemsByOrderId(orderDetails.orderId);
-        
         setStoredOrders(items);
         orderDetails.items = items;
 
@@ -243,7 +242,9 @@ const OrderDetailsScreen = ({ navigation, route }) => {
         <View style={{ flex: 1 }}>
           <Text style={styles.productName}>{item?.item_name}</Text>
           <Text style={styles.productWeight}>{item?.quantity_type || ''}</Text>
-          <Text style={styles.productDetails}>{item?.item_description || 'Abhi24'}</Text>
+          <Text style={styles.productDetails} numberOfLines={2}>
+            {item?.item_description || 'Abhi24'}
+          </Text>
           <Text style={styles.seller}>Seller: Local Seller</Text>
 
           <View style={styles.priceRow}>
@@ -516,7 +517,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
         onConfirm={() => {
           setCancelAlertVisible(false);
           // TODO: Add your cancel order logic here
-          
+
         }}
         onCancel={() => setCancelAlertVisible(false)}
       />

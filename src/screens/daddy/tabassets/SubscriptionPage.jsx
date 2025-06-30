@@ -240,7 +240,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
               </Text>
               <TouchableOpacity
                 style={styles.exploreButton}
-                onPress={() => navigation.goBack()}
+                onPress={() => navigation.navigate('Home')}
               >
                 <Text style={styles.exploreButtonText}>Explore Products</Text>
               </TouchableOpacity>

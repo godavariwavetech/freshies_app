@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, Text, Image, Pressable, Platform, StyleSheet } from 'react-native';
@@ -23,17 +23,40 @@ import UserActive from './tabassets/UserActive';
 import ReorderScreen from './ReorderScreen';
 import ProfileScreen from './ProfileScreen';
 import CategoriesScreen from './CategoriesScreen';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import ProfileSvg from './tabassets/ProfileSvg';
 import SubscriptionPage from '../daddy/tabassets/SubscriptionPage';
 // import RechargeHistoryScreen from '../daddy/tabassets/RechargeHistoryScreen';
 import ProductDetailsScreen from '../daddy/tabassets/ProductDetailsScreen';
 import PreviousOrdersScreen from '../PreviousOrdersScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { getUserData } from '../../services/services';
+import { setUseDetails } from '../../redux/reducers/auth';
 const Tab = createBottomTabNavigator();
 
 export default function BottomNavigation() {
+  const dispatch = useDispatch();
   const { cartItems } = useSelector((state) => state.Dashboard);
+  const { customerId } = useSelector(state => state.Auth);
+ 
+
+  useEffect(() => {
+    const getUserProfile = async () => {
+      try {
+        const res = await getUserData({ customer_id: customerId });
+        console.log("response0000", res.data[0])
+        if (res.status === 200 && res.data?.length > 0) {
+          
+          const user = res.data[0];
+          console.log("user0000000000000000000000000000000000000", user)
+          dispatch(setUseDetails(user))
+        }
+      } catch (err) {
+        console.log('Error storing userDetails:', err.message);
+      }
+    };
+    getUserProfile();
+  }, []);
 
   return (
     <Tab.Navigator

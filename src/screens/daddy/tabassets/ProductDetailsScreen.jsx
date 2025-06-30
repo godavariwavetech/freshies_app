@@ -11,6 +11,7 @@ import {
   StatusBar,
   Platform,
   SafeAreaView,
+  Linking,
   ActivityIndicator,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
@@ -24,6 +25,7 @@ import { getItemDetails, recommendItems } from '../../../services/services';
 import { combineSlices } from '@reduxjs/toolkit';
 import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import { useSelector } from 'react-redux';
+import Icon2 from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('window');
 
@@ -38,12 +40,10 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const { customerId } = useSelector(state => state.Auth);
   const { status = 0, getCategories } = route.params || {};
   const backgroundColor = '#8655d2';
-  
 
   useEffect(() => {
     const subcategoryItems = async () => {
       const response = await recommendItems(route.params.item.subcategory_id);
-      
       setRecommendedItems(response.data)
     }
     subcategoryItems()
@@ -55,7 +55,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
       try {
         if (route.params?.unique_id) {
           const response = await getItemDetails(customerId, route.params.unique_id);
-          
+          // console.log("item-details", response.data[0])
           if (response.data && response.data.length > 0) {
             const fetchedDetails = response.data;
             const processedDetails = fetchedDetails.map(detail => ({
@@ -70,7 +70,8 @@ const ProductDetailScreen = ({ navigation, route }) => {
               item_ind: detail.item_ind,
               quantity_type: detail.quantity_type,
               price: parseFloat(detail.actual_price),
-              offer: parseFloat(detail.selling_price)
+              offer: parseFloat(detail.selling_price),
+              productLink: detail.product_link
             }));
             setProductDetails(processedDetails);
             setSelectedWeight(processedDetails[0].quantity_type);
@@ -117,7 +118,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
       </View>
     );
   }
-
 
   const toggleFavorite = async () => {
     if (!productDetails) return;
@@ -166,15 +166,11 @@ const ProductDetailScreen = ({ navigation, route }) => {
     }
   };
 
-
   const handleBuyOnce = async (product) => {
-    
     try {
       const price = parseFloat(product.offer) || 0;
-      
       const cartData = await AsyncStorage.getItem('cartItems');
       const cart = cartData ? JSON.parse(cartData) : [];
-
       const index = cart.findIndex(
         (item) =>
           item.id === product.unique_id &&
@@ -182,7 +178,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
       );
       let updatedCart = [...cart];
       if (index > -1) {
-        
         const existingItem = cart[index];
         const newQuantity = (existingItem.quantity || 1) + 1;
         updatedCart[index] = {
@@ -191,7 +186,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
           totalPrice: price * newQuantity,
         };
       } else {
-        
         updatedCart.push({
           ...product,
           id: product.unique_id,
@@ -200,7 +194,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
           status,
         });
       }
-      
       await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
       // setCartItems(updatedCart);
       navigation.navigate('ByOncescreen', {
@@ -220,9 +213,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
     }
   };
 
-
-  // 
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
@@ -239,7 +229,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
               style={styles.headerImage}
               defaultSource={require('../../daddy/tabassets/prawns.png')}
               onError={(e) => {
-                
+
               }}
             />
             <LinearGradient
@@ -314,29 +304,22 @@ const ProductDetailScreen = ({ navigation, route }) => {
             ))}
           </View>
 
-          {/* Additional Product Information */}
-          {/* <View style={styles.additionalInfoContainer}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Item Name:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].name}</Text>
+          <TouchableOpacity style={styles.brandCard} onPress={() => navigation.navigate('GroceriesScreen', {
+            subcategory_id: productDetails[0].sub_category_id,
+            subcategory_name: productDetails[0]?.filter_one|| "" ,
+            category_id:productDetails[0].category_id,
+            filter_one: productDetails[0]?.filter_one
+          })}>
+            <View style={styles.brandCardContent}>
+              {/* Optional brand icon - use your own or fallback to generic */}
+              <Icon2 name="local-offer" size={24} color="#FFD700" style={styles.brandIcon} />
+
+              <Text style={styles.brandCardText}>View all {productDetails[0].filter_one} products</Text>
+
+              <Icon2 name="chevron-right" size={26} color="#888" />
             </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Category ID:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].category_id}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Subcategory ID:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].sub_category_id}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Item Indicator:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].item_ind}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Filter:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].filter_one || 'N/A'}</Text>
-            </View>
-          </View> */}
+          </TouchableOpacity>
+
 
           {/* Description Section */}
           <View style={styles.description}>
@@ -344,28 +327,16 @@ const ProductDetailScreen = ({ navigation, route }) => {
             <Text style={styles.descriptionText}>
               {productDetails[0].description || 'No description available'}
             </Text>
-          </View>
 
-          {/* Additional Details */}
-          {/* <View style={styles.additionalDetailsContainer}>
-            <Text style={styles.sectionTitle}>Additional Information</Text>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Category ID:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].category_id}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Subcategory ID:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].sub_category_id}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Filter:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].filter_one || 'N/A'}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Item Indicator:</Text>
-              <Text style={styles.detailValue}>{productDetails[0].item_ind}</Text>
-            </View>
-          </View> */}
+            {/* Conditionally render "Read more" if product_link exists */}
+            {productDetails[0].productLink && (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(productDetails[0].productLink)}
+              >
+                <Text style={styles.readMoreText}>Read more</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Restore Recommended Section */}
           <View style={styles.recommendedSection}>
@@ -380,22 +351,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
                 <TouchableOpacity
                   key={`${recItem.id}-${recItem.category || 'default'}`}
                   style={styles.recommendedItemContainer}
-                  // onPress={() => {
-                  //   // Determine the product type for the recommended item
-                  //   const recProductType = productType; // Since recommended items are already filtered by productType
-                  //   navigation.push('ProductDetailsScreen', {
-                  //     item: {
-                  //       ...recItem,
-                  //       category: productDetails.category, // Preserve category for consistency
-                  //       subcategory: productDetails.subcategory || undefined,
-                  //       status,
-                  //       productType: recProductType,
-                  //     },
-                  //     status,
-                  //     productType: recProductType,
-                  //     getCategories,
-                  //   });
-                  // }}
                   onPress={() =>
                     navigation.navigate('ProductDetailsScreen', {
                       item: {
@@ -424,7 +379,6 @@ const ProductDetailScreen = ({ navigation, route }) => {
                       <Text style={[styles.recommendedItemOffer, { color: backgroundColor }]}>
                         ₹{recItem.actual_price}
                       </Text>
-
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -435,15 +389,14 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
         {/* Bottom Bar for Buy and Subscribe */}
         <View style={styles.bottomBar}>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={[styles.subscribeButton, { borderColor: backgroundColor }]}
             onPress={() => {
               // Find the selected item details
               const selectedItem = productDetails.find(
                 item => item.quantity_type === selectedWeight
               );
-
-              navigation.navigate('SubscriptionPage', {
+              navigation.navigate('EditSubscribe', {
                 productDetails: selectedItem,
                 status,
                 getCategories,
@@ -452,7 +405,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
             }}
           >
             <Text style={[styles.subscribeButtonText, { color: backgroundColor }]}>SUBSCRIBE</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.buyButton, { backgroundColor }]}
             onPress={() => {
@@ -460,15 +413,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
               const selectedItem = productDetails.find(
                 item => item.quantity_type === selectedWeight
               );
-
-
               handleBuyOnce(selectedItem)
-              // navigation.navigate('ByOncescreen', {
-              //   productDetails: selectedItem,
-              //   status,
-              //   getCategories,
-              //   selectedQuantity: selectedWeight,
-              // });
             }}
           >
             <Text style={styles.buyButtonText}>BUY ONCE</Text>
@@ -495,6 +440,11 @@ const styles = StyleSheet.create({
     height: hp('30%'),
     resizeMode: 'cover',
   },
+  brandLink: {
+    color: '#007BFF', // or your theme color
+    textDecorationLine: 'underline',
+    fontWeight: '500',
+  },
   gradientOverlay: {
     position: 'absolute',
     top: 0,
@@ -502,6 +452,37 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: hp('30%'),
+  },
+  readMoreText: {
+    color: '#007bff',
+    marginTop: 6,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  brandCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 14,
+    marginVertical: 10,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  brandCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  brandIcon: {
+    marginRight: 12,
+  },
+  brandCardText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
   backButton: {
     position: 'absolute',

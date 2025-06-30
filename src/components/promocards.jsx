@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: CARD_WIDTH,
-    height: 188,
+    height: 100,
     borderRadius: 15,
     overflow: 'hidden', // 🔥 This ensures image corners get clipped
     marginHorizontal: PADDING_HORIZONTAL / 2,
