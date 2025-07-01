@@ -23,6 +23,7 @@ import Toast from 'react-native-toast-message';
 
 const EditSubscriptionScreen = ({ navigation, route }) => {
   const { productDetails } = route.params;
+  console.log("productDetails--------------------------------------------", productDetails)
   const today = dayjs().format('YYYY-MM-DD');
   const [scheduleType, setScheduleType] = useState('Custom');
   const [startDate, setStartDate] = useState(dayjs().add(1, 'day').toDate());
@@ -226,17 +227,14 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           <View style={styles.productDetails}>
             <Text style={styles.productCategory}>{productDetails.filter_one || 'Category'}</Text>
             <Text style={styles.productName}>{productDetails.name?.trim()}</Text>
-            <Text style={styles.productWeight}>{productDetails.variant?.quantity_type}</Text>
+            <Text style={styles.productWeight}>{productDetails.variant?.quantity_type || productDetails.quantity_type}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={styles.productPrice}>
-                ₹{parseFloat(productDetails.variant?.selling_price || 0) * quantity}
+                ₹{parseFloat(productDetails.variant?.selling_price || productDetails.selling_price || 0) * quantity}
               </Text>
-              {productDetails.variant?.actual_price &&
-                productDetails.variant?.actual_price !== productDetails.variant?.selling_price && (
-                  <Text style={styles.actualPrice}>
-                    ₹{parseFloat(productDetails.variant.actual_price || 0)}
-                  </Text>
-                )}
+              <Text style={styles.actualPrice}>
+                ₹{parseFloat(productDetails.variant?.actual_price || productDetails.price || "")}
+              </Text>
             </View>
 
             {/* Quantity Selector */}
@@ -376,7 +374,14 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.updateButton} onPress={handleSubscribe}>
+        <TouchableOpacity
+          style={[
+            styles.updateButton,
+            Object.keys(markedDates).length === 0 && { backgroundColor: '#ccc' }
+          ]}
+          disabled={Object.keys(markedDates).length === 0}
+          onPress={handleSubscribe}
+        >
           <Text style={styles.updateButtonText}>Subscribe</Text>
         </TouchableOpacity>
         {/* <View style={styles.secondaryButtons}>

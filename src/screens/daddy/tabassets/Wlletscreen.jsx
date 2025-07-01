@@ -10,7 +10,8 @@ import {
   TextInput,
   alert,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView
 } from 'react-native';
 import RadioForm from 'react-native-simple-radio-button';
 import { Picker } from '@react-native-picker/picker';
@@ -48,7 +49,7 @@ const WalletPage = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [walletData, setWalletDataState] = useState(null);
   const [walletLoading, setWalletLoading] = useState(true);
-  const { customerId, mobileNumber, referralCode,username } = useSelector(state => state.Auth);
+  const { customerId, mobileNumber, referralCode, username } = useSelector(state => state.Auth);
   const [transactions, setTransactions] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const dispatch = useDispatch();
@@ -227,15 +228,15 @@ const WalletPage = ({ navigation }) => {
             setIsLoading(false);
           }).catch((error) => {
             setIsLoading(false);
-          
+
             let errorMessage = 'Transaction was not completed.';
-          
+
             // Handle user cancel case explicitly
             if (error?.code === 0 || error?.description === 'The payment was cancelled') {
               console.log('User exited Razorpay payment screen.');
               return; // Don’t show alert for user cancel
             }
-          
+
             // Handle API or Razorpay failures
             if (typeof error === 'object') {
               if (error.description) {
@@ -246,10 +247,10 @@ const WalletPage = ({ navigation }) => {
                 errorMessage = error.reason.replace(/_/g, ' ');
               }
             }
-          
+
             console.error('Payment failed:', error);
             Alert.alert('Payment Failed', errorMessage);
-          });        
+          });
       } else {
         setIsLoading(false);
         Alert.alert('Error', 'Failed to create payment order.');
@@ -278,8 +279,32 @@ const WalletPage = ({ navigation }) => {
         </View>
       </View>
       {/* Balance Section (Card) */}
+      {selectedWallet === 'User Wallet' && parseFloat(walletData?.user_balance_amount || 0) <= 0 && (
+        <View
+          style={{
+            backgroundColor: '#fff0f0',
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            borderLeftWidth: 4,
+            borderLeftColor: '#D32F2F',
+          }}
+        >
+          <Text
+            style={{
+              color: '#D32F2F',
+              fontSize: 14,
+              fontWeight: '500',
+            }}
+          >
+            You have no User Cash. If you want to subscribe to any product, please recharge your wallet.
+          </Text>
+        </View>
+      )}
+
       <View style={styles.balanceContainer}>
         {/* Tabs */}
+
         <View style={styles.walletHeader}>
           <TouchableOpacity
             onPress={() => handleWalletPress('User Wallet')}
@@ -319,8 +344,6 @@ const WalletPage = ({ navigation }) => {
             `₹${parseFloat(walletData?.abhi24_balanced_amount || 0).toFixed(2)}`
           )}
         </Text>
-
-        {/* Optional Subtext */}
         <Text style={styles.balanceSubText}>
           {selectedWallet === 'User Wallet'
             ? `Used: ₹${walletData?.user_used_amount || 0}`
@@ -529,7 +552,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: wp('4%'),
-    paddingVertical: hp('4%'),
+    paddingVertical: hp('2%'),
     backgroundColor: '#8655d2',
   },
   headerTitle: {

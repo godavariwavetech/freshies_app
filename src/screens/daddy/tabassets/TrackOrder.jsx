@@ -404,10 +404,10 @@ const OrderDetailsScreen = ({ navigation, route }) => {
 
           </View>
 
-          <View style={styles.shippingRow}>
+          {/* <View style={styles.shippingRow}>
             <Text style={styles.shippingLabel}>Customer ID:</Text>
             <Text style={styles.shippingValue}>{customerId}</Text>
-          </View>
+          </View> */}
 
           <View style={styles.shippingRow}>
             <Text style={styles.shippingLabel}>Mobile:</Text>
@@ -498,12 +498,12 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           >
             <Text style={styles.footerBtnTextOutline}>View Track</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.footerBtnFilled}
             onPress={() => setCancelAlertVisible(true)}
           >
             <Text style={styles.footerBtnTextFilled}>Cancel Order</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </ScrollView>
 

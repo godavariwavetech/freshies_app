@@ -18,12 +18,11 @@ const cartSlice = createSlice({
         item.id === newItem.id && item.category === newItem.category
       );
       
-      
+      console.log("existingItemIndex",existingItemIndex)
       if (existingItemIndex > -1) {
         // If item exists, update its quantity with limit
         const currentQuantity = state.items[existingItemIndex].quantity;
         const newQuantity = Math.min(currentQuantity + (newItem.quantity || 1), MAX_QUANTITY_LIMIT);
-
         state.items[existingItemIndex].quantity = newQuantity;
       } else {
         // If item doesn't exist, add it to cart

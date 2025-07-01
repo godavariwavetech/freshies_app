@@ -46,7 +46,6 @@ function UserHome() {
     try {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
-    console.log("helooiiii", fetchedSubCategories)
       setSubCategories(fetchedSubCategories);
       const uniqueCategories = [
         ...new Map(
@@ -232,14 +231,15 @@ function UserHome() {
                           />
                         </View>
 
-                        <Text style={styles.categoryGridTextSmall}>
-                          {subcategory.sub_category_name}
-                        </Text>
+                        <View style={{ minHeight: 20, justifyContent: 'center' }}>
+                          <Text style={styles.categoryGridTextSmall} numberOfLines={2} ellipsizeMode="tail">
+                            {subcategory.sub_category_name}
+                          </Text>
+                        </View>
                       </View>
                     </TouchableOpacity>
                   ))}
                 </View>
-
               )}
             </View>
           ))
@@ -341,15 +341,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 2,
   },
-
   categoryGridItemSmall: {
-    width: '30%', // or adjust based on screen width
-    borderRadius: 10,
+    width: '30%',
     alignItems: 'center',
     justifyContent: 'flex-start',
     margin: 5,
-    marginBottom: 10,
-    // backgroundColor: "green"
   },
   categoryGridItemContent: {
     flex: 1,
@@ -362,32 +358,29 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     backgroundColor: '#fff',
-    // ✅ iOS shadow (soft and natural)
     shadowOffset: { width: 0, height: 2 },
-    shadowColor: '#8655d2',     // A glow color (e.g., purple)
+    shadowColor: '#8655d2',
     shadowOpacity: 0.3,
     shadowRadius: 6,
-    elevation: 4,                // Android glow-like effect
-    // ✅ Overflow settings
+    elevation: 4,
     marginBottom: 5,
-    overflow: Platform.OS === 'ios' ? 'visible' : 'hidden',
-    flex: 1,
-    flexDirection: "row",
+    overflow: 'hidden', // Better image clip
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "center"
   },
   categoryGridImageSmall: {
-    width: '90%',
-    height: '90%',
-    borderRadius: 8,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover', // OR 'contain' based on preference
   },
   categoryGridTextSmall: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#000',
     fontWeight: '500',
     textAlign: 'center',
-    flexWrap: 'wrap',
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
+    lineHeight: 16,
+    maxWidth: 100, // match imageWrapper width
   },
   errorText: {
     fontSize: 16,

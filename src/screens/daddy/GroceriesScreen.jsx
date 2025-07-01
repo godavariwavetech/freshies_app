@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToCart, clearCart, updateQuantity, removeFromCart } from '../../redux/reducers/cartReducer';
 import { RootState } from '../../redux/store'; // adjust path
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import LinearGradient from 'react-native-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 const productCardWidth = (width * 0.8 - 32) / 2;
@@ -145,6 +146,7 @@ export default function GroceriesScreen({ navigation, route }) {
           return acc;
         }, []);
         // Map grouped items to product structure
+       
         const mappedProducts = groupedItems.map(item => ({
           id: item.id, // Use unique_id as the main identifier
           category_id: item.category_id,
@@ -163,9 +165,10 @@ export default function GroceriesScreen({ navigation, route }) {
           variants: item.variants, // Include all variants
           subscription: item.subscription,
           wishlist_flag: item.wishlist_flag,
-          wishlistId: item.wishlistId
+          wishlistId: item.wishlistId,
+          value: item.value
         }));
-
+        console.log("groupedItems",mappedProducts)
         setProducts(mappedProducts);
       } catch (error) {
         setError('Failed to load items');
@@ -238,16 +241,14 @@ export default function GroceriesScreen({ navigation, route }) {
     }
   };
 
-
-
   const isFavorite = (item) => item?.wishlist_flag === 1;
-
   const getAdjustedPrice = (product, weight) => {
     const weightOption = weightOptions.find((opt) => opt.value === weight);
     return product.price * (weightOption?.priceMultiplier || 1);
   };
 
   const handleBuyOnce = async (product) => {
+    console.log("firstproduct:", product)
     try {
       // Get selected quantity type from productWeights or fallback to first
       const selectedQuantityType = productWeights[product.id] || product.variants[0].quantity_type;
@@ -269,6 +270,7 @@ export default function GroceriesScreen({ navigation, route }) {
         category: product.category || '',
         status,
       };
+      console.log("thirdproduct:", cartItem)
       dispatch(addToCart(cartItem));
     } catch (error) {
       Toast.show({
@@ -374,24 +376,48 @@ export default function GroceriesScreen({ navigation, route }) {
     return filtered;
   };
 
-  const renderSubcategory = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.categoryItem, selectedSubcategoryId === item.id && styles.selectedCategoryItem]}
-      onPress={() => setSelectedSubcategoryId(item.id)}
-    >
-      <Image
-        source={{ uri: item.subtotal_category_image || 'https://via.placeholder.com/30' }}
-        style={[styles.categoryIcon, selectedSubcategoryId === item.id && styles.selectedCategoryIcon]}
-
-      />
-      <Text
-        style={[styles.categoryText, selectedSubcategoryId === item.id && styles.selectedCategoryText]}
-        numberOfLines={2}
-      >
-        {item.subtotal_category_name}
-      </Text>
-    </TouchableOpacity>
-  );
+  const renderSubcategory = ({ item }) => {
+    const isSelected = selectedSubcategoryId === item.id;
+  
+    const content = (
+      <>
+        <Image
+          source={{ uri: item.subtotal_category_image || 'https://via.placeholder.com/30' }}
+          style={[styles.categoryIcon, isSelected && styles.selectedCategoryIcon]}
+        />
+        <Text
+          style={[styles.categoryText, isSelected && styles.selectedCategoryText]}
+          numberOfLines={2}
+        >
+          {item.subtotal_category_name}
+        </Text>
+      </>
+    );
+  
+    if (isSelected) {
+      return (
+        <TouchableOpacity onPress={() => setSelectedSubcategoryId(item.id)}>
+          <LinearGradient
+            colors={['#ffffff', '#f2e9fc']} // Very light violet gradient
+            style={[styles.categoryItem, styles.selectedCategoryItem]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+          >
+            {content}
+          </LinearGradient>
+        </TouchableOpacity>
+      );
+    } else {
+      return (
+        <TouchableOpacity
+          style={styles.categoryItem}
+          onPress={() => setSelectedSubcategoryId(item.id)}
+        >
+          {content}
+        </TouchableOpacity>
+      );
+    }
+  };
 
   const renderProduct = ({ item }) => {
     const selectedQuantityType = productWeights[item.id] || item.variants[0].quantity_type;
@@ -408,7 +434,7 @@ export default function GroceriesScreen({ navigation, route }) {
     }));
 
     return (
-      <View style={[styles.productCard, { width: productCardWidth, gap: 8 }]}>
+      <View style={[styles.productCard, { width: productCardWidth, gap: 2 }]}>
         <TouchableOpacity
           style={styles.favoriteIcon}
           onPress={() => toggleFavorite(item)}
@@ -994,12 +1020,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedCategoryItem: {
-    backgroundColor: '#8655d2',
+    
     borderLeftWidth: 3,
     borderLeftColor: '#9010BF',
   },
-  categoryIcon: { width: 60, height: 40, marginBottom: 5, borderRadius: 2 },
-  selectedCategoryIcon: { width: 60, height: 40, marginBottom: 5 },
+  categoryIcon: { width: "100%", height: 50, marginBottom: 5, borderRadius: 2, resizeMode: 'contain' },
+  selectedCategoryIcon: { width: "100%", height: 50, marginBottom: 5, resizeMode: 'contain' },
   categoryText: {
     color: '#000',
     fontWeight: '500',
@@ -1007,7 +1033,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: '100%',
   },
-  selectedCategoryText: { color: '#fff', fontWeight: 'bold' },
+  selectedCategoryText: { color: '#000', fontWeight: 'bold' },
   productArea: { width: productAreaWidth, flex: 1 },
   filterRow: {
     flexDirection: 'row',
@@ -1057,7 +1083,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: productCardWidth,
-    height: (productCardWidth - 12) * 0.7,
+    height: (productCardWidth - 5) * 0.8,
     borderRadius: 4,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,

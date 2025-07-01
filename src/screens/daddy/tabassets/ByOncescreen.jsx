@@ -55,7 +55,6 @@ const BasketScreen = ({ navigation, route }) => {
     "d_in": 0
   })
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
-
   const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
@@ -76,7 +75,7 @@ const BasketScreen = ({ navigation, route }) => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
 
-
+  console.log("cartItems+++++++++++++++++++++++++++++++++++", cartItems)
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
       checkAddressExistenceInList();
@@ -196,7 +195,7 @@ const BasketScreen = ({ navigation, route }) => {
 
   // Calculate total price
   const calculateTotalPrice = () => {
-    const subtotal = cartItems.reduce((total, item) => total + (Number(item.variant?.selling_price || 0) * item.quantity), 0);
+    const subtotal = cartItems.reduce((total, item) => total + (Number(item.variant?.selling_price || item.offer || 0) * item.quantity), 0);
 
     // Apply coupon if available
     if (coupon) {
@@ -259,10 +258,10 @@ const BasketScreen = ({ navigation, route }) => {
       />
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemWeight}>{item.variant?.quantity_type || item.defaultWeight || item.weight}</Text>
+        <Text style={styles.itemWeight}>{item.variant?.quantity_type || item?.quantity_type || item.weight}</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.itemPrice}>₹{(Number(item.variant?.selling_price || 0) * item.quantity).toFixed(2)}</Text>
-          <Text style={styles.originalPrice}>₹{(Number(item.variant?.actual_price || 0) || item.originalPrice || 0).toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>₹{(Number(item.variant?.selling_price || item.offer || 0) * item.quantity).toFixed(2)}</Text>
+          <Text style={styles.originalPrice}>₹{(Number(item.variant?.actual_price || item.price || 0) || item.originalPrice || 0).toFixed(2)}</Text>
         </View>
       </View>
       <View style={styles.quantityContainer}>
@@ -335,6 +334,7 @@ const BasketScreen = ({ navigation, route }) => {
   const handlePlaceOrder = async () => {
     try {
       setIsProcessingPayment(true);
+      console.log("cartItems", cartItems)
       const mappedItems = cartItems.map((item) => {
         // Determine which price values to use
         const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
@@ -359,6 +359,7 @@ const BasketScreen = ({ navigation, route }) => {
           filter_one: filterOne,
           quantity_type: quantityType,
           shop_id: item?.shop_id?.toString() || "",
+          value: item?.value
         };
       });
 
@@ -399,7 +400,7 @@ const BasketScreen = ({ navigation, route }) => {
         "delivery_instruction": deliveryInstructions,
         "sub_order_array": mappedItems
       };
-     
+
       console.log("----------------", payload)
       if (selectedPaymentMethod === 'COD') {
         const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
@@ -477,31 +478,31 @@ const BasketScreen = ({ navigation, route }) => {
         },
         theme: { color: '#8655d2' },
       };
-    
+
       RazorpayCheckout.open(options)
         .then(async data => {
           payload.payment_id = data.razorpay_payment_id;
           payload.razorpay_order_id = data.razorpay_order_id;
           payload.order_status = 0;
-    
+
           await dispatch(updateOrderStatus({
             paymentId: data.razorpay_payment_id,
             rzpId: data.razorpay_order_id,
             orderId: pacedResponse.payload.id,
             orderStatus: 0
           }));
-    
+
           navigation.navigate("OrderSuccess", { orderDetails, status: 0 });
         })
         .catch(error => {
           let errorMessage = 'Transaction was not completed.';
-    
+
           // Handle user cancel case explicitly
           if (error?.code === 0 || error?.description === 'The payment was cancelled') {
             console.log('User exited Razorpay payment screen.');
             return; // Don’t show alert for user cancel
           }
-    
+
           // Extract more specific error messages if available
           if (typeof error === 'object') {
             if (error.description) {
@@ -512,7 +513,7 @@ const BasketScreen = ({ navigation, route }) => {
               errorMessage = error.reason.replace(/_/g, ' ');
             }
           }
-    
+
           console.error('Payment failed:', error);
           Alert.alert('Payment Failed', errorMessage);
         });
@@ -522,7 +523,7 @@ const BasketScreen = ({ navigation, route }) => {
     } finally {
       setIsProcessingPayment(false);
     }
- }
+  }
 
   if (isLoading) {
     return (
@@ -700,37 +701,7 @@ const BasketScreen = ({ navigation, route }) => {
             </Text>
           </TouchableOpacity>
 
-          {showInstructionModal && (
-            <View style={styles.CustomModalOverlay}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Add Delivery Instructions</Text>
-                <TextInput
-                  style={styles.instructionInput}
-                  placeholder="Enter any delivery notes..."
-                  multiline
-                  value={tempInstruction}
-                  onChangeText={setTempInstruction}
-                />
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    onPress={() => setShowInstructionModal(false)}
-                    style={styles.cancelButton}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      dispatch(setDeliveryInstructions(tempInstruction));
-                      setShowInstructionModal(false);
-                    }}
-                    style={styles.saveButton}
-                  >
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          )}
+
 
           {/* Order Summary */}
           <View style={styles.orderSummary}>
@@ -891,6 +862,37 @@ const BasketScreen = ({ navigation, route }) => {
         </View>
       </Modal>
 
+      {showInstructionModal && (
+        <View style={styles.CustomModalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Add Delivery Instructions</Text>
+            <TextInput
+              style={styles.instructionInput}
+              placeholder="Enter any delivery notes..."
+              multiline
+              value={tempInstruction}
+              onChangeText={setTempInstruction}
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => setShowInstructionModal(false)}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  dispatch(setDeliveryInstructions(tempInstruction));
+                  setShowInstructionModal(false);
+                }}
+                style={styles.saveButton}
+              >
+                <Text style={styles.saveButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -1286,7 +1288,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
+    zIndex: 20000,
   },
   modalContainer: {
     backgroundColor: 'white',
@@ -1311,6 +1313,7 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   cancelButton: {
     marginRight: 15,

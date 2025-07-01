@@ -24,12 +24,14 @@ import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { getItemDetails, recommendItems } from '../../../services/services';
 import { combineSlices } from '@reduxjs/toolkit';
 import FocusAwareStatusBar from '../../../components/CustomStatusBar';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
-
+import { addToCart } from '../../../redux/reducers/cartReducer';
 const { width } = Dimensions.get('window');
 
+
 const ProductDetailScreen = ({ navigation, route }) => {
+  const dispatch = useDispatch();
   const [productDetails, setProductDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
@@ -39,6 +41,12 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const [recommendedItems, setRecommendedItems] = useState([]);
   const { customerId } = useSelector(state => state.Auth);
   const { status = 0, getCategories } = route.params || {};
+  const [showFull, setShowFull] = useState(false);
+  const walletData = useSelector((state) => state.wallet);
+
+
+  const previewLength = 200; // chars
+
   const backgroundColor = '#8655d2';
 
   useEffect(() => {
@@ -55,10 +63,10 @@ const ProductDetailScreen = ({ navigation, route }) => {
       try {
         if (route.params?.unique_id) {
           const response = await getItemDetails(customerId, route.params.unique_id);
-          // console.log("item-details", response.data[0])
           if (response.data && response.data.length > 0) {
             const fetchedDetails = response.data;
             const processedDetails = fetchedDetails.map(detail => ({
+              ...detail,
               id: detail.id,
               unique_id: detail.unique_id,
               name: detail.item_name,
@@ -167,35 +175,21 @@ const ProductDetailScreen = ({ navigation, route }) => {
   };
 
   const handleBuyOnce = async (product) => {
+
     try {
-      const price = parseFloat(product.offer) || 0;
-      const cartData = await AsyncStorage.getItem('cartItems');
-      const cart = cartData ? JSON.parse(cartData) : [];
-      const index = cart.findIndex(
-        (item) =>
-          item.id === product.unique_id &&
-          item.subcategory_id === route.params.item.subcategory_id
-      );
-      let updatedCart = [...cart];
-      if (index > -1) {
-        const existingItem = cart[index];
-        const newQuantity = (existingItem.quantity || 1) + 1;
-        updatedCart[index] = {
-          ...existingItem,
-          quantity: newQuantity,
-          totalPrice: price * newQuantity,
-        };
-      } else {
-        updatedCart.push({
-          ...product,
-          id: product.unique_id,
-          quantity: 1,
-          subcategory_id: route.params.item.subcategory_id,
-          status,
-        });
-      }
-      await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
-      // setCartItems(updatedCart);
+      const selectedQuantityType = selectedWeight || product.variants[0].quantity_type;
+
+      const cartItem = {
+        ...product,
+        id: `${product.unique_id}_${product.id}`, // 🔥 use composite id,
+        quantity: 1,
+        variant: selectedQuantityType,
+        subcategory_id: product.sub_category_id,
+        category: product.category || '',
+        status,
+      };
+      console.log("secondproduct:", cartItem)
+      dispatch(addToCart(cartItem));
       navigation.navigate('ByOncescreen', {
         productDetails: product,
         // status,
@@ -212,6 +206,34 @@ const ProductDetailScreen = ({ navigation, route }) => {
       });
     }
   };
+
+  const toggleDescription = () => setShowFull(prev => !prev);
+
+  const description = productDetails[0]?.description || 'No description available';
+
+  const getThumbnailFromLink = (url) => {
+    if (!url) return null;
+
+    // Handle YouTube only
+    const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([-_a-zA-Z0-9]{11})/;
+    const match = url.match(youtubeRegex);
+
+    if (match) {
+      return {
+        type: 'youtube',
+        uri: `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`,
+      };
+    }
+
+    // For Instagram or unknown links, no thumbnail
+    return {
+      type: 'none',
+      uri: null,
+    };
+  };
+
+
+  const thumbnail = getThumbnailFromLink(productDetails[0].productLink);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
@@ -306,8 +328,8 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
           <TouchableOpacity style={styles.brandCard} onPress={() => navigation.navigate('GroceriesScreen', {
             subcategory_id: productDetails[0].sub_category_id,
-            subcategory_name: productDetails[0]?.filter_one|| "" ,
-            category_id:productDetails[0].category_id,
+            subcategory_name: productDetails[0]?.filter_one || "",
+            category_id: productDetails[0].category_id,
             filter_one: productDetails[0]?.filter_one
           })}>
             <View style={styles.brandCardContent}>
@@ -325,17 +347,57 @@ const ProductDetailScreen = ({ navigation, route }) => {
           <View style={styles.description}>
             <Text style={styles.sectionTitle}>Description</Text>
             <Text style={styles.descriptionText}>
-              {productDetails[0].description || 'No description available'}
+              {showFull || description.length <= previewLength
+                ? description
+                : `${description.slice(0, previewLength)}...`}
             </Text>
-
-            {/* Conditionally render "Read more" if product_link exists */}
-            {productDetails[0].productLink && (
-              <TouchableOpacity
-                onPress={() => Linking.openURL(productDetails[0].productLink)}
-              >
-                <Text style={styles.readMoreText}>Read more</Text>
+            {description.length > previewLength && (
+              <TouchableOpacity onPress={toggleDescription}>
+                <Text style={styles.readMoreText}>{showFull ? 'Read Less ▲' : 'Read More ▼'}</Text>
               </TouchableOpacity>
             )}
+
+            {productDetails[0].productLink && (
+              <TouchableOpacity
+                style={styles.videoLinkCard}
+                onPress={() => Linking.openURL(productDetails[0].productLink)}
+                activeOpacity={0.8}
+              >
+                {/* Show preview image only for YouTube */}
+                {productDetails[0].productLink.includes('youtube') && thumbnail?.uri && (
+                  <Image
+                    source={{ uri: thumbnail.uri }}
+                    style={styles.videoThumbnail}
+                    resizeMode="cover"
+                  />
+                )}
+
+                <View style={styles.videoLinkContent}>
+                  <Icon2
+                    name={
+                      productDetails[0].productLink.includes('youtube')
+                        ? 'ondemand-video'
+                        : productDetails[0].productLink.includes('instagram')
+                          ? 'video-library'
+                          : 'play-circle'
+                    }
+                    size={24}
+                    color="#ff4444"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={styles.videoLinkText}>
+                    {productDetails[0].productLink.includes('youtube')
+                      ? 'Watch on YouTube'
+                      : productDetails[0].productLink.includes('instagram')
+                        ? 'Watch on Instagram'
+                        : 'Watch Product Video'}
+                  </Text>
+                  <Icon2 name="chevron-right" size={22} color="#888" />
+                </View>
+              </TouchableOpacity>
+            )}
+
+
           </View>
 
           {/* Restore Recommended Section */}
@@ -392,16 +454,25 @@ const ProductDetailScreen = ({ navigation, route }) => {
           <TouchableOpacity
             style={[styles.subscribeButton, { borderColor: backgroundColor }]}
             onPress={() => {
-              // Find the selected item details
+              const isAbhi24Category = false; 
+
               const selectedItem = productDetails.find(
                 item => item.quantity_type === selectedWeight
               );
-              navigation.navigate('EditSubscribe', {
-                productDetails: selectedItem,
-                status,
-                getCategories,
-                selectedQuantity: selectedWeight,
-              });
+              const balanceToCheck = isAbhi24Category
+                ? parseFloat(walletData.abhi24_balanced_amount || '0')
+                : parseFloat(walletData.user_balance_amount || '0');
+
+              if (balanceToCheck <= 0) {
+                navigation.navigate('Wlletscreen'); // 👈 adjust route name
+              } else {
+                navigation.navigate('EditSubscribe', {
+                  productDetails: selectedItem,
+                  status,
+                  getCategories,
+                  selectedQuantity: selectedWeight,
+                });
+              }
             }}
           >
             <Text style={[styles.subscribeButtonText, { color: backgroundColor }]}>SUBSCRIBE</Text>
@@ -440,6 +511,26 @@ const styles = StyleSheet.create({
     height: hp('30%'),
     resizeMode: 'cover',
   },
+  videoLinkCard: {
+    backgroundColor: '#fff5f5',
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#ffd6d6',
+  },
+
+  videoLinkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  videoLinkText: {
+    flex: 1,
+    color: '#333',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+
   brandLink: {
     color: '#007BFF', // or your theme color
     textDecorationLine: 'underline',
@@ -556,9 +647,24 @@ const styles = StyleSheet.create({
     lineHeight: hp('3%'),
   },
   priceContainer: {
-    padding: wp('4%'),
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#fff8f0',
+    borderRadius: 10,
+    marginHorizontal: 16,
+    elevation: 1,
+  },
+
+  brandCard: {
+    backgroundColor: '#f1f3ff',
+    padding: 12,
+    margin: 16,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   actualPriceText: {
     fontSize: wp('3.5%'),
@@ -718,6 +824,32 @@ const styles = StyleSheet.create({
     fontSize: wp('3%'),
     textDecorationLine: 'line-through',
   },
+  videoThumbnail: {
+    width: '100%',
+    height: 180,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    backgroundColor: '#eee',
+  },
+  videoLinkCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginVertical: 12,
+    elevation: 3,
+  },
+  videoLinkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  videoLinkText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+
 });
 
 export default ProductDetailScreen;
