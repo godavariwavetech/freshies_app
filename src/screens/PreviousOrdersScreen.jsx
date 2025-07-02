@@ -23,7 +23,7 @@ const PreviousOrdersScreen = () => {
           order_id: 0
         };
         const result = await getPreviousOrders(payload);
-        console.log("result", payload)
+        console.log("previous orders", result)
         setOrders(result);
       } catch (err) {
         console.error(err);
@@ -38,39 +38,43 @@ const PreviousOrdersScreen = () => {
 
   const renderOrder = ({ item }) => (
     <TouchableOpacity
-      onPress={() =>
-        navigation.navigate('TrackOrder', {
-          orderDetails: {
-            orderId: item.id,
-            totalAmount: item.total_amount,
-            grandTotal: item.grand_total,
-            couponAmount: item.coupon_amount,
-            deliveryCharges: item.delivery_charges,
-            totalSavings: item.total_saving_amount,
-            paymentType: item.payment_type,
-            shopName: item.shop_name,
-            orderDate: item.order_date,
-            orderTime: item.order_time,
-            deliveryAddress: item.delivery_address,
-            shopAddress: item.shop_address,
-            shopPhoneNumber: item.shop_phone_number,
-            order_id: item.order_id,
-            delivery_charges_gst: item.delivery_charges_gst,
-            handling_charges: item.handling_charges
-          },
-          status: item.order_status,
-        })}
-      style={styles.card}
-    >
-      <View style={styles.headerRow}>
-        <Text style={styles.shopName}>{item.shop_name}</Text>
-        <Text style={styles.orderStatus}>#{item.order_id}</Text>
-      </View>
+    onPress={() =>
+      navigation.navigate('TrackOrder', {
+        orderDetails: {
+          orderId: item.id,
+          totalAmount: item.total_amount,
+          grandTotal: item.grand_total,
+          couponAmount: item.coupon_amount,
+          deliveryCharges: item.delivery_charges,
+          totalSavings: item.total_saving_amount,
+          paymentType: item.payment_type,
+          shopName: item.shop_name,
+          orderDate: item.order_date,
+          orderTime: item.order_time,
+          deliveryAddress: item.delivery_address,
+          shopAddress: item.shop_address,
+          shopPhoneNumber: item.shop_phone_number,
+          order_id: item.order_id,
+          delivery_charges_gst: item.delivery_charges_gst,
+          handling_charges: item.handling_charges
+        },
+        status: item.order_status,
+      })}
+    style={styles.card}
+  >
+    <View style={styles.headerRow}>
+      <Text style={styles.orderStatus}>#{item.order_id}</Text>
       <Text style={styles.orderDate}>{item.order_date_time}</Text>
+    </View>
+  
+    <View style={styles.middleRow}>
       <Text style={styles.itemCount}>Items: {item.item_count}</Text>
       <Text style={styles.amount}>₹{item.grand_total}</Text>
-      <Text numberOfLines={1} style={styles.address}>{item.delivery_address}</Text>
-    </TouchableOpacity>
+    </View>
+  
+    <Text numberOfLines={1} style={styles.address}>{item.delivery_address}</Text>
+  </TouchableOpacity>
+  
   );
 
 
@@ -125,46 +129,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    margin: 5
   },
+  
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  shopName: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
-  },
+  
   orderStatus: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '600',
     color: '#8655d2',
   },
+  
   orderDate: {
-    fontSize: 13,
-    color: '#999',
-    marginTop: 4,
+    fontSize: 12,
+    color: '#888',
   },
+  
+  middleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  
   itemCount: {
     fontSize: 14,
-    color: '#444',
-    marginTop: 6,
+    color: '#333',
   },
+  
   amount: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#000',
-    marginTop: 4,
   },
+  
   address: {
     fontSize: 12,
-    color: '#555',
-    marginTop: 6,
+    color: '#666',
+    marginTop: 12,
   },
+  
 });
 
 

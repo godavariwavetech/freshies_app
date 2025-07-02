@@ -7,16 +7,18 @@ import {
   TouchableOpacity,
   StatusBar,
   ScrollView,
-  RefreshControl, Alert
+  RefreshControl, Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { fetchOrderStatus } from '../../../services/services';
 import { useFocusEffect } from '@react-navigation/native';
+import Clipboard from '@react-native-clipboard/clipboard';
+
 
 
 const ViewTrackScreen = ({ navigation, route }) => {
-  const { orderDetails} = route.params || {};
+  const { orderDetails } = route.params || {};
   const backgroundColor = "#8655d2";
   const [refreshing, setRefreshing] = useState(false);
   const [currentOrderDetails, setCurrentOrderDetails] = useState(orderDetails);
@@ -26,7 +28,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
       const fetchData = async () => {
         try {
           const updatedData = await fetchOrderStatus(orderDetails?.orderId);
-          
+
           if (updatedData.status === 200) {
             setCurrentOrderDetails(updatedData.data[0]);
           }
@@ -44,7 +46,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
     setRefreshing(true);
     try {
       const updatedData = await fetchOrderStatus(orderDetails?.orderId);
-      
+
       if (updatedData.status === 200) {
         setCurrentOrderDetails(updatedData.data[0]);
       }
@@ -65,7 +67,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
       default: return 0;
     }
   };
-  
+
 
   const trackingSteps = [
     {
@@ -94,7 +96,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
     }
   ];
 
-  
+
   const status = getStatusIndex(currentOrderDetails?.order_status);
 
 
@@ -116,11 +118,25 @@ const ViewTrackScreen = ({ navigation, route }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Order ID */}
         <View style={styles.orderIdContainer}>
           <Text style={styles.orderIdLabel}>Order ID</Text>
-          <Text style={styles.orderIdText}>{orderDetails?.order_id || 'N/A'}</Text>
+          <View style={styles.orderIdRow}>
+            <Text style={styles.orderIdText} numberOfLines={1}>
+              {orderDetails?.order_id || 'N/A'}
+            </Text>
+            {orderDetails?.order_id && (
+              <TouchableOpacity
+                onPress={() => {
+                  Clipboard.setString(orderDetails.order_id);
+                }}
+                style={styles.copyIconButton}
+              >
+                <Ionicons name="copy-outline" size={16} color="#8655d2" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
+
 
         {/* Timeline */}
         <View style={styles.trackingTimeline}>
@@ -240,6 +256,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
   },
+  orderIdContainer: {
+    marginBottom: 12,
+    backgroundColor: '#f4f4f4',
+    padding: responsiveWidth(4),
+    borderRadius: 8,
+  },
+
+  orderIdLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#444',
+    marginBottom: 4,
+  },
+
+  orderIdRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  orderIdText: {
+    fontSize: 15,
+    color: '#000',
+    flex: 1,
+  },
+
+  copyIconButton: {
+    paddingLeft: 8,
+    paddingVertical: 4,
+  },
+
 });
 
 export default ViewTrackScreen;

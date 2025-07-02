@@ -390,7 +390,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
                       ? 'Watch on YouTube'
                       : productDetails[0].productLink.includes('instagram')
                         ? 'Watch on Instagram'
-                        : 'Watch Product Video'}
+                        : 'View More details'}
                   </Text>
                   <Icon2 name="chevron-right" size={22} color="#888" />
                 </View>

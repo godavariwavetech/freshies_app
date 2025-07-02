@@ -197,7 +197,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         mapRef.current.animateToRegion(region, 1000);
       }
       await getAddressFromCoordinates(newRegion.latitude, newRegion.longitude);
-
       // Update Redux with new current location
       dispatch(setLocation(newRegion));
       dispatch(setLocationName(address));
@@ -381,11 +380,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           )}
         </TouchableOpacity>
       </View>
-
-
-
-
-
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           <AntDesign name="search1" size={20} color="#666" style={styles.searchIcon} />
@@ -455,7 +449,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       )}
-
       <CustomModal
         visible={showServiceModal}
         title="Service Not Available"
@@ -534,7 +527,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     position: 'absolute',
-    top: responsiveHeight(15) + 20,
+    top: responsiveHeight(10),
     left: 20,
     right: 20,
     zIndex: 1,

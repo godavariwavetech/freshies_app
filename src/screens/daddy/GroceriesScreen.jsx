@@ -81,7 +81,6 @@ export default function GroceriesScreen({ navigation, route }) {
           sub_category_id: subcategory_id
         });
         // const filteredSubcategories = subCats.filter((sub) => sub.category_id === category_id);
-
         setSelectedSubcategoryId(subCats[0].id)
         setSubtotalcategories(subCats);
       } catch (error) {

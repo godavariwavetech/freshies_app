@@ -75,7 +75,6 @@ function UserHome() {
   const getSubCategoriesByCategoryId = (categoryId) => {
     return subcategories.filter((sub) => sub.category_id === categoryId);
   };
-
   // Combine all products for search
   const allProducts = subcategories.map((sub) => ({
     id: sub.id.toString(),
@@ -115,7 +114,6 @@ function UserHome() {
       setRefreshing(false);
     }
   };
-
 
   return (
     <View style={styles.mainContainer}>
@@ -231,7 +229,7 @@ function UserHome() {
                           />
                         </View>
 
-                        <View style={{ minHeight: 20, justifyContent: 'center' }}>
+                        <View style={{ minHeight: 20, justifyContent: 'center'}}>
                           <Text style={styles.categoryGridTextSmall} numberOfLines={2} ellipsizeMode="tail">
                             {subcategory.sub_category_name}
                           </Text>
@@ -350,7 +348,7 @@ const styles = StyleSheet.create({
   categoryGridItemContent: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
   },
 
   imageWrapper: {

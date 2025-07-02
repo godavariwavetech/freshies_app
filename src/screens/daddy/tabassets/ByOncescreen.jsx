@@ -74,8 +74,11 @@ const BasketScreen = ({ navigation, route }) => {
       : null;
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
+  const [useWallet, setUseWallet] = useState(false);
+const walletAmount = 500; // example value from API or redux
+const payableAmount = calculatePayable(); // total after discounts
 
-  console.log("cartItems+++++++++++++++++++++++++++++++++++", cartItems)
+
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
       checkAddressExistenceInList();
@@ -91,7 +94,6 @@ const BasketScreen = ({ navigation, route }) => {
       console.warn("Cannot check address: Location data is missing.");
       return;
     }
-
     try {
       setIsCheckingAddress(true);
       const response = await dispatch(
@@ -100,7 +102,6 @@ const BasketScreen = ({ navigation, route }) => {
           longitude: parseFloat(storedLocation.longitude),
         })
       );
-
       if (response.payload.data.length > 0) {
         dispatch(
           setLocation({
@@ -128,14 +129,12 @@ const BasketScreen = ({ navigation, route }) => {
     const loadApplicationCharges = async () => {
       try {
         const data = await fetchApplicationCharges();
-
         setApplicationCharges(data[0])
         // setState(data) if you're using state to store it
       } catch (error) {
         console.error('Failed to load application charges', error);
       }
     };
-
     loadApplicationCharges();
   }, []);
 
@@ -412,8 +411,8 @@ const BasketScreen = ({ navigation, route }) => {
               calculateTotalPrice() +
               Number(applicationCharges?.delivery_fixed_charges || 0) +
               Number(applicationCharges?.handling_charges || 0) +
-              gstCalculation()
-            ).toFixed(2) - (couponAmount || 0),
+              gstCalculation() - (couponAmount || 0)
+            ).toFixed(2),
           couponAmount: couponAmount || 0,
           deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
           totalSavings: 0,
@@ -513,7 +512,6 @@ const BasketScreen = ({ navigation, route }) => {
               errorMessage = error.reason.replace(/_/g, ' ');
             }
           }
-
           console.error('Payment failed:', error);
           Alert.alert('Payment Failed', errorMessage);
         });
@@ -688,6 +686,27 @@ const BasketScreen = ({ navigation, route }) => {
             <Icon name="chevron-right" size={24} color="#000" />
           </TouchableOpacity>
 
+          {/* Apply Wallet Amount */}
+          {walletAmount > 0 && (
+            <TouchableOpacity
+              style={styles.walletSection}
+              onPress={() => setUseWallet(prev => !prev)} // toggle wallet usage
+            >
+              <View style={styles.walletIcon}>
+                <Icon name="account-balance-wallet" size={24} color="#4CAF50" />
+              </View>
+              <Text style={styles.walletText}>
+                {useWallet
+                  ? `Using ₹${Math.min(walletAmount, payableAmount)}`
+                  : `Use Wallet Balance (₹${walletAmount})`}
+              </Text>
+              <Switch
+                value={useWallet}
+                onValueChange={(val) => setUseWallet(val)}
+              />
+            </TouchableOpacity>
+          )}
+
           {/* Add Delivery Instructions */}
           <TouchableOpacity
             style={styles.deliveryInstructions}
@@ -700,8 +719,6 @@ const BasketScreen = ({ navigation, route }) => {
               {deliveryInstructions ? `Note: ${deliveryInstructions}` : '+ Add Delivery Instructions'}
             </Text>
           </TouchableOpacity>
-
-
 
           {/* Order Summary */}
           <View style={styles.orderSummary}>
@@ -1215,15 +1232,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingBottom: Platform.OS === 'ios' ? 85 : 60,
   },
-
-
-
   Paymentcontainer: {
     padding: 16,
     position: 'relative',
     zIndex: 10,
   },
-
   selectedMethodBox: {
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -1235,13 +1248,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-
   selectedText: {
     fontSize: 16,
     color: '#00796b',
     fontWeight: '600',
   },
-
   dropdown: {
     marginTop: 6,
     backgroundColor: '#ffffff',
@@ -1252,7 +1263,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-
   paymentMethodItem: {
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -1261,24 +1271,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   selectedItem: {
     backgroundColor: '#e0f2f1',
   },
-
   paymentMethodText: {
     fontSize: 16,
     color: '#333333',
     marginLeft: 8,
   },
-
   selectedTextBold: {
     fontWeight: '700',
     color: '#004d40',
   },
-
-
-
   CustomModalOverlay: {
     position: 'absolute',
     top: 0,
@@ -1332,10 +1336,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
-
-
-
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -1385,3 +1385,22 @@ const styles = StyleSheet.create({
 });
 
 export default BasketScreen;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

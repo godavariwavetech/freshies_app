@@ -77,7 +77,7 @@ export default function RentalNavigation() {
       <Stack.Screen name='Support' component={SupportScreen} />
       <Stack.Screen name='Feedback' component={FeedbackScreen} />
       <Stack.Screen name='OrderSuccess' component={OrderSuccessScreen} />
-      <Stack.Screen name='OrderDetailsScreen' component={OrderDetailsScreen} />
+      {/* <Stack.Screen name='OrderDetailsScreen' component={OrderDetailsScreen} /> */}
       <Stack.Screen name='Coupons' component={CouponsScreen} />
       <Stack.Screen name='ServiceLocations' component={ServiceLocationsScreen} />
       <Stack.Screen name='PrivacyPolicy' component={PrivacyPolicyScreen} />

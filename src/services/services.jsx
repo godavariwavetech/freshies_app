@@ -483,7 +483,7 @@ export const updateUserProfile = async (payload) => {
     const response = await api.post('/public_app/updateprofiledata', payload);
     return response.data;
   } catch (error) {
-    console.log("rees", error)
+    console.log("rees", error.message)
     console.error('❌ Update profile error:', error);
     throw error;
   }

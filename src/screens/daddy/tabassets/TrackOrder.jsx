@@ -19,7 +19,7 @@ import { getOrderItemsByOrderId } from '../../../services/services';
 import CustomAlert from '../../../components/CustomAlert';
 import CustomModal from '../../../components/CustomModal';
 import FocusAwareStatusBar from '../../../components/CustomStatusBar';
-
+import Clipboard from '@react-native-clipboard/clipboard';
 
 
 const OrderDetailsScreen = ({ navigation, route }) => {
@@ -315,20 +315,19 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           onPress={() => navigation.navigate('BottomNavigation')}
         />
         <Text style={styles.headerTitle}>Order Details</Text>
-        {/* <View style={styles.headerActions}>
-          <TouchableOpacity onPress={saveOrderToStorage}>
-            <Ionicons name="save" size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setViewSavedOrders(true)}>
-            <Ionicons name="list" size={24} color="white" />
-          </TouchableOpacity>
-        </View> */}
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: responsiveHeight(2), }}>
-          <Text style={[styles.orderId, { flex: 1 }]} numberOfLines={1}>
-            Order ID - {orderDetails.order_id || 'N/A'}
-          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              Clipboard.setString(orderDetails.order_id || '');
+            }}
+            style={{ flex: 1 }}
+          >
+            <Text style={[styles.orderId]} numberOfLines={1}>
+              Order ID - {orderDetails.order_id || 'N/A'}
+            </Text>
+          </TouchableOpacity>
           <Text
             style={[
               styles.shippingValue,

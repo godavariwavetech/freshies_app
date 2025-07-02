@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,29 +10,29 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import Clipboard from '@react-native-clipboard/clipboard';
-import {getUserData, updateUserProfile} from '../../services/services';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { getUserData, updateUserProfile } from '../../services/services';
+import { launchImageLibrary } from 'react-native-image-picker';
 import deliveryBoy from '../../screens/daddy/tabassets/deliveryBoy.png';
-import {setUseDetails} from '../../redux/reducers/auth';
+import { setUseDetails } from '../../redux/reducers/auth';
 
 const UserProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const editButtonRef = useRef(new Animated.Value(1)).current;
-  const {mobileNumber, referralCode, username, address} = useSelector(
+  const { mobileNumber, referralCode, username, address } = useSelector(
     state => state.Auth,
   );
   const [base64Image, setBase64Image] = useState('');
   const [imageUri, setImageUri] = useState(userData?.profile_image || '');
   const [editMode, setEditMode] = useState(false);
   const [editedUsername, setEditedUsername] = useState(username);
-  const {customerId} = useSelector(state => state.Auth);
+  const { customerId } = useSelector(state => state.Auth);
   const [userData, setUserData] = useState(null);
   const [preferences, setPreferences] = useState({
     callBefore: false,
@@ -42,22 +42,19 @@ const UserProfileScreen = () => {
 
   const getUserProfile = async () => {
     try {
-      const res = await getUserData({customer_id: customerId});
+      const res = await getUserData({ customer_id: customerId });
       console.log('response0000', res.data[0]);
       if (res.status === 200 && res.data?.length > 0) {
         const user = res.data[0];
         dispatch(setUseDetails(user));
         setUserData(user);
         setEditedUsername(user.customer_name || '');
-        setSelectedSlot(
-          user?.delivery_time_slot || 'Morning (5.00 AM – 7.30 AM)',
-        );
         setPreferences({
-          callBefore: user?.call_before_delivery || false,
-          ringBell: user?.ring_bell || false,
-          leaveAtDoorstep: user?.leave_at_doorstep || false,
+          callBefore: !!user?.call_before_delivery,
+          ringBell: !!user?.ring_bell,
+          leaveAtDoorstep: !!user?.leave_at_doorstep,
         });
-       
+
       }
     } catch (err) {
       console.log('Error loading profile:', err.message);
@@ -90,9 +87,11 @@ const UserProfileScreen = () => {
       imagesData: base64Image ? `data:image/jpeg;base64,${base64Image}` : '',
       profile_image: userData?.profile_image,
       address: address,
-      call_before_delivery: preferences.callBefore,
-      ring_bell: preferences.ringBell,
-      leave_at_doorstep: preferences.leaveAtDoorstep,
+      delivery_preferences: {
+        call_before_delivery: preferences.callBefore,
+        ring_bell: preferences.ringBell,
+        leave_at_doorstep: preferences.leaveAtDoorstep
+      }
     };
     console.log('pyaloefefdd', payload);
     try {
@@ -111,7 +110,7 @@ const UserProfileScreen = () => {
       return;
     }
     launchImageLibrary(
-      {mediaType: 'photo', includeBase64: true, maxHeight: 600, maxWidth: 600},
+      { mediaType: 'photo', includeBase64: true, maxHeight: 600, maxWidth: 600 },
       response => {
         if (response.didCancel) return;
         if (response.errorCode) {
@@ -148,7 +147,7 @@ const UserProfileScreen = () => {
           onPress={() =>
             navigation.navigate('BottomNavigation', {
               screen: 'Profile',
-              params: {id: 123},
+              params: { id: 123 },
             })
           }
           style={styles.backButton}>
@@ -157,12 +156,12 @@ const UserProfileScreen = () => {
         <Text style={styles.headerTitle}>Account</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{padding: 16}}>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
         {/* Profile Info */}
         <View style={styles.profileHeader}>
           <TouchableOpacity
             onPress={pickImage}
-            style={{borderRadius: 100, overflow: 'hidden'}}>
+            style={{ borderRadius: 100, overflow: 'hidden' }}>
             <Image
               source={{
                 uri:
@@ -275,7 +274,7 @@ const UserProfileScreen = () => {
 
         {/* Edit/Save Button */}
         <Animated.View
-          style={{transform: [{scale: editButtonRef}], marginTop: 30}}>
+          style={{ transform: [{ scale: editButtonRef }], marginTop: 30 }}>
           <TouchableOpacity
             style={[styles.editButton, editMode && styles.editButtonActive]}
             onPress={editMode ? handleSave : () => setEditMode(true)}>
@@ -355,7 +354,7 @@ const styles = StyleSheet.create({
   editButtonActive: {
     backgroundColor: '#6f40c5',
     shadowColor: '#8655d2',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
@@ -400,7 +399,7 @@ const styles = StyleSheet.create({
   editButtonActive: {
     backgroundColor: '#6f40c5', // slightly different from default
     shadowColor: '#8655d2',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,

@@ -39,16 +39,12 @@ export default function BottomNavigation() {
   const { cartItems } = useSelector((state) => state.Dashboard);
   const { customerId,userDetails } = useSelector(state => state.Auth);
  
-
   useEffect(() => {
     const getUserProfile = async () => {
       try {
         const res = await getUserData({ customer_id: customerId });
-        console.log("response0000", res.data[0])
-        if (res.status === 200 && res.data?.length > 0) {
-          
+        if (res.status === 200 && res.data?.length > 0) {      
           const user = res.data[0];
-          console.log("user0000000000000000000000000000000000000", user)
           dispatch(setUseDetails(user))
         }
       } catch (err) {

@@ -12,8 +12,8 @@ import {
   ActivityIndicator,
   Linking,
   RefreshControl,
-  Alert,
-  LayoutAnimation, UIManager
+  LayoutAnimation, UIManager,
+  Alert
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -40,7 +40,7 @@ import UserProfileScreen from '../user/ProfileScreen';
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { customerId, username,userDetails } = useSelector(state => state.Auth);
+  const { customerId, username, userDetails } = useSelector(state => state.Auth);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +48,7 @@ const ProfileScreen = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [appVersion, setAppVersion] = useState('');
   const [isPoliciesExpanded, setIsPoliciesExpanded] = useState(false);
-  console.log("userDetails", userDetails)
+
   useEffect(() => {
     if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
       UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -57,9 +57,9 @@ const ProfileScreen = () => {
   // Favorites state
   const [favorites, setFavorites] = useState([]);
 
-  useFocusEffect(useCallback(()=>{
+  useFocusEffect(useCallback(() => {
 
-  },[]))
+  }, []))
 
   // Load favorites on component mount
   useEffect(() => {
@@ -88,7 +88,6 @@ const ProfileScreen = () => {
     };
     getVersion();
   }, []);
-
 
   const handleUpdate = async () => {
     try {
@@ -132,7 +131,14 @@ const ProfileScreen = () => {
     }
   };
 
-
+  const openLink = async (url) => {
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Can't open this link", url);
+    }
+  };
 
 
   return (
@@ -160,7 +166,7 @@ const ProfileScreen = () => {
           <TouchableOpacity onPress={() => navigation.navigate('UserProfileScreen')}>
             <Image
               source={{
-                uri: userDetails?.profile_image  || 'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png',
+                uri: userDetails?.profile_image || 'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png',
               }}
               style={{
                 width: responsiveWidth(10),
@@ -178,12 +184,12 @@ const ProfileScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
       >
-        <View style={styles.ordersHeader}>
+        {/* <View style={styles.ordersHeader}>
           <Text style={styles.ordersTitle}>Your Orders</Text>
           <TouchableOpacity onPress={() => navigation.navigate('PreviousOrdersScreen')}>
             <Text style={styles.viewAll}>View All</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
         <View style={styles.menuOptions}>
           {/* Account */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('UserProfileScreen')}>
@@ -243,14 +249,28 @@ const ProfileScreen = () => {
 
           {isPoliciesExpanded && (
             <>
-              <TouchableOpacity style={[styles.menuItemMain, { paddingLeft: 40 }]} onPress={() => navigation.navigate('PrivacyPolicy')}>
-                <Text style={styles.menuText}>Privacy Policy</Text>
+              <TouchableOpacity
+                style={[styles.menuItemMain, { paddingLeft: 40 }]}
+                onPress={() => openLink('https://abhi24.in/privacypolicy')}
+              >
+                <View style={styles.menuItemLeft}>
+                  <MaterialCommunityIcons name="file-document-outline" size={20} color="#8655d2" />
+                  <Text style={styles.menuText}>Privacy Policy</Text>
+                </View>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.menuItemMain, { paddingLeft: 40 }]} onPress={() => navigation.navigate('TermsConditions')}>
-                <Text style={styles.menuText}>Terms and Conditions</Text>
+
+              <TouchableOpacity
+                style={[styles.menuItemMain, { paddingLeft: 40 }]}
+                onPress={() => openLink('https://abhi24.in/terms')}
+              >
+                <View style={styles.menuItemLeft}>
+                  <MaterialCommunityIcons name="file-certificate-outline" size={20} color="#8655d2" />
+                  <Text style={styles.menuText}>Terms and Conditions</Text>
+                </View>
               </TouchableOpacity>
             </>
           )}
+
 
           {/* Check for Updates */}
           {/* <TouchableOpacity style={styles.menuItemMain} onPress={handleCheckForUpdate}>
@@ -262,13 +282,14 @@ const ProfileScreen = () => {
           </TouchableOpacity> */}
 
           {/* About Us */}
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('AboutUsScreen')}>
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/about')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="information-outline" size={24} color="#8655d2" />
               <Text style={styles.menuText}>About Us</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
+
 
           {/* Logout */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => setLogoutModalVisible(true)}>
@@ -332,6 +353,15 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingBottom: Platform.OS === 'ios' ? 85 : 60, // Add padding for tab bar
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10, // Optional: if using React Native >= 0.71
+  },
+  menuText: {
+    fontSize: 15,
+    color: '#333',
   },
   header: { padding: 20, backgroundColor: '#8655d2', alignItems: 'center' },
   profileName: { fontSize: 24, fontWeight: 'bold', color: '#fff' },

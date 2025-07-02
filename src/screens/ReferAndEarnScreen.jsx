@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,31 @@ import LinearGradient from 'react-native-linear-gradient';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useSelector } from 'react-redux';
+import { applicationCharges } from '../services/services';
+
 
 const ReferAndEarnScreen = ({ navigation }) => {
-  const referralCode = 'ABHI24USER123'; // You can fetch this dynamically if needed
+  const { referralCode } = useSelector(state => state.Auth);
   const [copied, setCopied] = useState(false);
+  const [refferalData, setRefferalData] = useState()
+
+  useEffect(() => {
+    const loadApplicationCharges = async () => {
+      try {
+        const data = await applicationCharges();
+        const parsedData = {
+          ...data[0],
+          refer_content: JSON.parse(data[0].refer_content),
+        };
+        setRefferalData(parsedData);
+      } catch (error) {
+        console.error('Failed to load application charges', error);
+      }
+    };
+    loadApplicationCharges();
+  }, []);
+
 
   const handleCopy = () => {
     Clipboard.setString(referralCode);
@@ -61,25 +82,15 @@ const ReferAndEarnScreen = ({ navigation }) => {
 
         <View style={{ marginTop: 30, alignSelf: 'stretch' }}>
           <Text style={styles.offerTitle}>Here's what to do</Text>
-          <View style={styles.bulletItem}>
-            <Text style={styles.bulletPoint}>{'\u2022'}</Text>
-            <Text style={styles.bulletText}>Tell a friend to download our app, sign up and recharge with at least Rs. 1,000/-.</Text>
-          </View>
-          <View style={styles.bulletItem}>
-            <Text style={styles.bulletPoint}>{'\u2022'}</Text>
-            <Text style={styles.bulletText}>When they do, both of you will receives Rs. 75 cashback to your Abhi24 wallets.</Text>
-          </View>
-          <View style={styles.bulletItem}>
-            <Text style={styles.bulletPoint}>{'\u2022'}</Text>
-            <Text style={styles.bulletText}>This offer is applicable only if you and your referred friend have different addresses.</Text>
-          </View>
-          <View style={styles.bulletItem}>
-            <Text style={styles.bulletPoint}>{'\u2022'}</Text>
-            <Text style={styles.bulletText}>The ₹75 cashback is applicable only to mutton purchases.</Text>
-          </View>
+          {Array.isArray(refferalData?.refer_content)
+            ? refferalData.refer_content.map((item, index) => (
+              <View key={index} style={styles.bulletItem}>
+                <Text style={styles.bulletPoint}>{'\u2022'}</Text>
+                <Text style={styles.bulletText}>{item}</Text>
+              </View>
+            ))
+            : null}
         </View>
-
-
         <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
           <Text style={styles.shareButtonText}>Share Referral Code</Text>
         </TouchableOpacity>
@@ -145,27 +156,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: '#000',
   },
-  
+
   bulletItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  
+
   bulletPoint: {
     fontSize: 20,
     lineHeight: 24,
     color: '#8655d2',
     marginRight: 6,
   },
-  
+
   bulletText: {
     flex: 1,
     fontSize: 14,
     color: '#444',
     lineHeight: 20,
   },
-  
+
   code: {
     fontSize: 18,
     fontWeight: '600',
