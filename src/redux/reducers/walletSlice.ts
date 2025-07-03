@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
 interface WalletState {
   user_wallet_amount: string;
   user_used_amount: string;

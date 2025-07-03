@@ -47,6 +47,7 @@ function UserHome() {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
       setSubCategories(fetchedSubCategories);
+      console.log('fetchedSubCategories', fetchedSubCategories);
       const uniqueCategories = [
         ...new Map(
           fetchedSubCategories.map((sub) => [

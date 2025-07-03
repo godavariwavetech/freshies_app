@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -12,31 +12,41 @@ import {
   Alert,
   Platform,
   TextInput,
-  Modal
+  Modal,
+  Switch,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SwipeListView } from 'react-native-swipe-list-view';
+import {SwipeListView} from 'react-native-swipe-list-view';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
   responsiveHeight,
   responsiveWidth,
 } from 'react-native-responsive-dimensions';
-import { useDispatch, useSelector } from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { checkAddressExistence, applicationCharges as fetchApplicationCharges, placeOrder, updateOrderStatus } from '../../../services/services';
-import RazorpayCheckout from "react-native-razorpay"
-import { clearCart, setDeliveryInstructions } from '../../../redux/reducers/cartReducer';
-import { haversineDistance } from '../distanceCalculator';
-import { setLocation, setLocationId, setLocationName, setShopAddress } from '../../../redux/reducers/auth';
-
-
-
+import {
+  checkAddressExistence,
+  applicationCharges as fetchApplicationCharges,
+  placeOrder,
+  updateOrderStatus,
+} from '../../../services/services';
+import RazorpayCheckout from 'react-native-razorpay';
+import {
+  clearCart,
+  setDeliveryInstructions,
+} from '../../../redux/reducers/cartReducer';
+import {haversineDistance} from '../distanceCalculator';
+import {
+  setLocation,
+  setLocationId,
+  setLocationName,
+  setShopAddress,
+} from '../../../redux/reducers/auth';
 
 const paymentMethods = ['Pay Online', 'COD'];
 
-const BasketScreen = ({ navigation, route }) => {
+const BasketScreen = ({navigation, route}) => {
   const dispatch = useDispatch();
-
   const [cartItems, setCartItems] = useState([]);
   const [showFullAddress, setShowFullAddress] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,54 +54,96 @@ const BasketScreen = ({ navigation, route }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('COD');
   const [coupon, setCoupon] = useState(null);
   const [applicationCharges, setApplicationCharges] = useState({
-    "id": 1,
-    "handling_charges": 0,
-    "donation_charges": "0",
-    "gst_percentage": 0,
-    "delivery_fixed_charges": "0",
-    "mail_id": "support@freshozapcart",
-    "contact_number": "9515153819",
-    "i_ts": "2025-03-22T13:08:52.000Z",
-    "d_in": 0
-  })
-  const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
-  const { chargesList, selectedAddress } = useSelector(state => state.address);
+    id: 1,
+    handling_charges: 0,
+    donation_charges: '0',
+    gst_percentage: 0,
+    delivery_fixed_charges: '0',
+    mail_id: 'support@freshozapcart',
+    contact_number: '9515153819',
+    i_ts: '2025-03-22T13:08:52.000Z',
+    d_in: 0,
+  });
+  const {
+    location: storedLocation,
+    locationName,
+    locationId,
+    address,
+    customerId,
+    mobileNumber,
+    shopAddress,
+  } = useSelector(state => state.Auth);
+  const {chargesList, selectedAddress} = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
+  const deliveryInstructions = useSelector(
+    state => state.cart.deliveryInstructions,
+  );
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [tempInstruction, setTempInstruction] = useState(''); // NEW state
   const orderDistance =
     storedLocation?.latitude &&
-      storedLocation?.longitude &&
-      shopAddress?.location_latitude &&
-      shopAddress?.location_longitude
+    storedLocation?.longitude &&
+    shopAddress?.location_latitude &&
+    shopAddress?.location_longitude
       ? haversineDistance(
-        storedLocation.latitude,
-        storedLocation.longitude,
-        shopAddress.location_latitude,
-        shopAddress.location_longitude
-      )
+          storedLocation.latitude,
+          storedLocation.longitude,
+          shopAddress.location_latitude,
+          shopAddress.location_longitude,
+        )
       : null;
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [useWallet, setUseWallet] = useState(false);
-const walletAmount = 500; // example value from API or redux
-const payableAmount = calculatePayable(); // total after discounts
+  const walletData = useSelector(state => state.wallet);
+  const walletAmount = Number(walletData?.abhi24_balanced_amount ?? 0);
+  console.log('walletAmount', walletData);
+  console.log('cartItems', cartItems);
 
+  const getSplitCartTotals = () => {
+    let muttonSubtotal = 0;
+    let otherSubtotal = 0;
+
+    cartItems.forEach(item => {
+      const price = Number(item.variant?.selling_price || item.offer || 0);
+      const itemTotal = price * item.quantity;
+      if (item.sub_category_id === 2) {
+        muttonSubtotal += itemTotal;
+      } else {
+        otherSubtotal += itemTotal;
+      }
+    });
+    console.log('muttonSubtotal', muttonSubtotal);
+    console.log('otherSubtotal', otherSubtotal);
+    return {muttonSubtotal, otherSubtotal};
+  };
+
+  const {muttonSubtotal, otherSubtotal} = getSplitCartTotals();
+  const abhiWalletAmount = Number(walletData?.abhi24_balanced_amount ?? 0);
+  const userWalletAmount = Number(walletData?.user_balanced_amount ?? 0);
+
+  const abhiWalletUsed = Math.min(muttonSubtotal, abhiWalletAmount);
+  const userWalletUsed = Math.min(otherSubtotal, userWalletAmount);
+
+  
 
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
       checkAddressExistenceInList();
     } else {
       setShowServiceModal(true);
-      console.warn("Location not available. Permission may be denied.");
+      console.warn('Location not available. Permission may be denied.');
       // Optionally show alert/modal or redirect user
     }
   }, []);
 
   const checkAddressExistenceInList = async () => {
-    if (!storedLocation || !storedLocation.latitude || !storedLocation.longitude) {
-      console.warn("Cannot check address: Location data is missing.");
+    if (
+      !storedLocation ||
+      !storedLocation.latitude ||
+      !storedLocation.longitude
+    ) {
+      console.warn('Cannot check address: Location data is missing.');
       return;
     }
     try {
@@ -100,7 +152,7 @@ const payableAmount = calculatePayable(); // total after discounts
         checkAddressExistence({
           latitude: parseFloat(storedLocation.latitude),
           longitude: parseFloat(storedLocation.longitude),
-        })
+        }),
       );
       if (response.payload.data.length > 0) {
         dispatch(
@@ -109,7 +161,7 @@ const payableAmount = calculatePayable(); // total after discounts
             longitude: parseFloat(storedLocation.longitude),
             latitudeDelta: storedLocation.latitudeDelta,
             longitudeDelta: storedLocation.longitudeDelta,
-          })
+          }),
         );
         dispatch(setLocationName(response.payload.data[0].location_name));
         dispatch(setLocationId(response.payload.data[0].id));
@@ -119,7 +171,7 @@ const payableAmount = calculatePayable(); // total after discounts
         setShowServiceModal(true);
       }
     } catch (error) {
-      console.error("Location confirmation error:", error);
+      console.error('Location confirmation error:', error);
     } finally {
       setIsCheckingAddress(false);
     }
@@ -129,7 +181,7 @@ const payableAmount = calculatePayable(); // total after discounts
     const loadApplicationCharges = async () => {
       try {
         const data = await fetchApplicationCharges();
-        setApplicationCharges(data[0])
+        setApplicationCharges(data[0]);
         // setState(data) if you're using state to store it
       } catch (error) {
         console.error('Failed to load application charges', error);
@@ -142,20 +194,16 @@ const payableAmount = calculatePayable(); // total after discounts
     const loadCartItems = async () => {
       try {
         setIsLoading(true);
-
         // Check for applied coupon from navigation
         if (route.params?.appliedCoupon) {
           setCoupon(route.params.appliedCoupon);
         }
-
         // Load cart items from AsyncStorage
         const storedCartItems = await AsyncStorage.getItem('cartItems');
         if (storedCartItems) {
           const parsedCartItems = JSON.parse(storedCartItems);
-
           setCartItems(parsedCartItems);
         }
-
         // Load location from AsyncStorage
         const storedLocation = await AsyncStorage.getItem('location');
         if (storedLocation) {
@@ -177,7 +225,10 @@ const payableAmount = calculatePayable(); // total after discounts
       try {
         // Save cart items to AsyncStorage
         await AsyncStorage.setItem('cartItems', JSON.stringify(cartItems));
-        await AsyncStorage.setItem('persistentCartItems', JSON.stringify(cartItems));
+        await AsyncStorage.setItem(
+          'persistentCartItems',
+          JSON.stringify(cartItems),
+        );
       } catch (error) {
         console.error('Error saving cart items:', error);
       }
@@ -189,18 +240,26 @@ const payableAmount = calculatePayable(); // total after discounts
   }, [cartItems, isLoading]);
 
   // Force green color by setting status to 0 if undefined, or ensure green is used
-  const effectiveStatus = route.params?.status !== undefined && route.params?.status === 1 ? 0 : (route.params?.status || 0);
+  const effectiveStatus =
+    route.params?.status !== undefined && route.params?.status === 1
+      ? 0
+      : route.params?.status || 0;
   const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
 
   // Calculate total price
   const calculateTotalPrice = () => {
-    const subtotal = cartItems.reduce((total, item) => total + (Number(item.variant?.selling_price || item.offer || 0) * item.quantity), 0);
+    const subtotal = cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
+      0,
+    );
 
     // Apply coupon if available
     if (coupon) {
       if (coupon.type === 'percentage') {
         // Percentage discount
-        return subtotal - (subtotal * (coupon.discount / 100));
+        return subtotal - subtotal * (coupon.discount / 100);
       } else if (coupon.type === 'flat') {
         // Flat discount
         return Math.max(0, subtotal - coupon.discount);
@@ -210,26 +269,61 @@ const payableAmount = calculatePayable(); // total after discounts
     return subtotal;
   };
 
+  const calculateFinalPrice = () => {
+    const deliveryCharge = Number(
+      applicationCharges?.delivery_fixed_charges || 0,
+    );
+    const handlingCharge = Number(applicationCharges?.handling_charges || 0);
+    const gst = gstCalculation();
+
+    let subtotal = muttonSubtotal + otherSubtotal;
+
+    // Apply coupon
+    if (coupon) {
+      if (coupon.type === 'percentage') {
+        subtotal -= subtotal * (coupon.discount / 100);
+      } else {
+        subtotal -= coupon.discount;
+      }
+    }
+
+    // Wallets
+    const totalAfterWallets =
+      subtotal +
+      deliveryCharge +
+      handlingCharge +
+      gst -
+      abhiWalletUsed -
+      userWalletUsed;
+
+    return Math.max(0, totalAfterWallets);
+  };
+
   const handleQuantityChange = (id, action) => {
-    const updatedCartItems = cartItems.map((item) =>
-      item.id === id
-        ? {
-          ...item,
-          quantity: action === 'increase'
-            ? item.quantity + 1
-            : Math.max(1, item.quantity - 1),
-          totalPrice: item.price * (action === 'increase'
-            ? item.quantity + 1
-            : Math.max(1, item.quantity - 1))
-        }
-        : item
-    ).filter(item => item.quantity > 0);
+    const updatedCartItems = cartItems
+      .map(item =>
+        item.id === id
+          ? {
+              ...item,
+              quantity:
+                action === 'increase'
+                  ? item.quantity + 1
+                  : Math.max(1, item.quantity - 1),
+              totalPrice:
+                item.price *
+                (action === 'increase'
+                  ? item.quantity + 1
+                  : Math.max(1, item.quantity - 1)),
+            }
+          : item,
+      )
+      .filter(item => item.quantity > 0);
 
     setCartItems(updatedCartItems);
   };
 
-  const handleDelete = (id) => {
-    const updatedCartItems = cartItems.filter((item) => item.id !== id);
+  const handleDelete = id => {
+    const updatedCartItems = cartItems.filter(item => item.id !== id);
     setCartItems(updatedCartItems);
   };
 
@@ -243,42 +337,59 @@ const payableAmount = calculatePayable(); // total after discounts
     }
   };
   const navigateToHomeTab = () => {
-    navigation.navigate('BottomNavigation', { screen: 'Home' });
+    navigation.navigate('BottomNavigation', {screen: 'Home'});
   };
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
       <Image
         source={
           item.image
-            ? { uri: item.image }
+            ? {uri: item.image}
             : require('../../daddy/tabassets/keema.png')
         }
         style={styles.itemImage}
       />
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemWeight}>{item.variant?.quantity_type || item?.quantity_type || item.weight}</Text>
+        <Text style={styles.itemWeight}>
+          {item.variant?.quantity_type || item?.quantity_type || item.weight}
+        </Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.itemPrice}>₹{(Number(item.variant?.selling_price || item.offer || 0) * item.quantity).toFixed(2)}</Text>
-          <Text style={styles.originalPrice}>₹{(Number(item.variant?.actual_price || item.price || 0) || item.originalPrice || 0).toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>
+            ₹
+            {(
+              Number(item.variant?.selling_price || item.offer || 0) *
+              item.quantity
+            ).toFixed(2)}
+          </Text>
+          <Text style={styles.originalPrice}>
+            ₹
+            {(
+              Number(item.variant?.actual_price || item.price || 0) ||
+              item.originalPrice ||
+              0
+            ).toFixed(2)}
+          </Text>
         </View>
       </View>
       <View style={styles.quantityContainer}>
-        <TouchableOpacity onPress={() => handleQuantityChange(item.id, 'decrease')}>
+        <TouchableOpacity
+          onPress={() => handleQuantityChange(item.id, 'decrease')}>
           <Text style={styles.quantityButton}>-</Text>
         </TouchableOpacity>
         <Text style={styles.quantityText}>{item.quantity}</Text>
-        <TouchableOpacity onPress={() => handleQuantityChange(item.id, 'increase')}>
+        <TouchableOpacity
+          onPress={() => handleQuantityChange(item.id, 'increase')}>
           <Text style={styles.quantityButton}>+</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const renderHiddenItem = ({ item }) => (
-    <View style={[styles.hiddenItem, { backgroundColor }]}>
+  const renderHiddenItem = ({item}) => (
+    <View style={[styles.hiddenItem, {backgroundColor}]}>
       <TouchableOpacity
-        style={[styles.deleteButton, { backgroundColor }]}
+        style={[styles.deleteButton, {backgroundColor}]}
         onPress={() => {
           // Show confirmation dialog before deleting
           Alert.alert(
@@ -294,10 +405,9 @@ const payableAmount = calculatePayable(); // total after discounts
                 style: 'destructive',
                 onPress: () => handleDelete(item.id),
               },
-            ]
+            ],
           );
-        }}
-      >
+        }}>
         <Icon name="delete" size={24} color="#fff" />
         <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
@@ -316,126 +426,143 @@ const payableAmount = calculatePayable(); // total after discounts
       </Text>
       <TouchableOpacity
         onPress={navigateToHomeTab}
-        style={[styles.exploreButton, { backgroundColor }]}
-      >
+        style={[styles.exploreButton, {backgroundColor}]}>
         <Text style={styles.exploreButtonText}>Explore Items</Text>
       </TouchableOpacity>
     </View>
   );
 
-
   const couponAmount = coupon?.discount
     ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
-    : "0.00";
-
-
+    : '0.00';
 
   const handlePlaceOrder = async () => {
     try {
       setIsProcessingPayment(true);
-      console.log("cartItems", cartItems)
-      const mappedItems = cartItems.map((item) => {
+      console.log('cartItems', cartItems);
+      const mappedItems = cartItems.map(item => {
         // Determine which price values to use
         const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
-        const sellingPrice = item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0;
-        const quantityType = item?.variant?.quantity_type ?? item?.quantity_type ?? "";
-        const filterOne = item?.variant?.filter_one ?? item?.filter_one ?? "";
+        const sellingPrice =
+          item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0;
+        const quantityType =
+          item?.variant?.quantity_type ?? item?.quantity_type ?? '';
+        const filterOne = item?.variant?.filter_one ?? item?.filter_one ?? '';
 
         return {
-          item_name: item?.name || "",
-          item_image: item?.image || "",
-          item_id: item?.id?.toString() || "",
-          category_id: item?.category_id?.toString() || "",
-          sub_category_id: item?.sub_category_id?.toString() || item?.subcategory_id?.toString() || "",
-          category_name: item?.category_name || "",
-          sub_category_name: item?.sub_category_name || "",
+          item_name: item?.name || '',
+          item_image: item?.image || '',
+          item_id: item?.id?.toString() || '',
+          category_id: item?.category_id?.toString() || '',
+          sub_category_id:
+            item?.sub_category_id?.toString() ||
+            item?.subcategory_id?.toString() ||
+            '',
+          category_name: item?.category_name || '',
+          sub_category_name: item?.sub_category_name || '',
           actualitem_price: actualPrice.toString(),
           item_price: sellingPrice.toString(),
           sub_item_count: (item?.quantity ?? 1).toString(),
-          item_total_amount: ((item?.totalPrice ?? sellingPrice * (item?.quantity ?? 1)) || 0).toString(),
-          item_description: item?.description || "",
-          saving_price: (parseFloat(actualPrice) - parseFloat(sellingPrice)).toString(),
+          item_total_amount: (
+            (item?.totalPrice ?? sellingPrice * (item?.quantity ?? 1)) ||
+            0
+          ).toString(),
+          item_description: item?.description || '',
+          saving_price: (
+            parseFloat(actualPrice) - parseFloat(sellingPrice)
+          ).toString(),
           filter_one: filterOne,
           quantity_type: quantityType,
-          shop_id: item?.shop_id?.toString() || "",
-          value: item?.value
+          shop_id: item?.shop_id?.toString() || '',
+          value: item?.value,
         };
       });
 
-
       let payload = {
-        "customer_id": customerId,
-        "customer_name": "",
-        "customer_mobile_number": mobileNumber,
-        "category_id": "",
-        "item_count": cartItems.length,
-        "total_amount": (calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2) || 0,
-        "total_saving_amount": 0,
-        "coupon_amount": (calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || "",
-        "delivery_charges": applicationCharges.delivery_fixed_charges || 0,
-        "grand_total": (calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2) || 0,
-        "location_id": locationId,
-        "location_name": locationName,
-        "payment_type": selectedPaymentMethod,
-        "payment_id": "",
-        "razorpay_order_id": "",
-        "order_status": 1,
-        "order_instructions": "",
-        "coupon_type": coupon?.coupon_type || "",
-        "coupon_id": coupon?.id || "",
-        "delivery_address": address,
-        "order_latitude": storedLocation.latitude,
-        "order_longitude": storedLocation.longitude,
-        "order_distance": orderDistance || shopAddress.distance_km || "",
-        "ext_del_charge": applicationCharges?.delivery_fixed_charges,
-        "shop_id": shopAddress.id || "",
-        "actual_total_amount": calculateTotalPrice() || 0,
-        "order_type": "Online",
-        "delivery_charges_gst": gstCalculation().toFixed(2) || 0,
-        "handling_charges": applicationCharges.handling_charges || 0,
-        "packing_charges": "",
-        "packing_charges_gst": "",
-        "donation_charges": "",
-        "delivery_instruction": deliveryInstructions,
-        "sub_order_array": mappedItems
+        customer_id: customerId,
+        customer_name: '',
+        customer_mobile_number: mobileNumber,
+        category_id: '',
+        item_count: cartItems.length,
+        total_amount:
+          (
+            calculateTotalPrice() +
+            Number(applicationCharges?.delivery_fixed_charges) +
+            Number(applicationCharges?.handling_charges) +
+            gstCalculation()
+          ).toFixed(2) || 0,
+        total_saving_amount: 0,
+        coupon_amount:
+          (calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || '',
+        delivery_charges: applicationCharges.delivery_fixed_charges || 0,
+        grand_total:
+          (
+            calculateTotalPrice() +
+            Number(applicationCharges?.delivery_fixed_charges) +
+            Number(applicationCharges?.handling_charges) +
+            gstCalculation()
+          ).toFixed(2) || 0,
+        location_id: locationId,
+        location_name: locationName,
+        payment_type: selectedPaymentMethod,
+        payment_id: '',
+        razorpay_order_id: '',
+        order_status: 1,
+        order_instructions: '',
+        coupon_type: coupon?.coupon_type || '',
+        coupon_id: coupon?.id || '',
+        delivery_address: address,
+        order_latitude: storedLocation.latitude,
+        order_longitude: storedLocation.longitude,
+        order_distance: orderDistance || shopAddress.distance_km || '',
+        ext_del_charge: applicationCharges?.delivery_fixed_charges,
+        shop_id: shopAddress.id || '',
+        actual_total_amount: calculateTotalPrice() || 0,
+        order_type: 'Online',
+        delivery_charges_gst: gstCalculation().toFixed(2) || 0,
+        handling_charges: applicationCharges.handling_charges || 0,
+        packing_charges: '',
+        packing_charges_gst: '',
+        donation_charges: '',
+        delivery_instruction: deliveryInstructions,
+        sub_order_array: mappedItems,
       };
 
-      console.log("----------------", payload)
+      console.log('----------------', payload);
       if (selectedPaymentMethod === 'COD') {
-        const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
+        const responseCod = await dispatch(placeOrder({orderDetails: payload}));
         const orderDetails = {
-          orderId: responseCod?.payload?.id || "",
+          orderId: responseCod?.payload?.id || '',
           totalAmount: calculateTotalPrice(),
-          grandTotal:
-            (
-              calculateTotalPrice() +
-              Number(applicationCharges?.delivery_fixed_charges || 0) +
-              Number(applicationCharges?.handling_charges || 0) +
-              gstCalculation() - (couponAmount || 0)
-            ).toFixed(2),
+          grandTotal: (
+            calculateTotalPrice() +
+            Number(applicationCharges?.delivery_fixed_charges || 0) +
+            Number(applicationCharges?.handling_charges || 0) +
+            gstCalculation() -
+            (couponAmount || 0)
+          ).toFixed(2),
           couponAmount: couponAmount || 0,
           deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
           totalSavings: 0,
           paymentType: selectedPaymentMethod,
-          shopName: "",
+          shopName: '',
           orderDate: responseCod.payload.order_date,
           orderTime: responseCod.payload.order_date,
           deliveryAddress: address,
-          shopAddress: "",
-          shopPhoneNumber: "",
+          shopAddress: '',
+          shopPhoneNumber: '',
           order_id: responseCod.payload.order_id,
           delivery_charges_gst: gstCalculation().toFixed(2) || 0,
-          handling_charges: applicationCharges?.handling_charges || 0
+          handling_charges: applicationCharges?.handling_charges || 0,
         };
 
-        navigation.navigate("OrderSuccess", { orderDetails, status: 0 });
+        navigation.navigate('OrderSuccess', {orderDetails, status: 0});
         return;
       }
 
       payload.order_status = 7;
-      const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
-      if (!pacedResponse.payload) return
-
+      const pacedResponse = await dispatch(placeOrder({orderDetails: payload}));
+      if (!pacedResponse.payload) return;
 
       // Prepare order details only once
       const orderDetails = {
@@ -452,16 +579,16 @@ const payableAmount = calculatePayable(); // total after discounts
         deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
         totalSavings: 0,
         paymentType: selectedPaymentMethod,
-        shopName: "",
+        shopName: '',
         orderDate: pacedResponse.payload.order_date,
         orderTime: pacedResponse.payload.order_date,
         deliveryAddress: address,
-        shopAddress: "",
-        shopPhoneNumber: "",
+        shopAddress: '',
+        shopPhoneNumber: '',
         order_id: pacedResponse.payload.order_id,
         delivery_charges_gst: gstCalculation().toFixed(2) || 0,
-        handling_charges: applicationCharges?.handling_charges || 0
-      }
+        handling_charges: applicationCharges?.handling_charges || 0,
+      };
 
       const options = {
         description: 'Order Payment',
@@ -475,7 +602,7 @@ const payableAmount = calculatePayable(); // total after discounts
           contact: mobileNumber,
           name: selectedAddress?.customer_name,
         },
-        theme: { color: '#8655d2' },
+        theme: {color: '#8655d2'},
       };
 
       RazorpayCheckout.open(options)
@@ -484,20 +611,25 @@ const payableAmount = calculatePayable(); // total after discounts
           payload.razorpay_order_id = data.razorpay_order_id;
           payload.order_status = 0;
 
-          await dispatch(updateOrderStatus({
-            paymentId: data.razorpay_payment_id,
-            rzpId: data.razorpay_order_id,
-            orderId: pacedResponse.payload.id,
-            orderStatus: 0
-          }));
+          await dispatch(
+            updateOrderStatus({
+              paymentId: data.razorpay_payment_id,
+              rzpId: data.razorpay_order_id,
+              orderId: pacedResponse.payload.id,
+              orderStatus: 0,
+            }),
+          );
 
-          navigation.navigate("OrderSuccess", { orderDetails, status: 0 });
+          navigation.navigate('OrderSuccess', {orderDetails, status: 0});
         })
         .catch(error => {
           let errorMessage = 'Transaction was not completed.';
 
           // Handle user cancel case explicitly
-          if (error?.code === 0 || error?.description === 'The payment was cancelled') {
+          if (
+            error?.code === 0 ||
+            error?.description === 'The payment was cancelled'
+          ) {
             console.log('User exited Razorpay payment screen.');
             return; // Don’t show alert for user cancel
           }
@@ -521,7 +653,7 @@ const payableAmount = calculatePayable(); // total after discounts
     } finally {
       setIsProcessingPayment(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -537,9 +669,11 @@ const payableAmount = calculatePayable(); // total after discounts
   }
 
   const gstCalculation = () => {
-    const gstAmmount = calculateTotalPrice() * (Number(applicationCharges?.gst_percentage) / 100)
-    return gstAmmount
-  }
+    const gstAmmount =
+      calculateTotalPrice() *
+      (Number(applicationCharges?.gst_percentage) / 100);
+    return gstAmmount;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -547,7 +681,7 @@ const payableAmount = calculatePayable(); // total after discounts
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor }]}>
+      <View style={[styles.header, {backgroundColor}]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -556,8 +690,15 @@ const payableAmount = calculatePayable(); // total after discounts
 
       {/* Location Section */}
       <View style={styles.locationSection}>
-        <Icon name="home" size={16} color={backgroundColor} style={styles.homeIcon} />
-        <Text style={styles.locationName}>{locationName ? locationName : ""}</Text>
+        <Icon
+          name="home"
+          size={16}
+          color={backgroundColor}
+          style={styles.homeIcon}
+        />
+        <Text style={styles.locationName}>
+          {locationName ? locationName : ''}
+        </Text>
         {/* <TouchableOpacity onPress={() => setShowFullAddress(!showFullAddress)}>
           <Icon name={showFullAddress ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={backgroundColor} />
         </TouchableOpacity> */}
@@ -575,20 +716,21 @@ const payableAmount = calculatePayable(); // total after discounts
               navigation.navigate('SelectServiceFromLocation', {
                 previousScreen: 'ByOncescreen',
                 ...(currentLocation.latitude && currentLocation.longitude
-                  ? { selectedAddress: currentLocation }
-                  : {})
+                  ? {selectedAddress: currentLocation}
+                  : {}),
               });
             } catch (error) {
               console.error('Navigation error:', error);
               Alert.alert(
                 'Navigation Error',
                 'Unable to change address. Please try again later.',
-                [{ text: 'OK' }]
+                [{text: 'OK'}],
               );
             }
-          }}
-        >
-          <Text style={styles.fullAddress}>{address || "Address Not Selected"}</Text>
+          }}>
+          <Text style={styles.fullAddress}>
+            {address || 'Address Not Selected'}
+          </Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity
@@ -603,20 +745,19 @@ const payableAmount = calculatePayable(); // total after discounts
             navigation.navigate('SelectServiceFromLocation', {
               previousScreen: 'ByOncescreen',
               ...(currentLocation.latitude && currentLocation.longitude
-                ? { selectedAddress: currentLocation }
-                : {})
+                ? {selectedAddress: currentLocation}
+                : {}),
             });
           } catch (error) {
             console.error('Navigation error:', error);
             Alert.alert(
               'Navigation Error',
               'Unable to change address. Please try again later.',
-              [{ text: 'OK' }]
+              [{text: 'OK'}],
             );
           }
-        }}
-      >
-        <Text style={[styles.deliveryTagline, { color: backgroundColor }]}>
+        }}>
+        <Text style={[styles.deliveryTagline, {color: backgroundColor}]}>
           Change Address
         </Text>
       </TouchableOpacity>
@@ -625,16 +766,24 @@ const payableAmount = calculatePayable(); // total after discounts
       {cartItems.length === 0 ? (
         renderEmptyScreen()
       ) : (
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}>
           {/* Total Items Section */}
           <View style={styles.totalItems}>
-            <Text style={styles.totalItemsText}>TOTAL ITEMS ({cartItems.length})</Text>
+            <Text style={styles.totalItemsText}>
+              TOTAL ITEMS ({cartItems.length})
+            </Text>
             <TouchableOpacity
-              style={[styles.clearCartContainer, { backgroundColor }]}
-              onPress={handleClearCart}
-            >
+              style={[styles.clearCartContainer, {backgroundColor}]}
+              onPress={handleClearCart}>
               <Text style={styles.clearCart}>Clear Cart</Text>
-              <Icon name="delete" size={16} color="#fff" style={styles.deleteIcon} />
+              <Icon
+                name="delete"
+                size={16}
+                color="#fff"
+                style={styles.deleteIcon}
+              />
             </TouchableOpacity>
           </View>
 
@@ -645,38 +794,39 @@ const payableAmount = calculatePayable(); // total after discounts
             renderHiddenItem={renderHiddenItem}
             rightOpenValue={-75}
             disableRightSwipe
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             scrollEnabled={false}
           />
 
           {/* Apply Coupons Section */}
           <TouchableOpacity
             style={styles.couponSection}
-            onPress={() => navigation.navigate("ApplyCuponScreen", {
-              cartItems,
-              totalAmount: (calculateTotalPrice() + Number(applicationCharges?.delivery_fixed_charges) + Number(applicationCharges?.handling_charges) + gstCalculation()).toFixed(2),
-              status: route.params?.status,
-
-            })}
-          >
-            <View style={[styles.couponIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Icon
-                name="local-offer"
-                size={24}
-                color={backgroundColor}
-              />
+            onPress={() =>
+              navigation.navigate('ApplyCuponScreen', {
+                cartItems,
+                totalAmount: (
+                  calculateTotalPrice() +
+                  Number(applicationCharges?.delivery_fixed_charges) +
+                  Number(applicationCharges?.handling_charges) +
+                  gstCalculation()
+                ).toFixed(2),
+                status: route.params?.status,
+              })
+            }>
+            <View style={[styles.couponIcon, {backgroundColor: '#E8F5E9'}]}>
+              <Icon name="local-offer" size={24} color={backgroundColor} />
             </View>
             {coupon ? (
               <View style={styles.couponAppliedContainer}>
                 <Text style={styles.couponText}>
-                  Saved ₹{coupon.type === 'percentage'
-                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
+                  Saved ₹
+                  {coupon.type === 'percentage'
+                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
+                        2,
+                      )
                     : coupon.discount.toFixed(2)}
                 </Text>
-                <Text style={[
-                  styles.couponCodeText,
-                  { color: backgroundColor }
-                ]}>
+                <Text style={[styles.couponCodeText, {color: backgroundColor}]}>
                   {coupon.code} Applied
                 </Text>
               </View>
@@ -686,25 +836,54 @@ const payableAmount = calculatePayable(); // total after discounts
             <Icon name="chevron-right" size={24} color="#000" />
           </TouchableOpacity>
 
-          {/* Apply Wallet Amount */}
-          {walletAmount > 0 && (
-            <TouchableOpacity
-              style={styles.walletSection}
-              onPress={() => setUseWallet(prev => !prev)} // toggle wallet usage
-            >
-              <View style={styles.walletIcon}>
-                <Icon name="account-balance-wallet" size={24} color="#4CAF50" />
-              </View>
-              <Text style={styles.walletText}>
-                {useWallet
-                  ? `Using ₹${Math.min(walletAmount, payableAmount)}`
-                  : `Use Wallet Balance (₹${walletAmount})`}
-              </Text>
-              <Switch
-                value={useWallet}
-                onValueChange={(val) => setUseWallet(val)}
-              />
-            </TouchableOpacity>
+          {(abhiWalletAmount > 0 || userWalletAmount > 0) && (
+            <View style={styles.walletSection}>
+              {abhiWalletAmount > 0 && muttonSubtotal > 0 && (
+                <View style={styles.walletRow}>
+                  <View style={styles.walletIcon}>
+                    <Icon
+                      name="account-balance-wallet"
+                      size={24}
+                      color="#4CAF50"
+                    />
+                  </View>
+                  <View style={styles.walletTextContainer}>
+                    <Text style={styles.walletText}>
+                      {useWallet
+                        ? `Using ₹${abhiWalletUsed.toFixed(2)} from Abhi Wallet`
+                        : `Use Abhi Wallet (₹${abhiWalletAmount})`}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={useWallet}
+                    onValueChange={val => setUseWallet(val)}
+                  />
+                </View>
+              )}
+
+              {userWalletAmount > 0 && otherSubtotal > 0 && (
+                <View style={styles.walletRow}>
+                  <View style={styles.walletIcon}>
+                    <Icon
+                      name="account-balance-wallet"
+                      size={24}
+                      color="#03A9F4"
+                    />
+                  </View>
+                  <View style={styles.walletTextContainer}>
+                    <Text style={styles.walletText}>
+                      {useWallet
+                        ? `Using ₹${userWalletUsed.toFixed(2)} from Wallet`
+                        : `Use Wallet (₹${userWalletAmount})`}
+                    </Text>
+                  </View>
+                  <Switch
+                    value={useWallet}
+                    onValueChange={val => setUseWallet(val)}
+                  />
+                </View>
+              )}
+            </View>
           )}
 
           {/* Add Delivery Instructions */}
@@ -713,10 +892,11 @@ const payableAmount = calculatePayable(); // total after discounts
             onPress={() => {
               setTempInstruction(deliveryInstructions); // <-- preload from redux
               setShowInstructionModal(true);
-            }}
-          >
+            }}>
             <Text style={styles.deliveryText}>
-              {deliveryInstructions ? `Note: ${deliveryInstructions}` : '+ Add Delivery Instructions'}
+              {deliveryInstructions
+                ? `Note: ${deliveryInstructions}`
+                : '+ Add Delivery Instructions'}
             </Text>
           </TouchableOpacity>
 
@@ -729,16 +909,23 @@ const payableAmount = calculatePayable(); // total after discounts
             {/* Item Total - always show */}
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Item Total</Text>
-              <Text style={styles.summaryValue}>₹{calculateTotalPrice().toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>
+                ₹{calculateTotalPrice().toFixed(2)}
+              </Text>
             </View>
 
             {/* Coupon */}
             {coupon && (
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: backgroundColor }]}>Coupon Applied</Text>
-                <Text style={[styles.summaryValue, { color: backgroundColor }]}>
-                  -₹{coupon.type === 'percentage'
-                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
+                <Text style={[styles.summaryLabel, {color: backgroundColor}]}>
+                  Coupon Applied
+                </Text>
+                <Text style={[styles.summaryValue, {color: backgroundColor}]}>
+                  -₹
+                  {coupon.type === 'percentage'
+                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
+                        2,
+                      )
                     : coupon.discount}
                 </Text>
               </View>
@@ -748,7 +935,7 @@ const payableAmount = calculatePayable(); // total after discounts
             {Number(applicationCharges?.delivery_fixed_charges) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Delivery Charge</Text>
-                <Text style={[styles.summaryValue, { color: backgroundColor }]}>
+                <Text style={[styles.summaryValue, {color: backgroundColor}]}>
                   ₹{applicationCharges?.delivery_fixed_charges}
                 </Text>
               </View>
@@ -758,39 +945,62 @@ const payableAmount = calculatePayable(); // total after discounts
             {Number(applicationCharges?.handling_charges) > 0 && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Platform fee</Text>
-                <Text style={styles.summaryValue}>₹{applicationCharges?.handling_charges}</Text>
+                <Text style={styles.summaryValue}>
+                  ₹{applicationCharges?.handling_charges}
+                </Text>
               </View>
             )}
 
             {/* GST */}
             {applicationCharges?.gst_percentage > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>GST & Restaurant Charges</Text>
-                <Text style={styles.summaryValue}>₹{gstCalculation().toFixed(2)}</Text>
+                <Text style={styles.summaryLabel}>
+                  GST & Restaurant Charges
+                </Text>
+                <Text style={styles.summaryValue}>
+                  ₹{gstCalculation().toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            {/* Wallet Deduction */}
+            {abhiWalletUsed > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, {color: '#4CAF50'}]}>
+                  Abhi Wallet Used
+                </Text>
+                <Text style={[styles.summaryValue, {color: '#4CAF50'}]}>
+                  -₹{abhiWalletUsed.toFixed(2)}
+                </Text>
+              </View>
+            )}
+
+            {userWalletUsed > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, {color: '#4CAF50'}]}>
+                  Wallet Used
+                </Text>
+                <Text style={[styles.summaryValue, {color: '#4CAF50'}]}>
+                  -₹{userWalletUsed.toFixed(2)}
+                </Text>
               </View>
             )}
 
             {/* Final To Pay */}
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, styles.totalLabel]}>To Pay</Text>
+              <Text style={[styles.summaryLabel, styles.totalLabel]}>
+                To Pay
+              </Text>
               <Text style={[styles.summaryValue, styles.totalValue]}>
-                ₹{(
-                  calculateTotalPrice() +
-                  Number(applicationCharges?.delivery_fixed_charges || 0) +
-                  Number(applicationCharges?.handling_charges || 0) +
-                  gstCalculation() -
-                  (couponAmount || 0)
-                ).toFixed(2)}
+                ₹{calculateFinalPrice().toFixed(2)}
               </Text>
             </View>
           </View>
 
-
           <View style={styles.Paymentcontainer}>
             <TouchableOpacity
               style={styles.selectedMethodBox}
-              onPress={() => setPaymentMenuVisible(prev => !prev)}
-            >
+              onPress={() => setPaymentMenuVisible(prev => !prev)}>
               <Text style={styles.selectedText}>{selectedPaymentMethod}</Text>
             </TouchableOpacity>
 
@@ -806,14 +1016,13 @@ const payableAmount = calculatePayable(); // total after discounts
                     onPress={() => {
                       setSelectedPaymentMethod(method);
                       setPaymentMenuVisible(false);
-                    }}
-                  >
+                    }}>
                     <Text
                       style={[
                         styles.paymentMethodText,
-                        selectedPaymentMethod === method && styles.selectedTextBold,
-                      ]}
-                    >
+                        selectedPaymentMethod === method &&
+                          styles.selectedTextBold,
+                      ]}>
                       {method}
                     </Text>
                   </TouchableOpacity>
@@ -823,15 +1032,18 @@ const payableAmount = calculatePayable(); // total after discounts
           </View>
 
           {/* Place Order Button */}
-          < View style={{ paddingBottom: 60 }}>
+          <View style={{paddingBottom: 60}}>
             <TouchableOpacity
               style={[
                 styles.placeOrderButton,
-                { backgroundColor: isProcessingPayment ? '#ccc' : backgroundColor },
+                {
+                  backgroundColor: isProcessingPayment
+                    ? '#ccc'
+                    : backgroundColor,
+                },
               ]}
               onPress={handlePlaceOrder}
-              disabled={isProcessingPayment}
-            >
+              disabled={isProcessingPayment}>
               {isProcessingPayment ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -846,13 +1058,13 @@ const payableAmount = calculatePayable(); // total after discounts
         transparent
         visible={showServiceModal}
         animationType="fade"
-        onRequestClose={() => setShowServiceModal(false)}
-      >
+        onRequestClose={() => setShowServiceModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Service Unavailable</Text>
             <Text style={styles.modalText}>
-              We currently do not provide service in your area. You can change your location or visit our app for more information.
+              We currently do not provide service in your area. You can change
+              your location or visit our app for more information.
             </Text>
 
             <View style={styles.buttonRow}>
@@ -861,8 +1073,7 @@ const payableAmount = calculatePayable(); // total after discounts
                 onPress={() => {
                   setShowServiceModal(false);
                   navigation.navigate('SelectServiceFromLocation'); // 👈 Navigate here
-                }}
-              >
+                }}>
                 <Text style={styles.buttonText}>Change Location</Text>
               </TouchableOpacity>
               {/* <TouchableOpacity
@@ -893,8 +1104,7 @@ const payableAmount = calculatePayable(); // total after discounts
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 onPress={() => setShowInstructionModal(false)}
-                style={styles.cancelButton}
-              >
+                style={styles.cancelButton}>
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -902,8 +1112,7 @@ const payableAmount = calculatePayable(); // total after discounts
                   dispatch(setDeliveryInstructions(tempInstruction));
                   setShowInstructionModal(false);
                 }}
-                style={styles.saveButton}
-              >
+                style={styles.saveButton}>
                 <Text style={styles.saveButtonText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -930,7 +1139,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomEndRadius: 25,
     borderBottomStartRadius: 25,
-    paddingVertical: "6%"
+    paddingVertical: '6%',
   },
   headerTitle: {
     color: '#fff',
@@ -1020,70 +1229,70 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   priceContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginTop: 5,
   },
   itemPrice: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginRight: 10,
   },
   originalPrice: {
     fontSize: 14,
-    color: "#666",
-    textDecorationLine: "line-through",
+    color: '#666',
+    textDecorationLine: 'line-through',
   },
   quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: '#ddd',
     borderRadius: 5,
     padding: 5,
   },
   quantityButton: {
     fontSize: 18,
     paddingHorizontal: 10,
-    color: "#000",
+    color: '#000',
   },
   quantityText: {
     fontSize: 16,
     paddingHorizontal: 10,
   },
   hiddenItem: {
-    backgroundColor: "#D32F2F", // Will be overridden by backgroundColor
+    backgroundColor: '#D32F2F', // Will be overridden by backgroundColor
     flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    flexDirection: "row",
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexDirection: 'row',
     padding: 15,
   },
   deleteButton: {
-    backgroundColor: "#D32F2F", // Will be overridden by backgroundColor
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#D32F2F', // Will be overridden by backgroundColor
+    justifyContent: 'center',
+    alignItems: 'center',
     width: 75,
-    height: "100%",
+    height: '100%',
     flexDirection: 'column',
     paddingVertical: 10,
   },
   deleteText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 12,
     marginTop: 5,
   },
   couponSection: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
+    flexDirection: 'row',
+    backgroundColor: '#fff',
     padding: 15,
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 10,
     borderRadius: 8,
     marginHorizontal: 10,
   },
   couponIcon: {
-    backgroundColor: "#FFEBEE", // Will be updated to a light green shade
+    backgroundColor: '#FFEBEE', // Will be updated to a light green shade
     borderRadius: 20,
     padding: 5,
   },
@@ -1091,10 +1300,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   deliveryInstructions: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     padding: 15,
     marginTop: 2,
     borderRadius: 8,
@@ -1102,69 +1311,69 @@ const styles = StyleSheet.create({
   },
   deliveryText: {
     fontSize: 16,
-    color: "#666",
+    color: '#666',
   },
   orderSummary: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     padding: 15,
     marginTop: 10,
     borderRadius: 8,
     marginHorizontal: 10,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: '#ddd',
   },
   summaryHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
   summaryTitle: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   viewMore: {
-    color: "#D32F2F", // Will be overridden by backgroundColor
+    color: '#D32F2F', // Will be overridden by backgroundColor
     fontSize: 14,
   },
   summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginVertical: 5,
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#666",
+    color: '#666',
   },
   summaryValue: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   addTip: {
-    color: "#D32F2F", // Will be overridden by backgroundColor
+    color: '#D32F2F', // Will be overridden by backgroundColor
     fontSize: 14,
   },
   totalLabel: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
+    fontWeight: 'bold',
+    color: '#000',
   },
   totalValue: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
+    fontWeight: 'bold',
+    color: '#000',
   },
   placeOrderButton: {
-    backgroundColor: "#D32F2F", // Will be overridden by backgroundColor
+    backgroundColor: '#D32F2F', // Will be overridden by backgroundColor
     padding: 15,
     margin: 10,
     borderRadius: 8,
-    alignItems: "center",
+    alignItems: 'center',
     // paddingBottom:100
   },
   placeOrderText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   emptyScreenContainer: {
     flex: 1,
@@ -1178,10 +1387,10 @@ const styles = StyleSheet.create({
   },
   emptyScreenText: {
     fontSize: 16,
-    color: "#000",
-    fontWeight: "700",
+    color: '#000',
+    fontWeight: '700',
     width: responsiveWidth(75),
-    textAlign: "center",
+    textAlign: 'center',
     lineHeight: 25,
     marginVertical: responsiveHeight(3),
   },
@@ -1196,9 +1405,9 @@ const styles = StyleSheet.create({
     marginBottom: Platform.OS === 'ios' ? 85 : 60,
   },
   exploreButtonText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,
@@ -1259,7 +1468,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowColor: '#000',
     shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowRadius: 6,
     elevation: 4,
   },
@@ -1380,27 +1589,38 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-  }
+  },
+  walletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
 
+  walletTextContainer: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+
+  walletSection: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginHorizontal: 10,
+    marginTop: 5,
+    marginBottom: 5,
+  },
+
+  walletIcon: {
+    width: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  walletText: {
+    fontSize: 14,
+    color: '#333',
+  },
 });
 
 export default BasketScreen;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
