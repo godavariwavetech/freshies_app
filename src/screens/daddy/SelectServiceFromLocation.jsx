@@ -300,7 +300,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           longitude: parseFloat(region.longitude),
         }),
       );
-
       if (response.payload.data.length > 0) {
         dispatch(
           setLocation({

@@ -52,11 +52,14 @@ const ServicesAvailableScreen = ({ navigation, route }) => {
   }, [searchQuery, availableAreas]);
 
   const handleAreaSelect = (area) => {
-    dispatch(setLocation({ latitude: area.location_latitude, longitude: area.location_longitude }))
+    console.log("area",area)
+    dispatch(setLocation({ latitude: area.location_latitude, longitude: area.location_latitude }))
     dispatch(setLocationName(area.location_name))
-    dispatch(setLocationId(area.id))
-    navigation.navigate("BottomNavigation")
+    // dispatch(setLocationId(area.id))
+    navigation.navigate("ByOncescreen")
   };
+
+  
 
   const handleRefresh = async () => {
     setRefreshing(true);

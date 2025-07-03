@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,13 +16,13 @@ import {
   Switch,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SwipeListView} from 'react-native-swipe-list-view';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {
   responsiveHeight,
   responsiveWidth,
 } from 'react-native-responsive-dimensions';
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import {
   checkAddressExistence,
@@ -35,7 +35,7 @@ import {
   clearCart,
   setDeliveryInstructions,
 } from '../../../redux/reducers/cartReducer';
-import {haversineDistance} from '../distanceCalculator';
+import { haversineDistance } from '../distanceCalculator';
 import {
   setLocation,
   setLocationId,
@@ -44,11 +44,11 @@ import {
 } from '../../../redux/reducers/auth';
 
 const paymentMethods = ['Pay Online', 'COD'];
+const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
 
-const BasketScreen = ({navigation, route}) => {
+const BasketScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const [cartItems, setCartItems] = useState([]);
-  const [showFullAddress, setShowFullAddress] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('COD');
@@ -73,37 +73,30 @@ const BasketScreen = ({navigation, route}) => {
     mobileNumber,
     shopAddress,
   } = useSelector(state => state.Auth);
-  const {chargesList, selectedAddress} = useSelector(state => state.address);
+  const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const deliveryInstructions = useSelector(
-    state => state.cart.deliveryInstructions,
-  );
+  const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
   const [showInstructionModal, setShowInstructionModal] = useState(false);
   const [tempInstruction, setTempInstruction] = useState(''); // NEW state
   const orderDistance =
     storedLocation?.latitude &&
-    storedLocation?.longitude &&
-    shopAddress?.location_latitude &&
-    shopAddress?.location_longitude
+      storedLocation?.longitude &&
+      shopAddress?.location_latitude &&
+      shopAddress?.location_longitude
       ? haversineDistance(
-          storedLocation.latitude,
-          storedLocation.longitude,
-          shopAddress.location_latitude,
-          shopAddress.location_longitude,
-        )
+        storedLocation.latitude,
+        storedLocation.longitude,
+        shopAddress.location_latitude,
+        shopAddress.location_longitude,
+      )
       : null;
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
-  const [useWallet, setUseWallet] = useState(false);
   const walletData = useSelector(state => state.wallet);
-  const walletAmount = Number(walletData?.abhi24_balanced_amount ?? 0);
-  console.log('walletAmount', walletData);
-  console.log('cartItems', cartItems);
 
   const getSplitCartTotals = () => {
     let muttonSubtotal = 0;
     let otherSubtotal = 0;
-
     cartItems.forEach(item => {
       const price = Number(item.variant?.selling_price || item.offer || 0);
       const itemTotal = price * item.quantity;
@@ -115,17 +108,22 @@ const BasketScreen = ({navigation, route}) => {
     });
     console.log('muttonSubtotal', muttonSubtotal);
     console.log('otherSubtotal', otherSubtotal);
-    return {muttonSubtotal, otherSubtotal};
+    return { muttonSubtotal, otherSubtotal };
   };
 
-  const {muttonSubtotal, otherSubtotal} = getSplitCartTotals();
+  const [useAbhiWallet, setUseAbhiWallet] = useState(false);
+  const [useUserWallet, setUseUserWallet] = useState(false);
+
+  const { muttonSubtotal, otherSubtotal } = getSplitCartTotals();
   const abhiWalletAmount = Number(walletData?.abhi24_balanced_amount ?? 0);
-  const userWalletAmount = Number(walletData?.user_balanced_amount ?? 0);
+  const userWalletAmount = Number(walletData?.user_balance_amount ?? 0);
+  const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
+  const userWalletUsed = useUserWallet ? Math.min(otherSubtotal, userWalletAmount) : 0;
 
-  const abhiWalletUsed = Math.min(muttonSubtotal, abhiWalletAmount);
-  const userWalletUsed = Math.min(otherSubtotal, userWalletAmount);
 
-  
+  console.log('walletAmount', walletData);
+  console.log(userWalletAmount, abhiWalletAmount)
+  console.log('cartItems', cartItems);
 
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
@@ -233,88 +231,27 @@ const BasketScreen = ({navigation, route}) => {
         console.error('Error saving cart items:', error);
       }
     };
-
     if (!isLoading) {
       saveCartItems();
     }
   }, [cartItems, isLoading]);
-
-  // Force green color by setting status to 0 if undefined, or ensure green is used
-  const effectiveStatus =
-    route.params?.status !== undefined && route.params?.status === 1
-      ? 0
-      : route.params?.status || 0;
-  const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
-
-  // Calculate total price
-  const calculateTotalPrice = () => {
-    const subtotal = cartItems.reduce(
-      (total, item) =>
-        total +
-        Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
-      0,
-    );
-
-    // Apply coupon if available
-    if (coupon) {
-      if (coupon.type === 'percentage') {
-        // Percentage discount
-        return subtotal - subtotal * (coupon.discount / 100);
-      } else if (coupon.type === 'flat') {
-        // Flat discount
-        return Math.max(0, subtotal - coupon.discount);
-      }
-    }
-
-    return subtotal;
-  };
-
-  const calculateFinalPrice = () => {
-    const deliveryCharge = Number(
-      applicationCharges?.delivery_fixed_charges || 0,
-    );
-    const handlingCharge = Number(applicationCharges?.handling_charges || 0);
-    const gst = gstCalculation();
-
-    let subtotal = muttonSubtotal + otherSubtotal;
-
-    // Apply coupon
-    if (coupon) {
-      if (coupon.type === 'percentage') {
-        subtotal -= subtotal * (coupon.discount / 100);
-      } else {
-        subtotal -= coupon.discount;
-      }
-    }
-
-    // Wallets
-    const totalAfterWallets =
-      subtotal +
-      deliveryCharge +
-      handlingCharge +
-      gst -
-      abhiWalletUsed -
-      userWalletUsed;
-
-    return Math.max(0, totalAfterWallets);
-  };
 
   const handleQuantityChange = (id, action) => {
     const updatedCartItems = cartItems
       .map(item =>
         item.id === id
           ? {
-              ...item,
-              quantity:
-                action === 'increase'
-                  ? item.quantity + 1
-                  : Math.max(1, item.quantity - 1),
-              totalPrice:
-                item.price *
-                (action === 'increase'
-                  ? item.quantity + 1
-                  : Math.max(1, item.quantity - 1)),
-            }
+            ...item,
+            quantity:
+              action === 'increase'
+                ? item.quantity + 1
+                : Math.max(1, item.quantity - 1),
+            totalPrice:
+              item.price *
+              (action === 'increase'
+                ? item.quantity + 1
+                : Math.max(1, item.quantity - 1)),
+          }
           : item,
       )
       .filter(item => item.quantity > 0);
@@ -336,15 +273,17 @@ const BasketScreen = ({navigation, route}) => {
       console.error('Error clearing cart:', error);
     }
   };
+
   const navigateToHomeTab = () => {
-    navigation.navigate('BottomNavigation', {screen: 'Home'});
+    navigation.navigate('BottomNavigation', { screen: 'Home' });
   };
-  const renderItem = ({item}) => (
+
+  const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image
         source={
           item.image
-            ? {uri: item.image}
+            ? { uri: item.image }
             : require('../../daddy/tabassets/keema.png')
         }
         style={styles.itemImage}
@@ -386,10 +325,10 @@ const BasketScreen = ({navigation, route}) => {
     </View>
   );
 
-  const renderHiddenItem = ({item}) => (
-    <View style={[styles.hiddenItem, {backgroundColor}]}>
+  const renderHiddenItem = ({ item }) => (
+    <View style={[styles.hiddenItem, { backgroundColor }]}>
       <TouchableOpacity
-        style={[styles.deleteButton, {backgroundColor}]}
+        style={[styles.deleteButton, { backgroundColor }]}
         onPress={() => {
           // Show confirmation dialog before deleting
           Alert.alert(
@@ -426,15 +365,11 @@ const BasketScreen = ({navigation, route}) => {
       </Text>
       <TouchableOpacity
         onPress={navigateToHomeTab}
-        style={[styles.exploreButton, {backgroundColor}]}>
+        style={[styles.exploreButton, { backgroundColor }]}>
         <Text style={styles.exploreButtonText}>Explore Items</Text>
       </TouchableOpacity>
     </View>
   );
-
-  const couponAmount = coupon?.discount
-    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
-    : '0.00';
 
   const handlePlaceOrder = async () => {
     try {
@@ -530,7 +465,7 @@ const BasketScreen = ({navigation, route}) => {
 
       console.log('----------------', payload);
       if (selectedPaymentMethod === 'COD') {
-        const responseCod = await dispatch(placeOrder({orderDetails: payload}));
+        const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
         const orderDetails = {
           orderId: responseCod?.payload?.id || '',
           totalAmount: calculateTotalPrice(),
@@ -556,12 +491,12 @@ const BasketScreen = ({navigation, route}) => {
           handling_charges: applicationCharges?.handling_charges || 0,
         };
 
-        navigation.navigate('OrderSuccess', {orderDetails, status: 0});
+        navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
         return;
       }
 
       payload.order_status = 7;
-      const pacedResponse = await dispatch(placeOrder({orderDetails: payload}));
+      const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
       if (!pacedResponse.payload) return;
 
       // Prepare order details only once
@@ -602,7 +537,7 @@ const BasketScreen = ({navigation, route}) => {
           contact: mobileNumber,
           name: selectedAddress?.customer_name,
         },
-        theme: {color: '#8655d2'},
+        theme: { color: '#8655d2' },
       };
 
       RazorpayCheckout.open(options)
@@ -620,7 +555,7 @@ const BasketScreen = ({navigation, route}) => {
             }),
           );
 
-          navigation.navigate('OrderSuccess', {orderDetails, status: 0});
+          navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
         })
         .catch(error => {
           let errorMessage = 'Transaction was not completed.';
@@ -655,6 +590,53 @@ const BasketScreen = ({navigation, route}) => {
     }
   };
 
+  const gstCalculation = () => {
+    const gstAmmount =
+      calculateTotalPrice() *
+      (Number(applicationCharges?.gst_percentage) / 100);
+    return gstAmmount;
+  };
+
+  // Calculate total price
+  const calculateTotalPrice = () => {
+    const subtotal = cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
+      0,
+    );
+    // Apply coupon if available
+    if (coupon) {
+      if (coupon.type === 'percentage') {
+        // Percentage discount
+        return subtotal - subtotal * (coupon.discount / 100);
+      } else if (coupon.type === 'flat') {
+        // Flat discount
+        return Math.max(0, subtotal - coupon.discount);
+      }
+    }
+    return subtotal;
+  };
+
+  const calculateFinalPrice = () => {
+    const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0,);
+    const handlingCharge = Number(applicationCharges?.handling_charges || 0);
+    const gst = gstCalculation();
+    let subtotal = muttonSubtotal + otherSubtotal;
+    // Apply coupon
+    if (coupon) {
+      if (coupon.type === 'percentage') {
+        subtotal -= subtotal * (coupon.discount / 100);
+      } else {
+        subtotal -= coupon.discount;
+      }
+    }
+    // Wallets
+    const totalAfterWallets = subtotal + deliveryCharge + handlingCharge + gst - abhiWalletUsed - userWalletUsed;
+
+    return Math.max(0, totalAfterWallets);
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -668,26 +650,19 @@ const BasketScreen = ({navigation, route}) => {
     );
   }
 
-  const gstCalculation = () => {
-    const gstAmmount =
-      calculateTotalPrice() *
-      (Number(applicationCharges?.gst_percentage) / 100);
-    return gstAmmount;
-  };
+  const couponAmount = coupon?.discount ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2) : '0.00';
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Status Bar */}
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
-
       {/* Header */}
-      <View style={[styles.header, {backgroundColor}]}>
+      <View style={[styles.header, { backgroundColor }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
       </View>
-
       {/* Location Section */}
       <View style={styles.locationSection}>
         <Icon
@@ -699,40 +674,7 @@ const BasketScreen = ({navigation, route}) => {
         <Text style={styles.locationName}>
           {locationName ? locationName : ''}
         </Text>
-        {/* <TouchableOpacity onPress={() => setShowFullAddress(!showFullAddress)}>
-          <Icon name={showFullAddress ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={20} color={backgroundColor} />
-        </TouchableOpacity> */}
       </View>
-      {showFullAddress && (
-        <TouchableOpacity
-          onPress={() => {
-            try {
-              // Retrieve current location from AsyncStorage or Redux if possible
-              const currentLocation = {
-                latitude: storedLocation?.latitude,
-                longitude: storedLocation?.longitude,
-              };
-
-              navigation.navigate('SelectServiceFromLocation', {
-                previousScreen: 'ByOncescreen',
-                ...(currentLocation.latitude && currentLocation.longitude
-                  ? {selectedAddress: currentLocation}
-                  : {}),
-              });
-            } catch (error) {
-              console.error('Navigation error:', error);
-              Alert.alert(
-                'Navigation Error',
-                'Unable to change address. Please try again later.',
-                [{text: 'OK'}],
-              );
-            }
-          }}>
-          <Text style={styles.fullAddress}>
-            {address || 'Address Not Selected'}
-          </Text>
-        </TouchableOpacity>
-      )}
       <TouchableOpacity
         onPress={() => {
           try {
@@ -745,7 +687,7 @@ const BasketScreen = ({navigation, route}) => {
             navigation.navigate('SelectServiceFromLocation', {
               previousScreen: 'ByOncescreen',
               ...(currentLocation.latitude && currentLocation.longitude
-                ? {selectedAddress: currentLocation}
+                ? { selectedAddress: currentLocation }
                 : {}),
             });
           } catch (error) {
@@ -753,11 +695,40 @@ const BasketScreen = ({navigation, route}) => {
             Alert.alert(
               'Navigation Error',
               'Unable to change address. Please try again later.',
-              [{text: 'OK'}],
+              [{ text: 'OK' }],
             );
           }
         }}>
-        <Text style={[styles.deliveryTagline, {color: backgroundColor}]}>
+        <Text style={styles.fullAddress}>
+          {address || 'Address Not Selected'}
+        </Text>
+      </TouchableOpacity>
+      {/* change location */}
+      <TouchableOpacity
+        onPress={() => {
+          try {
+            // Retrieve current location from AsyncStorage or Redux if possible
+            const currentLocation = {
+              latitude: storedLocation?.latitude,
+              longitude: storedLocation?.longitude,
+            };
+
+            navigation.navigate('SelectServiceFromLocation', {
+              previousScreen: 'ByOncescreen',
+              ...(currentLocation.latitude && currentLocation.longitude
+                ? { selectedAddress: currentLocation }
+                : {}),
+            });
+          } catch (error) {
+            console.error('Navigation error:', error);
+            Alert.alert(
+              'Navigation Error',
+              'Unable to change address. Please try again later.',
+              [{ text: 'OK' }],
+            );
+          }
+        }}>
+        <Text style={[styles.deliveryTagline, { color: backgroundColor }]}>
           Change Address
         </Text>
       </TouchableOpacity>
@@ -775,7 +746,7 @@ const BasketScreen = ({navigation, route}) => {
               TOTAL ITEMS ({cartItems.length})
             </Text>
             <TouchableOpacity
-              style={[styles.clearCartContainer, {backgroundColor}]}
+              style={[styles.clearCartContainer, { backgroundColor }]}
               onPress={handleClearCart}>
               <Text style={styles.clearCart}>Clear Cart</Text>
               <Icon
@@ -813,7 +784,7 @@ const BasketScreen = ({navigation, route}) => {
                 status: route.params?.status,
               })
             }>
-            <View style={[styles.couponIcon, {backgroundColor: '#E8F5E9'}]}>
+            <View style={[styles.couponIcon, { backgroundColor: '#E8F5E9' }]}>
               <Icon name="local-offer" size={24} color={backgroundColor} />
             </View>
             {coupon ? (
@@ -822,11 +793,11 @@ const BasketScreen = ({navigation, route}) => {
                   Saved ₹
                   {coupon.type === 'percentage'
                     ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
-                        2,
-                      )
+                      2,
+                    )
                     : coupon.discount.toFixed(2)}
                 </Text>
-                <Text style={[styles.couponCodeText, {color: backgroundColor}]}>
+                <Text style={[styles.couponCodeText, { color: backgroundColor }]}>
                   {coupon.code} Applied
                 </Text>
               </View>
@@ -849,14 +820,14 @@ const BasketScreen = ({navigation, route}) => {
                   </View>
                   <View style={styles.walletTextContainer}>
                     <Text style={styles.walletText}>
-                      {useWallet
+                      {useAbhiWallet
                         ? `Using ₹${abhiWalletUsed.toFixed(2)} from Abhi Wallet`
                         : `Use Abhi Wallet (₹${abhiWalletAmount})`}
                     </Text>
                   </View>
                   <Switch
-                    value={useWallet}
-                    onValueChange={val => setUseWallet(val)}
+                    value={useAbhiWallet}
+                    onValueChange={val => setUseAbhiWallet(val)}
                   />
                 </View>
               )}
@@ -872,20 +843,19 @@ const BasketScreen = ({navigation, route}) => {
                   </View>
                   <View style={styles.walletTextContainer}>
                     <Text style={styles.walletText}>
-                      {useWallet
+                      {useUserWallet
                         ? `Using ₹${userWalletUsed.toFixed(2)} from Wallet`
                         : `Use Wallet (₹${userWalletAmount})`}
                     </Text>
                   </View>
                   <Switch
-                    value={useWallet}
-                    onValueChange={val => setUseWallet(val)}
+                    value={useUserWallet}
+                    onValueChange={val => setUseUserWallet(val)}
                   />
                 </View>
               )}
             </View>
           )}
-
           {/* Add Delivery Instructions */}
           <TouchableOpacity
             style={styles.deliveryInstructions}
@@ -914,28 +884,12 @@ const BasketScreen = ({navigation, route}) => {
               </Text>
             </View>
 
-            {/* Coupon */}
-            {coupon && (
-              <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, {color: backgroundColor}]}>
-                  Coupon Applied
-                </Text>
-                <Text style={[styles.summaryValue, {color: backgroundColor}]}>
-                  -₹
-                  {coupon.type === 'percentage'
-                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
-                        2,
-                      )
-                    : coupon.discount}
-                </Text>
-              </View>
-            )}
 
             {/* Delivery Charge */}
             {Number(applicationCharges?.delivery_fixed_charges) > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Delivery Charge</Text>
-                <Text style={[styles.summaryValue, {color: backgroundColor}]}>
+                <Text style={styles.summaryLabel}>Delivery Charges</Text>
+                <Text style={[styles.summaryValue]}>
                   ₹{applicationCharges?.delivery_fixed_charges}
                 </Text>
               </View>
@@ -963,13 +917,30 @@ const BasketScreen = ({navigation, route}) => {
               </View>
             )}
 
+             {/* Coupon */}
+             {coupon && (
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, { color: '#4CAF50' }]}>
+                  Coupon Applied
+                </Text>
+                <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
+                  -₹
+                  {coupon.type === 'percentage'
+                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
+                      2,
+                    )
+                    : coupon.discount}
+                </Text>
+              </View>
+            )}
+
             {/* Wallet Deduction */}
             {abhiWalletUsed > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, {color: '#4CAF50'}]}>
+                <Text style={[styles.summaryLabel, { color: '#4CAF50' }]}>
                   Abhi Wallet Used
                 </Text>
-                <Text style={[styles.summaryValue, {color: '#4CAF50'}]}>
+                <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
                   -₹{abhiWalletUsed.toFixed(2)}
                 </Text>
               </View>
@@ -977,10 +948,10 @@ const BasketScreen = ({navigation, route}) => {
 
             {userWalletUsed > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, {color: '#4CAF50'}]}>
+                <Text style={[styles.summaryLabel, { color: '#4CAF50' }]}>
                   Wallet Used
                 </Text>
-                <Text style={[styles.summaryValue, {color: '#4CAF50'}]}>
+                <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
                   -₹{userWalletUsed.toFixed(2)}
                 </Text>
               </View>
@@ -1021,7 +992,7 @@ const BasketScreen = ({navigation, route}) => {
                       style={[
                         styles.paymentMethodText,
                         selectedPaymentMethod === method &&
-                          styles.selectedTextBold,
+                        styles.selectedTextBold,
                       ]}>
                       {method}
                     </Text>
@@ -1032,7 +1003,7 @@ const BasketScreen = ({navigation, route}) => {
           </View>
 
           {/* Place Order Button */}
-          <View style={{paddingBottom: 60}}>
+          <View style={{ paddingBottom: 60 }}>
             <TouchableOpacity
               style={[
                 styles.placeOrderButton,
@@ -1468,7 +1439,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     shadowColor: '#000',
     shadowOpacity: 0.12,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
     elevation: 4,
   },
