@@ -52,12 +52,18 @@ const ServicesAvailableScreen = ({ navigation, route }) => {
   }, [searchQuery, availableAreas]);
 
   const handleAreaSelect = (area) => {
-    console.log("area",area)
-    dispatch(setLocation({ latitude: area.location_latitude, longitude: area.location_latitude }))
-    dispatch(setLocationName(area.location_name))
-    // dispatch(setLocationId(area.id))
-    navigation.navigate("ByOncescreen")
+    dispatch(setLocation({ latitude: area.location_latitude, longitude: area.location_longitude }));
+    dispatch(setLocationName(area.location_name));
+  
+    navigation.navigate("SelectServiceFromLocation", {
+      selectedAddress: {
+        customer_latitude: area.location_latitude,
+        customer_longitude: area.location_longitude,
+        location_name: area.location_name,
+      },
+    });
   };
+  
 
   
 

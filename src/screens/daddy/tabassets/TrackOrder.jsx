@@ -26,15 +26,13 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   // Get order details from route params
   const dispatch = useDispatch();
   const { orderDetails, status } = route.params || {};
-
-
+  console.log(orderDetails)
   const backgroundColor = '#8655d2';
   const [storedOrders, setStoredOrders] = useState([]);
   const [viewSavedOrders, setViewSavedOrders] = useState(false);
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
   const [loadingItems, setLoadingItems] = useState(true);
   const [isCancelAlertVisible, setCancelAlertVisible] = useState(false);
-
 
   useEffect(() => {
     const fetchOrderItems = async () => {
@@ -43,9 +41,9 @@ const OrderDetailsScreen = ({ navigation, route }) => {
       setLoadingItems(true);
       try {
         const items = await getOrderItemsByOrderId(orderDetails.orderId);
+        console.log("itemssssss", items)
         setStoredOrders(items);
         orderDetails.items = items;
-
       } catch (error) {
         console.error('Failed to fetch order items:', error);
       } finally {
@@ -58,87 +56,6 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   }, [orderDetails?.orderId]);
 
 
-  // Load stored orders
-  const loadStoredOrders = async () => {
-    try {
-      const ordersJson = await AsyncStorage.getItem('trackOrders');
-      const orders = ordersJson ? JSON.parse(ordersJson) : [];
-      setStoredOrders(orders);
-    } catch (error) {
-      console.error('Error loading stored orders:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Load Failed',
-        text2: 'Unable to load saved orders',
-        visibilityTime: 3000,
-        autoHide: true,
-      });
-    }
-  };
-
-  // Validate order details before saving
-  const validateOrderDetails = (details) => {
-    const requiredFields = ['orderId', 'items', 'totalPrice'];
-    for (let field of requiredFields) {
-      if (!details[field]) {
-        throw new Error(`Missing required field: ${field}`);
-      }
-    }
-    return true;
-  };
-
-  // Save order to local storage
-  // const saveOrderToStorage = async () => {
-  //   try {
-  //     // Validate order details
-  //     if (!orderDetails || !validateOrderDetails(orderDetails)) {
-  //       throw new Error('Invalid order details');
-  //     }
-
-  //     // Check if order already exists
-  //     const existingOrderIndex = storedOrders.findIndex(
-  //       order => order.orderId === orderDetails?.orderId
-  //     );
-
-  //     let updatedOrders;
-  //     if (existingOrderIndex > -1) {
-  //       // Update existing order
-  //       updatedOrders = [...storedOrders];
-  //       updatedOrders[existingOrderIndex] = orderDetails;
-  //     } else {
-  //       // Add new order
-  //       updatedOrders = [...storedOrders, orderDetails];
-  //     }
-
-  //     // Save to AsyncStorage
-  //     await AsyncStorage.setItem('trackOrders', JSON.stringify(updatedOrders));
-
-  //     // Update local state
-  //     setStoredOrders(updatedOrders);
-
-  //     // Show success toast
-  //     Toast.show({
-  //       type: 'success',
-  //       text1: 'Order Saved',
-  //       text2: 'Order details have been saved successfully',
-  //       visibilityTime: 3000,
-  //       autoHide: true,
-  //     });
-  //   } catch (error) {
-  //     console.error('Error saving order:', error);
-
-  //     // Show error toast
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Save Failed',
-  //       text2: error.message || 'Unable to save order details',
-  //       visibilityTime: 3000,
-  //       autoHide: true,
-  //     });
-  //   }
-  // };
-
-  // Remove order from local storage
   const removeOrderFromStorage = async (orderIdToRemove) => {
     try {
       const updatedOrders = storedOrders.filter(
@@ -269,7 +186,6 @@ const OrderDetailsScreen = ({ navigation, route }) => {
 
   const renderSkeletonItems = () => {
     const skeletonArray = Array.from({ length: 3 });
-
     return skeletonArray.map((_, index) => (
       <View key={index} style={[styles.productCard, { opacity: 0.5 }]}>
         <View style={{ flex: 1 }}>
@@ -302,7 +218,12 @@ const OrderDetailsScreen = ({ navigation, route }) => {
     }
   };
 
+  const usedAbhicash = parseFloat(orderDetails?.abhicash_amount || 0) > 0;
+  const usedWallet = parseFloat(orderDetails?.userwallet_amount || 0) > 0;
 
+  const walletLabel = usedAbhicash && usedWallet
+    ? 'Wallets'
+    : 'Wallet';
 
   return (
     <View style={styles.container}>
@@ -346,37 +267,8 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-
         {/* Dynamically render product items */}
         {renderProductItems()}
-
-        {/* Order Status */}
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Order Status</Text>
-
-          <View style={styles.statusItem}>
-            <Ionicons name="checkmark-circle" size={18} color="#8655d2" />
-            <Text style={styles.statusText}>Order Confirmed, Oct 06</Text>
-          </View>
-          <View style={styles.statusItem}>
-            <Ionicons name="checkmark-circle" size={18} color="#8655d2" />
-            <Text style={styles.statusText}>Shipped</Text>
-          </View>
-          <Text style={styles.subStatus}>Your item has arrived at Facility, Mon 14th Oct</Text>
-
-          <View style={styles.statusItem}>
-            <Ionicons name="ellipse-outline" size={18} color="#8655d2" />
-            <Text style={styles.statusText}>Out For Delivery</Text>
-          </View>
-
-          <View style={styles.statusItem}>
-            <Ionicons name="ellipse-outline" size={18} color="#8655d2" />
-            <Text style={styles.statusText}>
-              Delivery, Sat Oct 19 (08:00 AM – 07:55 PM)
-            </Text>
-          </View>
-        </View> */}
-
 
         <View style={styles.section}>
           <Text style={styles.shippingTitle}>Shipping Details</Text>
@@ -413,15 +305,8 @@ const OrderDetailsScreen = ({ navigation, route }) => {
             <Text style={styles.shippingValue}>+91 {mobileNumber}</Text>
           </View>
 
-          {shopAddress?.location_name && (
-            <View style={styles.shippingRow}>
-              <Text style={styles.shippingLabel}>Location:</Text>
-              <Text style={styles.shippingValue}>{shopAddress.location_name}</Text>
-            </View>
-          )}
-
           <View style={styles.shippingRow}>
-            <Text style={styles.shippingLabel}>Address:</Text>
+            <Text style={styles.shippingLabel}>Location:</Text>
             <Text style={styles.shippingValue}>{address}</Text>
           </View>
         </View>
@@ -431,7 +316,6 @@ const OrderDetailsScreen = ({ navigation, route }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pricing Details</Text>
 
-          {/* Show Total MRP from items if present, else use total_amount */}
           <View style={styles.priceRowBetween}>
             <Text style={styles.priceLabel}>Total MRP</Text>
             <Text style={styles.priceValue}>
@@ -450,43 +334,82 @@ const OrderDetailsScreen = ({ navigation, route }) => {
             </View>
           )}
 
-
-          {/* Platform Fee (if applicable) */}
-          {orderDetails?.handling_charges && (
+          {orderDetails?.handling_charges > 0 && (
             <View style={styles.priceRowBetween}>
               <Text style={styles.priceLabel}>Platform Fee</Text>
               <Text style={styles.priceValue}>₹{orderDetails.handling_charges}</Text>
             </View>
           )}
 
-          {/* Delivery Charges */}
-          <View style={styles.priceRowBetween}>
-            <Text style={styles.priceLabel}>Delivery Charges</Text>
-            <Text style={styles.priceValue}>₹{orderDetails.deliveryCharges || 0}</Text>
-          </View>
+          {orderDetails.deliveryCharges > 0 && (
+            <View style={styles.priceRowBetween}>
+              <Text style={styles.priceLabel}>Delivery Charges</Text>
+              <Text style={styles.priceValue}>₹{orderDetails.deliveryCharges}</Text>
+            </View>
+          )}
 
-          {/* GST or Restaurant Charges */}
-          {orderDetails.delivery_charges_gst && (
+          {orderDetails.delivery_charges_gst > 0 && (
             <View style={styles.priceRowBetween}>
               <Text style={styles.priceLabel}>GST & Restaurant Charges</Text>
               <Text style={styles.priceValue}>₹{orderDetails.delivery_charges_gst}</Text>
             </View>
           )}
 
-          {/* Shipping Fee (optional static) */}
-          {/* <View style={styles.priceRowBetween}>
-            <Text style={styles.priceLabel}>Shipping Fee</Text>
-            <Text style={[styles.priceValue, { color: 'green' }]}>FREE</Text>
-          </View> */}
 
-          {/* Total */}
           <View style={[styles.priceRowBetween, { marginTop: responsiveHeight(1) }]}>
             <Text style={[styles.priceLabel, { fontWeight: 'bold' }]}>Total Amount</Text>
             <Text style={[styles.priceValue, { fontWeight: 'bold' }]}>
               ₹{orderDetails?.grandTotal || orderDetails?.totalPrice || 'N/A'}
             </Text>
           </View>
+
+          {/* ✅ Wallet Summary (only if used) */}
+          {(parseFloat(orderDetails.abhicash_amount) > 0 ||
+            parseFloat(orderDetails.userwallet_amount) > 0) && (
+              <View style={{ marginTop: responsiveHeight(2) }}>
+                <Text style={[styles.sectionTitle, { marginBottom: 8 }]}>Wallet Summary</Text>
+
+                {parseFloat(orderDetails.abhicash_amount) > 0 && (
+                  <View style={styles.priceRowBetween}>
+                    <Text style={styles.priceLabel}>Abhicash Used</Text>
+                    <Text style={[styles.priceValue, { color: '#FF5722' }]}>
+                      - ₹{parseFloat(orderDetails.abhicash_amount).toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+
+                {parseFloat(orderDetails.userwallet_amount) > 0 && (
+                  <View style={styles.priceRowBetween}>
+                    <Text style={styles.priceLabel}>Wallet Used</Text>
+                    <Text style={[styles.priceValue, { color: '#FF5722' }]}>
+                      - ₹{parseFloat(orderDetails.userwallet_amount).toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+
+                <View
+                  style={[
+                    styles.priceRowBetween,
+                    { borderTopWidth: 1, borderTopColor: '#ccc', marginTop: 8, paddingTop: 8 },
+                  ]}
+                >
+                  <Text style={[styles.priceLabel, { fontWeight: 'bold' }]}>
+                    Paid via {walletLabel}
+                  </Text>
+                  <Text style={[styles.priceValue, { fontWeight: 'bold', color: '#4CAF50' }]}>
+                    ₹
+                    {(
+                      parseFloat(orderDetails.abhicash_amount || 0) +
+                      parseFloat(orderDetails.userwallet_amount || 0)
+                    ).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+
         </View>
+
 
 
         {/* Footer Buttons */}

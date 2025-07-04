@@ -279,7 +279,7 @@ const WalletPage = ({ navigation }) => {
         </View>
       </View>
       {/* Balance Section (Card) */}
-      {selectedWallet === 'User Wallet' && parseFloat(walletData?.user_balance_amount || 0) <= 0 && (
+      {selectedWallet === 'User Wallet' && walletData && parseFloat(walletData?.user_balance_amount || 0) <= 0 && (
         <View
           style={{
             backgroundColor: '#fff0f0',

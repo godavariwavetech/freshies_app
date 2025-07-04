@@ -29,6 +29,7 @@ import {
   applicationCharges as fetchApplicationCharges,
   placeOrder,
   updateOrderStatus,
+  WalletAPI,
 } from '../../../services/services';
 import RazorpayCheckout from 'react-native-razorpay';
 import {
@@ -42,6 +43,8 @@ import {
   setLocationName,
   setShopAddress,
 } from '../../../redux/reducers/auth';
+import { setWalletData } from '../../../redux/reducers/walletSlice';
+
 
 const paymentMethods = ['Pay Online', 'COD'];
 const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
@@ -51,7 +54,7 @@ const BasketScreen = ({ navigation, route }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMenuVisible, setPaymentMenuVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('COD');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Pay Online');
   const [coupon, setCoupon] = useState(null);
   const [applicationCharges, setApplicationCharges] = useState({
     id: 1,
@@ -94,6 +97,36 @@ const BasketScreen = ({ navigation, route }) => {
   const [showServiceModal, setShowServiceModal] = useState(false);
   const walletData = useSelector(state => state.wallet);
 
+
+  const gstCalculation = () => {
+    const gstAmmount =
+      calculateTotalPrice() *
+      (Number(applicationCharges?.gst_percentage) / 100);
+    return gstAmmount;
+  };
+
+  // Calculate total price
+  const calculateTotalPrice = () => {
+    const subtotal = cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
+      0,
+    );
+    // Apply coupon if available
+    if (coupon) {
+      if (coupon.type === 'percentage') {
+        // Percentage discount
+        return subtotal - subtotal * (coupon.discount / 100);
+      } else if (coupon.type === 'flat') {
+        // Flat discount
+        return Math.max(0, subtotal - coupon.discount);
+      }
+    }
+    return subtotal;
+  };
+
+
   const getSplitCartTotals = () => {
     let muttonSubtotal = 0;
     let otherSubtotal = 0;
@@ -106,8 +139,8 @@ const BasketScreen = ({ navigation, route }) => {
         otherSubtotal += itemTotal;
       }
     });
-    console.log('muttonSubtotal', muttonSubtotal);
-    console.log('otherSubtotal', otherSubtotal);
+    // console.log('muttonSubtotal', muttonSubtotal);
+    // console.log('otherSubtotal', otherSubtotal);
     return { muttonSubtotal, otherSubtotal };
   };
 
@@ -117,16 +150,39 @@ const BasketScreen = ({ navigation, route }) => {
   const { muttonSubtotal, otherSubtotal } = getSplitCartTotals();
   const abhiWalletAmount = Number(walletData?.abhi24_balanced_amount ?? 0);
   const userWalletAmount = Number(walletData?.user_balance_amount ?? 0);
+  const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
+  const handlingCharge = Number(applicationCharges?.handling_charges || 0);
+  const gst = gstCalculation();
+
+  let subtotal = muttonSubtotal + otherSubtotal;
+
+  // Apply coupon
+  if (coupon) {
+    if (coupon.type === 'percentage') {
+      subtotal -= subtotal * (coupon.discount / 100);
+    } else {
+      subtotal -= coupon.discount;
+    }
+  }
+
+  const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
+
   const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
-  const userWalletUsed = useUserWallet ? Math.min(otherSubtotal, userWalletAmount) : 0;
+
+  const userWalletUsed = useUserWallet
+    ? Math.min(totalBeforeWallets - abhiWalletUsed, userWalletAmount)
+    : 0;
 
 
-  console.log('walletAmount', walletData);
-  console.log(userWalletAmount, abhiWalletAmount)
-  console.log('cartItems', cartItems);
+
+
+  // console.log('walletAmount', walletData);
+  // console.log(userWalletAmount, abhiWalletAmount)
+  // console.log('cartItems', cartItems);
 
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
+      console.log("vachindhi")
       checkAddressExistenceInList();
     } else {
       setShowServiceModal(true);
@@ -134,6 +190,15 @@ const BasketScreen = ({ navigation, route }) => {
       // Optionally show alert/modal or redirect user
     }
   }, []);
+
+  useEffect(() => {
+    fetchWallet();
+  }, []);
+
+  const fetchWallet = async () => {
+    const data = await WalletAPI.getWalletAmounts(customerId);
+    dispatch(setWalletData(data));
+  };
 
   const checkAddressExistenceInList = async () => {
     if (
@@ -152,6 +217,8 @@ const BasketScreen = ({ navigation, route }) => {
           longitude: parseFloat(storedLocation.longitude),
         }),
       );
+      console.log("helooooooooo", storedLocation)
+      console.log("heloooooooooooooooooo", response)
       if (response.payload.data.length > 0) {
         dispatch(
           setLocation({
@@ -215,7 +282,7 @@ const BasketScreen = ({ navigation, route }) => {
     };
 
     loadCartItems();
-  }, [route.params]);
+  }, []);
 
   // Save cart items to AsyncStorage whenever cart items change
   useEffect(() => {
@@ -234,7 +301,7 @@ const BasketScreen = ({ navigation, route }) => {
     if (!isLoading) {
       saveCartItems();
     }
-  }, [cartItems, isLoading]);
+  }, [])
 
   const handleQuantityChange = (id, action) => {
     const updatedCartItems = cartItems
@@ -374,7 +441,7 @@ const BasketScreen = ({ navigation, route }) => {
   const handlePlaceOrder = async () => {
     try {
       setIsProcessingPayment(true);
-      console.log('cartItems', cartItems);
+
       const mappedItems = cartItems.map(item => {
         // Determine which price values to use
         const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
@@ -413,6 +480,16 @@ const BasketScreen = ({ navigation, route }) => {
         };
       });
 
+      const totalSavingAmount = cartItems.reduce((acc, item) => {
+        const actualPrice = parseFloat(item?.variant?.actual_price ?? item?.price ?? 0);
+        const sellingPrice = parseFloat(item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0);
+        const quantity = item?.quantity ?? 1;
+
+        const savingPerItem = actualPrice - sellingPrice;
+        return acc + (savingPerItem > 0 ? savingPerItem * quantity : 0);
+      }, 0);
+
+
       let payload = {
         customer_id: customerId,
         customer_name: '',
@@ -426,17 +503,16 @@ const BasketScreen = ({ navigation, route }) => {
             Number(applicationCharges?.handling_charges) +
             gstCalculation()
           ).toFixed(2) || 0,
-        total_saving_amount: 0,
+        total_saving_amount: totalSavingAmount.toFixed(2),
         coupon_amount:
           (calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || '',
         delivery_charges: applicationCharges.delivery_fixed_charges || 0,
-        grand_total:
-          (
-            calculateTotalPrice() +
-            Number(applicationCharges?.delivery_fixed_charges) +
-            Number(applicationCharges?.handling_charges) +
-            gstCalculation()
-          ).toFixed(2) || 0,
+        grand_total: (
+          calculateTotalPrice() +
+          Number(applicationCharges?.delivery_fixed_charges) +
+          Number(applicationCharges?.handling_charges) +
+          gstCalculation()
+        ).toFixed(2) || 0,
         location_id: locationId,
         location_name: locationName,
         payment_type: selectedPaymentMethod,
@@ -460,12 +536,19 @@ const BasketScreen = ({ navigation, route }) => {
         packing_charges_gst: '',
         donation_charges: '',
         delivery_instruction: deliveryInstructions,
+        abhicash_amount: abhiWalletUsed,
+        userwallet_amount: userWalletUsed,
+        payment_amount: calculateTotalPrice(),
         sub_order_array: mappedItems,
       };
-
+      console.log('mappeditems', mappedItems);
       console.log('----------------', payload);
-      if (selectedPaymentMethod === 'COD') {
+      const finalPrice = parseFloat(calculateFinalPrice());
+      console.log("final price 00000", finalPrice)
+      if ((finalPrice === 0) || selectedPaymentMethod === 'COD') {
         const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
+        if (!responseCod.payload) return;
+        console.log("responseeeeeeeeeeeeeeeeeeeeeeeee", responseCod)
         const orderDetails = {
           orderId: responseCod?.payload?.id || '',
           totalAmount: calculateTotalPrice(),
@@ -478,7 +561,7 @@ const BasketScreen = ({ navigation, route }) => {
           ).toFixed(2),
           couponAmount: couponAmount || 0,
           deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
-          totalSavings: 0,
+          totalSavings: totalSavingAmount || 0,
           paymentType: selectedPaymentMethod,
           shopName: '',
           orderDate: responseCod.payload.order_date,
@@ -489,9 +572,13 @@ const BasketScreen = ({ navigation, route }) => {
           order_id: responseCod.payload.order_id,
           delivery_charges_gst: gstCalculation().toFixed(2) || 0,
           handling_charges: applicationCharges?.handling_charges || 0,
+          abhicash_amount: abhiWalletUsed,
+          userwallet_amount: userWalletUsed,
         };
-
-        navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
+        if (responseCod.payload.status === 200) {
+          fetchWallet()
+          navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
+        }
         return;
       }
 
@@ -512,7 +599,7 @@ const BasketScreen = ({ navigation, route }) => {
           ).toFixed(2) - (couponAmount || 0),
         couponAmount: couponAmount || 0,
         deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
-        totalSavings: 0,
+        totalSavings: totalSavingAmount,
         paymentType: selectedPaymentMethod,
         shopName: '',
         orderDate: pacedResponse.payload.order_date,
@@ -523,6 +610,8 @@ const BasketScreen = ({ navigation, route }) => {
         order_id: pacedResponse.payload.order_id,
         delivery_charges_gst: gstCalculation().toFixed(2) || 0,
         handling_charges: applicationCharges?.handling_charges || 0,
+        abhicash_amount: abhiWalletUsed,
+        userwallet_amount: userWalletUsed,
       };
 
       const options = {
@@ -554,7 +643,7 @@ const BasketScreen = ({ navigation, route }) => {
               orderStatus: 0,
             }),
           );
-
+          fetchWallet()
           navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
         })
         .catch(error => {
@@ -590,40 +679,15 @@ const BasketScreen = ({ navigation, route }) => {
     }
   };
 
-  const gstCalculation = () => {
-    const gstAmmount =
-      calculateTotalPrice() *
-      (Number(applicationCharges?.gst_percentage) / 100);
-    return gstAmmount;
-  };
-
-  // Calculate total price
-  const calculateTotalPrice = () => {
-    const subtotal = cartItems.reduce(
-      (total, item) =>
-        total +
-        Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
-      0,
-    );
-    // Apply coupon if available
-    if (coupon) {
-      if (coupon.type === 'percentage') {
-        // Percentage discount
-        return subtotal - subtotal * (coupon.discount / 100);
-      } else if (coupon.type === 'flat') {
-        // Flat discount
-        return Math.max(0, subtotal - coupon.discount);
-      }
-    }
-    return subtotal;
-  };
 
   const calculateFinalPrice = () => {
-    const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0,);
+    const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
     const handlingCharge = Number(applicationCharges?.handling_charges || 0);
     const gst = gstCalculation();
+
     let subtotal = muttonSubtotal + otherSubtotal;
-    // Apply coupon
+
+    // Apply coupon on subtotal
     if (coupon) {
       if (coupon.type === 'percentage') {
         subtotal -= subtotal * (coupon.discount / 100);
@@ -631,11 +695,22 @@ const BasketScreen = ({ navigation, route }) => {
         subtotal -= coupon.discount;
       }
     }
-    // Wallets
-    const totalAfterWallets = subtotal + deliveryCharge + handlingCharge + gst - abhiWalletUsed - userWalletUsed;
+
+    // Full total (after coupon)
+    const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
+
+    // Abhi Wallet can only be used for mutton subtotal (no change needed)
+    const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
+
+    // User Wallet can apply to full remaining amount
+    const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
+    const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
+
+    const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
 
     return Math.max(0, totalAfterWallets);
   };
+
 
   if (isLoading) {
     return (
@@ -672,37 +747,9 @@ const BasketScreen = ({ navigation, route }) => {
           style={styles.homeIcon}
         />
         <Text style={styles.locationName}>
-          {locationName ? locationName : ''}
+          {address ? address : locationName || 'Address Not Selected'}
         </Text>
       </View>
-      <TouchableOpacity
-        onPress={() => {
-          try {
-            // Retrieve current location from AsyncStorage or Redux if possible
-            const currentLocation = {
-              latitude: storedLocation?.latitude,
-              longitude: storedLocation?.longitude,
-            };
-
-            navigation.navigate('SelectServiceFromLocation', {
-              previousScreen: 'ByOncescreen',
-              ...(currentLocation.latitude && currentLocation.longitude
-                ? { selectedAddress: currentLocation }
-                : {}),
-            });
-          } catch (error) {
-            console.error('Navigation error:', error);
-            Alert.alert(
-              'Navigation Error',
-              'Unable to change address. Please try again later.',
-              [{ text: 'OK' }],
-            );
-          }
-        }}>
-        <Text style={styles.fullAddress}>
-          {address || 'Address Not Selected'}
-        </Text>
-      </TouchableOpacity>
       {/* change location */}
       <TouchableOpacity
         onPress={() => {
@@ -759,15 +806,17 @@ const BasketScreen = ({ navigation, route }) => {
           </View>
 
           {/* Swipeable Item List */}
-          <SwipeListView
-            data={cartItems}
-            renderItem={renderItem}
-            renderHiddenItem={renderHiddenItem}
-            rightOpenValue={-75}
-            disableRightSwipe
-            keyExtractor={item => item.id}
-            scrollEnabled={false}
-          />
+          <View style={{ maxHeight: 300 }}>
+            <SwipeListView
+              data={cartItems}
+              renderItem={renderItem}
+              renderHiddenItem={renderHiddenItem}
+              rightOpenValue={-75}
+              disableRightSwipe
+              keyExtractor={item => item.id}
+              scrollEnabled={false}
+            />
+          </View>
 
           {/* Apply Coupons Section */}
           <TouchableOpacity
@@ -917,8 +966,8 @@ const BasketScreen = ({ navigation, route }) => {
               </View>
             )}
 
-             {/* Coupon */}
-             {coupon && (
+            {/* Coupon */}
+            {coupon && (
               <View style={styles.summaryRow}>
                 <Text style={[styles.summaryLabel, { color: '#4CAF50' }]}>
                   Coupon Applied
@@ -968,7 +1017,7 @@ const BasketScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          <View style={styles.Paymentcontainer}>
+          {/* <View style={styles.Paymentcontainer}>
             <TouchableOpacity
               style={styles.selectedMethodBox}
               onPress={() => setPaymentMenuVisible(prev => !prev)}>
@@ -1000,7 +1049,7 @@ const BasketScreen = ({ navigation, route }) => {
                 ))}
               </View>
             )}
-          </View>
+          </View> */}
 
           {/* Place Order Button */}
           <View style={{ paddingBottom: 60 }}>
@@ -1037,7 +1086,6 @@ const BasketScreen = ({ navigation, route }) => {
               We currently do not provide service in your area. You can change
               your location or visit our app for more information.
             </Text>
-
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.changeLocationBtn}
@@ -1047,15 +1095,6 @@ const BasketScreen = ({ navigation, route }) => {
                 }}>
                 <Text style={styles.buttonText}>Change Location</Text>
               </TouchableOpacity>
-              {/* <TouchableOpacity
-                style={styles.visitAppBtn}
-                onPress={() => {
-                  setShowServiceModal(false);
-                  Linking.openURL("https://yourwebsite.com"); // Change to your app URL
-                }}
-              >
-                <Text style={styles.buttonText}>Visit Our App</Text>
-              </TouchableOpacity> */}
             </View>
           </View>
         </View>
@@ -1579,7 +1618,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginHorizontal: 10,
     marginTop: 5,
-    marginBottom: 5,
+    marginBottom: 18,
   },
 
   walletIcon: {

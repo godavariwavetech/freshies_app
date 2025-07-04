@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import { getItems, getSubCategoriesById, removeFromWishlist, addToWishlist } from '../../services/services';
+import { getItems, getSubCategoriesById, removeFromWishlist, addToWishlist, getSubCategories } from '../../services/services';
 import { Dropdown } from 'react-native-element-dropdown';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useDispatch, useSelector } from 'react-redux';
@@ -41,7 +41,7 @@ const weightOptions = [
 
 export default function GroceriesScreen({ navigation, route }) {
   const dispatch = useDispatch();
-  const { status = 0, subcategory_id, category_id, subcategory_name,filter_one } = route.params || {};
+  const { status = 0, subcategory_id, category_id, subcategory_name, filter_one } = route.params || {};
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id);
   const [subtotalcategories, setSubtotalcategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -64,6 +64,9 @@ export default function GroceriesScreen({ navigation, route }) {
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
   const totalItems = useSelector((state) => state.cart.totalItems);
   const walletData = useSelector((state) => state.wallet);
+  const [sidebarSubcategories, setSideBarSubCategories] = useState([]);
+  const [sideBardCategories, setSideBarCategories] = useState([]);
+  const flatListRef = useRef(null);
 
   const priceRangeOptions = [
     { label: '₹0 - ₹100', min: 0, max: 100 },
@@ -73,15 +76,43 @@ export default function GroceriesScreen({ navigation, route }) {
     { label: 'Above ₹1000', min: 1001, max: Infinity },
   ];
 
+
+  // Fetch subcategories and derive categories
+  useEffect(() => {
+    loadSubCategories();
+  }, []);
+
+  const loadSubCategories = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedSubCategories = await getSubCategories();
+      setSideBarSubCategories(fetchedSubCategories);
+      console.log('fetchedSubCategories', fetchedSubCategories);
+      const uniqueCategories = [
+        ...new Map(
+          fetchedSubCategories.map((sub) => [
+            sub.category_id,
+            { id: sub.category_id, name: sub.category_name },
+          ])
+        ).values(),
+      ];
+      setSideBarCategories(uniqueCategories);
+      setError(null);
+    } catch (error) {
+      setError('Failed to load categories');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch subtotalcategories
   useEffect(() => {
     const fetchSubcategories = async () => {
       try {
         const subCats = await getSubCategoriesById({
-          sub_category_id: subcategory_id
+          sub_category_id: route.params?.subcategory_id,
         });
-        // const filteredSubcategories = subCats.filter((sub) => sub.category_id === category_id);
-        setSelectedSubcategoryId(subCats[0].id)
+        setSelectedSubcategoryId(subCats[0]?.id);
         setSubtotalcategories(subCats);
       } catch (error) {
         Toast.show({
@@ -93,10 +124,12 @@ export default function GroceriesScreen({ navigation, route }) {
         });
       }
     };
-    if (category_id) {
+
+    if (route.params?.category_id) {
       fetchSubcategories();
     }
-  }, [category_id]);
+  }, [route.params?.subcategory_id, route.params?.category_id]);
+
   // Fetch items
   useEffect(() => {
     const fetchItems = async () => {
@@ -104,7 +137,7 @@ export default function GroceriesScreen({ navigation, route }) {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await getItems(selectedSubcategoryId, customerId,filter_one);
+        const response = await getItems(selectedSubcategoryId, customerId, filter_one);
         const items = response.data || [];
         // Group items strictly by unique_id and sub_category_id
         const groupedItems = items.reduce((acc, item) => {
@@ -145,7 +178,7 @@ export default function GroceriesScreen({ navigation, route }) {
           return acc;
         }, []);
         // Map grouped items to product structure
-       
+
         const mappedProducts = groupedItems.map(item => ({
           id: item.id, // Use unique_id as the main identifier
           category_id: item.category_id,
@@ -167,7 +200,7 @@ export default function GroceriesScreen({ navigation, route }) {
           wishlistId: item.wishlistId,
           value: item.value
         }));
-        console.log("groupedItems",mappedProducts)
+        // console.log("groupedItems", mappedProducts)
         setProducts(mappedProducts);
       } catch (error) {
         setError('Failed to load items');
@@ -183,19 +216,8 @@ export default function GroceriesScreen({ navigation, route }) {
       }
     };
     fetchItems();
-  }, [selectedSubcategoryId, category_id]);
+  }, [selectedSubcategoryId, route.params?.category_id]);
 
-  const handleSearch = (text) => {
-    setSearchQuery(text);
-    const results = products.filter((product) =>
-      product.name.toLowerCase().includes(text.toLowerCase())
-    );
-    setSearchResults(results);
-    // navigation.navigate('CategoriesScreen', {
-    //   searchResults: results,
-    //   searchQuery: text,
-    // });
-  };
 
   const toggleFavorite = async (item) => {
     const isFavorited = !!item.wishlistId;
@@ -247,7 +269,7 @@ export default function GroceriesScreen({ navigation, route }) {
   };
 
   const handleBuyOnce = async (product) => {
-    console.log("firstproduct:", product)
+    // console.log("firstproduct:", product)
     try {
       // Get selected quantity type from productWeights or fallback to first
       const selectedQuantityType = productWeights[product.id] || product.variants[0].quantity_type;
@@ -269,7 +291,7 @@ export default function GroceriesScreen({ navigation, route }) {
         category: product.category || '',
         status,
       };
-      console.log("thirdproduct:", cartItem)
+      // console.log("thirdproduct:", cartItem)
       dispatch(addToCart(cartItem));
     } catch (error) {
       Toast.show({
@@ -375,48 +397,57 @@ export default function GroceriesScreen({ navigation, route }) {
     return filtered;
   };
 
-  const renderSubcategory = ({ item }) => {
-    const isSelected = selectedSubcategoryId === item.id;
-  
-    const content = (
-      <>
-        <Image
-          source={{ uri: item.subtotal_category_image || 'https://via.placeholder.com/30' }}
-          style={[styles.categoryIcon, isSelected && styles.selectedCategoryIcon]}
-        />
-        <Text
-          style={[styles.categoryText, isSelected && styles.selectedCategoryText]}
-          numberOfLines={2}
-        >
-          {item.subtotal_category_name}
-        </Text>
-      </>
-    );
-  
-    if (isSelected) {
+  const renderSidebarItem = ({ item }) => {
+    if (item.type === 'label') {
       return (
-        <TouchableOpacity onPress={() => setSelectedSubcategoryId(item.id)}>
-          <LinearGradient
-            colors={['#ffffff', '#f2e9fc']} // Very light violet gradient
-            style={[styles.categoryItem, styles.selectedCategoryItem]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-          >
-            {content}
-          </LinearGradient>
-        </TouchableOpacity>
-      );
-    } else {
-      return (
-        <TouchableOpacity
-          style={styles.categoryItem}
-          onPress={() => setSelectedSubcategoryId(item.id)}
-        >
-          {content}
-        </TouchableOpacity>
+        <View style={styles.sidebarSectionHeader}>
+          <View style={styles.sidebarDivider} />
+          <Text style={styles.sidebarSectionTitle}>{item.title}</Text>
+          <View style={styles.sidebarDivider} />
+        </View>
       );
     }
+
+
+    const isSelected =
+      (item.type === 'subtotal' && selectedSubcategoryId === item.id)
+
+      const handlePress = () => {
+        if (item.type === 'subtotal') {
+          setSelectedSubcategoryId(item.id);
+          flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); // 👈 scroll to top
+        } else if (item.type === 'subcategory') {
+          flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); // 👈 scroll to top
+          navigation.navigate('GroceriesScreen', {
+            subcategory_id: parseInt(item.id),
+            subcategory_name: item.sub_category_name,
+            category_id: item.category_id,
+          });
+        }
+      };
+      
+
+    const imageUrl = item.subtotal_category_image || item.sub_category_image;
+    const label = item.subtotal_category_name || item.sub_category_name;
+
+    return (
+      <TouchableOpacity onPress={handlePress}>
+        <View style={[
+          styles.categoryItem,
+          isSelected && styles.selectedCategoryItem
+        ]}>
+          <Image
+            source={{ uri: imageUrl }}
+            style={[styles.categoryIcon, isSelected && styles.selectedCategoryIcon]}
+          />
+          <Text style={[styles.categoryText, isSelected && styles.selectedCategoryText]} numberOfLines={2}>
+            {label}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
+
 
   const renderProduct = ({ item }) => {
     const selectedQuantityType = productWeights[item.id] || item.variants[0].quantity_type;
@@ -713,7 +744,6 @@ export default function GroceriesScreen({ navigation, route }) {
     </TouchableOpacity>
   );
 
-
   if (error) {
     return (
       <View style={styles.loadingContainer}>
@@ -732,6 +762,28 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   }
 
+  const selectedSubcategoryName = subtotalcategories[0]?.sub_category_name?.trim();
+  const remainingSubcategories = sidebarSubcategories.filter(
+    cat => cat.sub_category_name?.trim() !== selectedSubcategoryName
+  );
+
+  const sortedRemainingSubcategories = [...remainingSubcategories].sort((a, b) => a.id - b.id);
+
+
+  const mergedSidebarItems = [
+    ...subtotalcategories.map(item => ({
+      ...item,
+      type: 'subtotal',
+    })),
+    { type: 'label', title: 'Explore More' },
+    ...sortedRemainingSubcategories.map(item => ({
+      ...item,
+      type: 'subcategory',
+    })),
+  ];
+
+
+
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="white" barStyle="dark-content" translucent={false} />
@@ -740,9 +792,14 @@ export default function GroceriesScreen({ navigation, route }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+        <Text
+          style={styles.headerTitle}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {subcategory_name}
         </Text>
+
         <View style={styles.headerIcons}>
           <TouchableOpacity style={[styles.supportButton, { marginRight: 1 }]} onPress={() => navigation.navigate('MyFavoritesScreen')}>
             <Icon name="favorite-border" size={24} color="#000" />
@@ -769,33 +826,18 @@ export default function GroceriesScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
       </View>
-      {/* <TouchableOpacity style={styles.searchContainer}>
-        <Image
-          source={require('./tabassets/searchhome.png')}
-          style={styles.searchIcon}
-        />
-        <TextInput
-          placeholderTextColor="#666666"
-          placeholder="Search for meat, groceries & pickles"
-          style={styles.searchInput}
-          value={searchQuery}
-          onChangeText={handleSearch}
-          editable={true}
-          onFocus={() => setSearchQuery('')}
-          accessibilityLabel="Search products"
-        />
-      </TouchableOpacity> */}
 
       <View style={styles.mainContent}>
         <View style={styles.sideMenu}>
           <FlatList
-            data={subtotalcategories}
-            renderItem={renderSubcategory}
-            keyExtractor={(item) => item.id.toString()}
+            ref={flatListRef}
+            data={mergedSidebarItems}
+            renderItem={renderSidebarItem}
+            keyExtractor={(item, index) => `${item.type}-${item.id || index}`}
             showsVerticalScrollIndicator={false}
             style={styles.categoryList}
-            contentContainerStyle={styles.categoryListContent}
           />
+
         </View>
         <View style={styles.productArea}>
           <View style={styles.filterRow}>
@@ -977,7 +1019,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#888',
   },
   backButton: { padding: 5 },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#000', flex: 1, textAlign: 'center' },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    flex: 1,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+  },
   headerIcons: { flexDirection: 'row', justifyContent: 'space-between', gap: 1, alignItems: "center" },
   searchContainer: {
     marginTop: 10,
@@ -1010,6 +1059,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRightWidth: 1,
     borderRightColor: '#e0e0e0',
+
   },
   categoryList: { flex: 1 },
   categoryListContent: { paddingVertical: 1 },
@@ -1019,7 +1069,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedCategoryItem: {
-    
+
     borderLeftWidth: 3,
     borderLeftColor: '#9010BF',
   },
@@ -1206,6 +1256,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
+  sidebarSectionTitle: {
+    fontWeight: 'bold',
+    fontSize: 7,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    color: '#7B4BB7',
+    backgroundColor: "yellow",
+    textAlign: "center"
+  },
+
   quantity: {
     fontSize: 15,
     textAlign: 'center',
@@ -1534,4 +1594,85 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 4,
   },
+  sidebarSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+    paddingHorizontal: 8,
+  },
+  sidebarDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#ccc',
+  },
+  sidebarSectionTitle: {
+    marginHorizontal: 8,
+    fontSize: 8,
+    fontWeight: '600',
+    color: '#666',
+  },
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const renderSubcategory = ({ item }) => {
+//   const isSelected = selectedSubcategoryId === item.id;
+
+//   const content = (
+//     <>
+//       <Image
+//         source={{ uri: item.subtotal_category_image || 'https://via.placeholder.com/30' }}
+//         style={[styles.categoryIcon, isSelected && styles.selectedCategoryIcon]}
+//       />
+//       <Text
+//         style={[styles.categoryText, isSelected && styles.selectedCategoryText]}
+//         numberOfLines={2}
+//       >
+//         {item.subtotal_category_name}
+//       </Text>
+//     </>
+//   );
+
+//   if (isSelected) {
+//     return (
+//       <TouchableOpacity onPress={() => setSelectedSubcategoryId(item.id)}>
+//         <LinearGradient
+//           colors={['#ffffff', '#f2e9fc']} // Very light violet gradient
+//           style={[styles.categoryItem, styles.selectedCategoryItem]}
+//           start={{ x: 0, y: 0 }}
+//           end={{ x: 0, y: 1 }}
+//         >
+//           {content}
+//         </LinearGradient>
+//       </TouchableOpacity>
+//     );
+//   } else {
+//     return (
+//       <TouchableOpacity
+//         style={styles.categoryItem}
+//         onPress={() => setSelectedSubcategoryId(item.id)}
+//       >
+//         {content}
+//       </TouchableOpacity>
+//     );
+//   }
+// };

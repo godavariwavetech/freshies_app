@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 // Placeholder image URI
 const placeholderImage = 'https://via.placeholder.com/100';
 
+
 function UserHome() {
   const navigation = useNavigation();
   const totalItems = useSelector((state) => state.cart.totalItems);

@@ -34,6 +34,7 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.0421,
 };
 
+
 const SelectServiceFromLocation = ({ navigation, route }) => {
   const mapRef = useRef(null);
   const dispatch = useDispatch();
@@ -67,14 +68,14 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       const timeout = setTimeout(() => {
         setMapReady(true);
       }, 300); // let the screen settle first
-  
+
       return () => {
         clearTimeout(timeout);
         setMapReady(false); // unmount on blur
       };
     }, [])
   );
-  
+
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
       const response = await fetch(
@@ -111,10 +112,11 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       latitudeDelta: 0.005,
       longitudeDelta: 0.005,
     };
-
+    console.log("adfds", newRegion)
+    setRegion(newRegion)
     // Only update region if coordinates are valid
     if (isMountedRef.current && mapRef.current?.animateToRegion) {
-      mapRef.current.animateToRegion(newRegion, 1000);
+      // mapRef.current.animateToRegion(newRegion, 1000);
 
       // Try to get address for the coordinates
       getAddressFromCoordinates(newRegion.latitude, newRegion.longitude)
@@ -123,9 +125,9 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         });
     } else {
       // Fallback to getting current location if no valid coordinates
-      getCurrentLocation();
+      // getCurrentLocation();
     }
-  }, [route?.params?.selectedAddress, storedLocation]);
+  }, [route?.params?.selectedAddress?.customer_latitude,`${storedLocation}`]);
 
   useEffect(() => {
     return () => {
@@ -171,7 +173,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       mapRef.current?.animateToRegion(validRegion, 1000);
       getAddressFromCoordinates(validRegion.latitude, validRegion.longitude);
     }
-  }, [getCurrentLocation, storedLocation]);
+  }, []);
 
   const getCurrentLocation = useCallback(async () => {
     setIsLoadingLocation(true);
@@ -180,7 +182,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       const position = await new Promise((resolve, reject) => {
         Geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: false,
-          timeout: 15000,
+          timeout: 20000,
           maximumAge: 10000,
         });
       });
@@ -209,17 +211,15 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     return () => {
       isMounted = false;
     };
-  }, [dispatch]);
+  }, []);
 
   const handleSearch = useCallback(
     text => {
       setSearchQuery(text);
-
       // Clear previous timeout
       if (searchTimeout.current) {
         clearTimeout(searchTimeout.current);
       }
-
       // Only show results when typing
       if (text.length > 0) {
         setShowResults(true);
@@ -228,7 +228,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         setSearchResults([]);
         return;
       }
-
       // Set new timeout for API call
       searchTimeout.current = setTimeout(async () => {
         try {
@@ -237,25 +236,19 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
               text,
             )}&key=AIzaSyDaojSAqWjt4t_nxBX_PfQFVRfoi1kqu-Y&components=country:in`,
           );
-
           if (!response.ok) throw new Error('Network response was not ok');
-
           const data = await response.json();
-
           if (data.status === 'OK') {
             setSearchResults(data.predictions);
           } else {
             setSearchResults([]);
-
           }
         } catch (error) {
           console.error('Search error:', error);
           setSearchResults([]);
         }
       }, 500);
-    },
-    [],
-  );
+    }, []);
 
   const handlePlaceSelect = async placeId => {
     try {
@@ -264,14 +257,12 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       );
       const data = await response.json();
       const location = data.result.geometry.location;
-
       const newRegion = {
         latitude: location.lat,
         longitude: location.lng,
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
       };
-
       setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 1000);
       await getAddressFromCoordinates(location.lat, location.lng);
@@ -312,7 +303,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         dispatch(setLocationName(response.payload.data[0].location_name));
         dispatch(setLocationId(response.payload.data[0].id));
         dispatch(setShopAddress(response.payload.data[0]))
-        navigation.goBack();
+        route?.params?.selectedAddress?.customer_latitude ? navigation.pop(3) :navigation.goBack();
       } else {
         setShowServiceModal(true);
       }
@@ -322,7 +313,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       setIsCheckingAddress(false);
     }
   };
-
 
   return (
     <View style={styles.container}>
@@ -335,12 +325,13 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       </View>
 
       <View style={styles.mapContainer}>
-      {mapReady && region && (
+        {mapReady && region && (
           <MapView
             key={`map-${region.latitude}-${region.longitude}`}
             ref={mapRef}
             provider={PROVIDER_GOOGLE}
             initialRegion={region}
+            region={region}
             style={styles.map}
             onPanDrag={() => setIsDragging(true)}
             onRegionChangeComplete={newRegion => {

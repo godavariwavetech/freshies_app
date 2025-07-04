@@ -22,9 +22,8 @@ import { clearCart } from '../../redux/reducers/cartReducer';
 
 const OrderSuccessScreen = ({ navigation, route }) => {
   const { orderDetails } = route.params; // ✅ Get the passed data
-  const { selectedAddress } = useSelector((state) => state.address);
+  const {address} = useSelector(state => state.Auth);
   const dispatch = useDispatch();
- 
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -34,7 +33,7 @@ const OrderSuccessScreen = ({ navigation, route }) => {
       });
       dispatch(clearCart());
       dispatch(removeCoupon());
-    }, 1500);
+    }, 5000);
 
     return () => clearTimeout(timer); // Cleanup
   }, []);
@@ -53,9 +52,7 @@ const OrderSuccessScreen = ({ navigation, route }) => {
       handleBackPress();
       return true; // Prevent default back action
     };
-
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-
     return () => backHandler.remove(); // Cleanup the event listener
   }, []);
 
@@ -71,8 +68,6 @@ const OrderSuccessScreen = ({ navigation, route }) => {
             resizeMode="contain"
             style={styles.checkmarkImage}
           />
-          {/* Optionally, you can overlay the MaterialIcons checkmark */}
-          {/* <MaterialIcons name="check" size={40} color="#fff" /> */}
         </View>
         
         <Text style={styles.successText}>
@@ -80,19 +75,17 @@ const OrderSuccessScreen = ({ navigation, route }) => {
         </Text>
         
         <View style={styles.addressContainer}>
-          <Text style={styles.addressType}>
-            {selectedAddress?.address_type || 'Home'}
-          </Text>
           <Text style={styles.addressText}>
-            {selectedAddress?.full_address || '301, JSR Enclave, Danvaipetapuram Lorem Ipsum Lorem Dolor Sit'}
+            {address}
           </Text>
         </View>
 
         {/* Reinstated the button with the new color */}
-        {/* <TouchableOpacity style={styles.offerButton}>
+        {orderDetails.totalSavings > 0 &&  <TouchableOpacity style={styles.offerButton}>
           <Ionicons name="pricetag" size={responsiveFontSize(2)} color="#348338" />
-          <Text style={styles.offerText}> ₹200 saved from this order</Text>
-        </TouchableOpacity> */}
+          <Text style={styles.offerText}> ₹{orderDetails.totalSavings} saved from this order</Text>
+        </TouchableOpacity>}
+       
       </View>
     </View>
   );

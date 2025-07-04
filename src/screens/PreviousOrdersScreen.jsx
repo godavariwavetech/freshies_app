@@ -56,7 +56,9 @@ const PreviousOrdersScreen = () => {
           shopPhoneNumber: item.shop_phone_number,
           order_id: item.order_id,
           delivery_charges_gst: item.delivery_charges_gst,
-          handling_charges: item.handling_charges
+          handling_charges: item.handling_charges,
+          abhicash_amount: item.abhicash_amount,
+          userwallet_amount: item.userwallet_amount,
         },
         status: item.order_status,
       })}

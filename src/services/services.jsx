@@ -176,6 +176,7 @@ export const checkAddressExistence = createAsyncThunk(
       "latitude": latitude,
       "longitude": longitude
     }
+   
     const response = await api.post('/public_app/getserviceavailability', data);
     if (response) {
       if (response.data) {
