@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     shadowColor: '#8655d2',
     shadowOpacity: 0.3,
     shadowRadius: 6,
-    elevation: 4,
+    // elevation: 4,
     marginBottom: 5,
     overflow: 'hidden', // Better image clip
     alignItems: "center",

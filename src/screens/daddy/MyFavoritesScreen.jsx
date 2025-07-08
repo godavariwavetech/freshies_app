@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { getWishlist } from '../../services/services';
+import { addToWishlist, getWishlist, removeFromWishlist } from '../../services/services';
 const { width } = Dimensions.get('window');
 const productCardWidth = (width - 32) / 2;
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,12 +27,13 @@ const MyFavoritesScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true)
+  const [updatingFavoriteId, setUpdatingFavoriteId] = useState(null);
+
 
   const loadFavorites = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getWishlist(customerId);
-      
       if (res.status === 200 && Array.isArray(res.data)) {
         const mapped = res.data.map(item => ({
           id: item.item_id,
@@ -47,6 +48,7 @@ const MyFavoritesScreen = () => {
           sub_category_id: item.sub_category_id
         }));
         setFavorites(mapped);
+        console.log("favorites", res.data)
       } else {
         setFavorites([]);
       }
@@ -64,7 +66,6 @@ const MyFavoritesScreen = () => {
   }, [customerId]);
 
   useEffect(() => {
-    loadFavorites();
     const unsubscribe = navigation.addListener('focus', loadFavorites);
     return unsubscribe;
   }, [navigation, loadFavorites]);
@@ -72,6 +73,46 @@ const MyFavoritesScreen = () => {
   const filteredFavorites = favorites.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+
+  const toggleFavorite = async (item) => {
+    if (updatingFavoriteId === item.id) return;
+
+    setUpdatingFavoriteId(item.id);
+    try {
+      const isFavorited = !!item.id; // because id = wishlistId
+      console.log("isss", isFavorited)
+      if (isFavorited) {
+        // Remove from wishlist
+        const response = await removeFromWishlist({ wishlistId: item.id });
+        console.log("deleteresponse", response)
+        const updated = favorites.filter(fav => fav.id !== item.id);
+        setFavorites(updated);
+      } else {
+        // In case you want to support adding back
+        const response = await addToWishlist({
+          customer_id: customerId,
+          item_id: item.item_id, // if you have original item_id
+          unique_id: item.unique_id,
+        });
+
+        const newWishlistId = response?.data?.wishlistId;
+        const updatedItem = { ...item, id: newWishlistId };
+        setFavorites([...favorites, updatedItem]);
+      }
+    } catch (error) {
+      console.error('Toggle favorite error:', error?.response?.data || error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update favorites',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setUpdatingFavoriteId(null);
+    }
+  };
+
 
   const renderFavoriteItem = ({ item }) => {
     const imageSource = item.image
@@ -101,12 +142,21 @@ const MyFavoritesScreen = () => {
             ₹{item.price?.toFixed(2) || 'N/A'}
           </Text>
           <Text style={styles.itemCategory}>
-            {item.category ? `Category: ${item.category}` : ''}
+            {item.quantityType ? `Quantity: ${item.quantityType}` : ''}
           </Text>
         </View>
-        <TouchableOpacity style={styles.favoriteIcon}>
-          <Icon name="heart" size={24} color="#8655d2" />
+        <TouchableOpacity
+          style={styles.favoriteIcon}
+          onPress={() => toggleFavorite(item)}
+          disabled={updatingFavoriteId === item.id}
+        >
+          <Icon
+            name="heart"
+            size={24}
+            color={updatingFavoriteId === item.id ? '#ccc' : '#8655d2'}
+          />
         </TouchableOpacity>
+
       </TouchableOpacity>
     );
   };
@@ -144,7 +194,7 @@ const MyFavoritesScreen = () => {
           borderRadius={8}
         >
           <View style={{ padding: 16 }}>
-            {[1, 2, 3, 1, 2, 3,1, 2, 3,].map((_, index) => (
+            {[1, 2, 3, 1, 2, 3, 1, 2, 3,].map((_, index) => (
               <View
                 key={index}
                 style={{
@@ -178,6 +228,8 @@ const MyFavoritesScreen = () => {
           renderItem={renderFavoriteItem}
           keyExtractor={(item) => `${item.id}-${item.category}`}
           contentContainerStyle={styles.listContainer}
+          refreshing={loading}
+          onRefresh={loadFavorites}
         />
       )}
 

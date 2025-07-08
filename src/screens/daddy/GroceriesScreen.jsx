@@ -26,6 +26,7 @@ import { addToCart, clearCart, updateQuantity, removeFromCart } from '../../redu
 import { RootState } from '../../redux/store'; // adjust path
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
+import { compose } from '@reduxjs/toolkit';
 
 const { width, height } = Dimensions.get('window');
 const productCardWidth = (width * 0.8 - 32) / 2;
@@ -67,6 +68,11 @@ export default function GroceriesScreen({ navigation, route }) {
   const [sidebarSubcategories, setSideBarSubCategories] = useState([]);
   const [sideBardCategories, setSideBarCategories] = useState([]);
   const flatListRef = useRef(null);
+  const [typeFilterModalVisible, setTypeFilterModalVisible] = useState(false);
+  const [priceFilterModalVisible, setPriceFilterModalVisible] = useState(false);
+  const [updatingFavoriteId, setUpdatingFavoriteId] = useState(null);
+
+
 
   const priceRangeOptions = [
     { label: '₹0 - ₹100', min: 0, max: 100 },
@@ -113,6 +119,7 @@ export default function GroceriesScreen({ navigation, route }) {
           sub_category_id: route.params?.subcategory_id,
         });
         setSelectedSubcategoryId(subCats[0]?.id);
+        console.log("subcategories", subCats)
         setSubtotalcategories(subCats);
       } catch (error) {
         Toast.show({
@@ -130,110 +137,112 @@ export default function GroceriesScreen({ navigation, route }) {
     }
   }, [route.params?.subcategory_id, route.params?.category_id]);
 
-  // Fetch items
-  useEffect(() => {
-    const fetchItems = async () => {
-      if (!selectedSubcategoryId || !category_id) return;
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await getItems(selectedSubcategoryId, customerId, filter_one);
-        const items = response.data || [];
-        // Group items strictly by unique_id and sub_category_id
-        const groupedItems = items.reduce((acc, item) => {
-          // Only process items matching the selected subcategory
-          if (item.subtotal_category_id === selectedSubcategoryId) {
-            // Find existing group or create new one
-            let existingGroup = acc.find(group => group.unique_id == item.unique_id);
 
-            if (!existingGroup) {
-              // Create new group with the first item
-              existingGroup = {
-                ...item,
-                variants: [{
-                  id: item.id,
-                  actual_price: item.actual_price,
-                  selling_price: item.selling_price,
-                  filter_one: item.filter_one || 'Default',
-                  quantity_type: item.quantity_type,
-                  item_ind: item.item_ind
-                }]
-              };
-              acc.push(existingGroup);
-            } else {
-              // Add variant to existing group if not already present
-              const existingVariant = existingGroup.variants.find(v => v.quantity_type === item.quantity_type);
-              if (!existingVariant) {
-                existingGroup.variants.push({
-                  id: item.id,
-                  actual_price: item.actual_price,
-                  selling_price: item.selling_price,
-                  filter_one: item.filter_one || 'Default',
-                  quantity_type: item.quantity_type,
-                  item_ind: item.item_ind
-                });
-              }
+  const fetchItems = async () => {
+    if (!selectedSubcategoryId || !category_id) return;
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await getItems(selectedSubcategoryId, customerId, filter_one);
+      const items = response.data || [];
+      // Group items strictly by unique_id and sub_category_id
+      const groupedItems = items.reduce((acc, item) => {
+        // Only process items matching the selected subcategory
+        if (item.subtotal_category_id === selectedSubcategoryId) {
+          // Find existing group or create new one
+          let existingGroup = acc.find(group => group.unique_id == item.unique_id);
+
+          if (!existingGroup) {
+            // Create new group with the first item
+            existingGroup = {
+              ...item,
+              variants: [{
+                id: item.id,
+                actual_price: item.actual_price,
+                selling_price: item.selling_price,
+                filter_one: item.filter_one || 'Default',
+                quantity_type: item.quantity_type,
+                item_ind: item.item_ind
+              }]
+            };
+            acc.push(existingGroup);
+          } else {
+            // Add variant to existing group if not already present
+            const existingVariant = existingGroup.variants.find(v => v.quantity_type === item.quantity_type);
+            if (!existingVariant) {
+              existingGroup.variants.push({
+                id: item.id,
+                actual_price: item.actual_price,
+                selling_price: item.selling_price,
+                filter_one: item.filter_one || 'Default',
+                quantity_type: item.quantity_type,
+                item_ind: item.item_ind
+              });
             }
           }
-          return acc;
-        }, []);
-        // Map grouped items to product structure
+        }
+        return acc;
+      }, []);
+      // Map grouped items to product structure
 
-        const mappedProducts = groupedItems.map(item => ({
-          id: item.id, // Use unique_id as the main identifier
-          category_id: item.category_id,
-          sub_category_id: item.sub_category_id,
-          subtotal_category_id: item.subtotal_category_id,
-          unique_id: item.unique_id,
-          name: item.item_name,
-          brand: 'N/A',
-          defaultWeight: item.variants[0].quantity_type,
-          price: parseFloat(item.actual_price) || 0,
-          offer: parseFloat(item.selling_price) || 0,
-          image: item.item_image,
-          filter_one: item.filter_one,
-          description: item.item_description,
-          item_ind: item.variants[0].item_ind, // Add item_ind to the product
-          variants: item.variants, // Include all variants
-          subscription: item.subscription,
-          wishlist_flag: item.wishlist_flag,
-          wishlistId: item.wishlistId,
-          value: item.value
-        }));
-        // console.log("groupedItems", mappedProducts)
-        setProducts(mappedProducts);
-      } catch (error) {
-        setError('Failed to load items');
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to load items for this subcategory',
-          position: 'top',
-          topOffset: Platform.OS === 'ios' ? 50 : 30,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const mappedProducts = groupedItems.map(item => ({
+        id: item.id, // Use unique_id as the main identifier
+        category_id: item.category_id,
+        sub_category_id: item.sub_category_id,
+        subtotal_category_id: item.subtotal_category_id,
+        unique_id: item.unique_id,
+        name: item.item_name,
+        brand: 'N/A',
+        defaultWeight: item.variants[0].quantity_type,
+        price: parseFloat(item.actual_price) || 0,
+        offer: parseFloat(item.selling_price) || 0,
+        image: item.item_image,
+        filter_one: item.filter_one,
+        description: item.item_description,
+        item_ind: item.variants[0].item_ind, // Add item_ind to the product
+        variants: item.variants, // Include all variants
+        subscription: item.subscription,
+        wishlist_flag: item.wishlist_flag,
+        wishlistId: item.wishlistId,
+        value: item.value
+      }));
+      console.log("groupedItems", mappedProducts)
+      setProducts(mappedProducts);
+    } catch (error) {
+      setError('Failed to load items');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to load items for this subcategory',
+        position: 'top',
+        topOffset: Platform.OS === 'ios' ? 50 : 30,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // Fetch items
+  useEffect(() => {
     fetchItems();
   }, [selectedSubcategoryId, route.params?.category_id]);
 
 
   const toggleFavorite = async (item) => {
-    const isFavorited = !!item.wishlistId;
+    if (updatingFavoriteId === item.id) return; // prevent re-click
+
+    setUpdatingFavoriteId(item.id);
+    const isFavorited = item.wishlistId;
+
     try {
       if (isFavorited) {
-        const response = await removeFromWishlist({
-          wishlistId: item.wishlistId,
-        });
-
+        const response = await removeFromWishlist({ wishlistId: item.wishlistId });
+          console.log("removal resposne", response)
         const updatedProducts = products.map((product) =>
           product.id === item.id
             ? { ...product, wishlist_flag: 0, wishlistId: null }
             : product
         );
         setProducts(updatedProducts);
-
       } else {
         const response = await addToWishlist({
           customer_id: customerId,
@@ -241,7 +250,7 @@ export default function GroceriesScreen({ navigation, route }) {
           unique_id: item.unique_id,
         });
 
-        const newWishlistId = response?.data?.wishlistId;
+        const newWishlistId = response?.data?.data?.insertId;
 
         const updatedProducts = products.map((product) =>
           product.id === item.id
@@ -259,14 +268,14 @@ export default function GroceriesScreen({ navigation, route }) {
         position: 'top',
         topOffset: Platform.OS === 'ios' ? 50 : 30,
       });
+    } finally {
+      setUpdatingFavoriteId(null);
     }
   };
 
+
   const isFavorite = (item) => item?.wishlist_flag === 1;
-  const getAdjustedPrice = (product, weight) => {
-    const weightOption = weightOptions.find((opt) => opt.value === weight);
-    return product.price * (weightOption?.priceMultiplier || 1);
-  };
+
 
   const handleBuyOnce = async (product) => {
     // console.log("firstproduct:", product)
@@ -385,12 +394,12 @@ export default function GroceriesScreen({ navigation, route }) {
       } else if (sort === 'Price (Low to High)') {
         filtered.sort(
           (a, b) =>
-            parseFloat(a.variants[0].actual_price) - parseFloat(b.variants[0].actual_price)
+            parseFloat(a.variants[0].selling_price) - parseFloat(b.variants[0].selling_price)
         );
       } else if (sort === 'Price (High to Low)') {
         filtered.sort(
           (a, b) =>
-            parseFloat(b.variants[0].actual_price) - parseFloat(a.variants[0].actual_price)
+            parseFloat(b.variants[0].selling_price) - parseFloat(a.variants[0].selling_price)
         );
       }
     }
@@ -400,36 +409,29 @@ export default function GroceriesScreen({ navigation, route }) {
   const renderSidebarItem = ({ item }) => {
     if (item.type === 'label') {
       return (
-        <View style={styles.sidebarSectionHeader}>
-          <View style={styles.sidebarDivider} />
-          <Text style={styles.sidebarSectionTitle}>{item.title}</Text>
-          <View style={styles.sidebarDivider} />
+        <View style={styles.sidebarLabelBanner}>
+          <Text style={styles.sidebarLabelBannerText}>{item.title}</Text>
         </View>
       );
     }
-
-
     const isSelected =
       (item.type === 'subtotal' && selectedSubcategoryId === item.id)
 
-      const handlePress = () => {
-        if (item.type === 'subtotal') {
-          setSelectedSubcategoryId(item.id);
-          flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); // 👈 scroll to top
-        } else if (item.type === 'subcategory') {
-          flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); // 👈 scroll to top
-          navigation.navigate('GroceriesScreen', {
-            subcategory_id: parseInt(item.id),
-            subcategory_name: item.sub_category_name,
-            category_id: item.category_id,
-          });
-        }
-      };
-      
-
+    const handlePress = () => {
+      if (item.type === 'subtotal') {
+        setSelectedSubcategoryId(item.id);
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); // 👈 scroll to top
+      } else if (item.type === 'subcategory') {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true }); // 👈 scroll to top
+        navigation.navigate('GroceriesScreen', {
+          subcategory_id: parseInt(item.id),
+          subcategory_name: item.sub_category_name,
+          category_id: item.category_id,
+        });
+      }
+    };
     const imageUrl = item.subtotal_category_image || item.sub_category_image;
     const label = item.subtotal_category_name || item.sub_category_name;
-
     return (
       <TouchableOpacity onPress={handlePress}>
         <View style={[
@@ -464,20 +466,22 @@ export default function GroceriesScreen({ navigation, route }) {
     }));
 
     return (
-      <View style={[styles.productCard, { width: productCardWidth, gap: 2 }]}>
+      <View style={[styles.productCard, { width: productCardWidth }]}>
         <TouchableOpacity
           style={styles.favoriteIcon}
           onPress={() => toggleFavorite(item)}
+          disabled={updatingFavoriteId === item.id}
           accessibilityLabel={isFavorite(item) ? 'Remove from favorites' : 'Add to favorites'}
         >
           <View style={styles.favoriteIconWrapper}>
             <Icon
               name={isFavorite(item) ? 'favorite' : 'favorite-border'}
               size={20}
-              color="#9010BF"
+              color={updatingFavoriteId === item.id ? "#ccc" : "#9010BF"}
             />
           </View>
         </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() =>
             navigation.navigate('ProductDetailsScreen', {
@@ -499,6 +503,10 @@ export default function GroceriesScreen({ navigation, route }) {
             resizeMode="cover"
           />
         </TouchableOpacity>
+        <View style={styles.companyRow}>
+          <Icon name="verified" size={14} color="#7D29E8" style={styles.companyIcon} />
+          <Text style={styles.companyName}>{item.filter_one}</Text>
+        </View>
         <Text style={styles.productName}>{item.name}</Text>
         {/* Conditionally render dropdown or text based on item_ind */}
         {item.variants.length > 1 && item.item_ind === 0 ? (
@@ -520,8 +528,6 @@ export default function GroceriesScreen({ navigation, route }) {
         ) : (
           <Text style={styles.quantityText}>{selectedVariant.quantity_type}</Text>
         )}
-
-        {/* <Text style={styles.description}>{item.description}</Text> */}
         <View style={styles.priceRow}>
           <Text style={styles.productPrice}>₹{adjustedOffer.toFixed(2)}</Text>
           <Text style={styles.productOffer}>₹{adjustedPrice.toFixed(2)}</Text>
@@ -588,118 +594,7 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   };
 
-  const renderFilterOption = () => {
-    const filterSections = [
-      {
-        key: 'Filter One',
-        options: getFilterOneOptions(),
-        selectedState: tempSelectedFilterOneValues,
-        setSelectedState: setTempSelectedFilterOneValues,
-      },
-      {
-        key: 'Price Range',
-        options: priceRangeOptions.map((range) => range.label),
-        selectedState: tempSelectedPriceRanges,
-        setSelectedState: setTempSelectedPriceRanges,
-      },
-    ];
 
-    return (
-      <View style={styles.filterModalContainer}>
-        <View style={styles.filterLeftPanel}>
-          {filterSections.map((section) => (
-            <TouchableOpacity
-              key={section.key}
-              style={[styles.filterLeftItem, activeFilterSection === section.key && styles.filterLeftItemActive]}
-              onPress={() => setActiveFilterSection(section.key)}
-            >
-              <Text
-                style={[styles.filterLeftText, activeFilterSection === section.key && styles.filterLeftTextActive]}
-              >
-                {section.key}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.filterRightPanel}>
-          <ScrollView contentContainerStyle={styles.filterRightScrollContent} showsVerticalScrollIndicator={false}>
-            {activeFilterSection === 'Filter One' && (
-              <View style={styles.filterRightSection}>
-                <Text style={styles.filterSectionTitle}>Select Type</Text>
-                {getFilterOneOptions().map((value) => (
-                  <TouchableOpacity
-                    key={value}
-                    style={styles.filterCheckboxContainer}
-                    onPress={() => {
-                      setTempSelectedFilterOneValues((prev) =>
-                        prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
-                      );
-                    }}
-                  >
-                    <View
-                      style={[styles.checkbox, tempSelectedFilterOneValues.includes(value) && styles.checkboxSelected]}
-                    >
-                      {tempSelectedFilterOneValues.includes(value) && (
-                        <Icon name="check" size={14} color="white" style={styles.checkIcon} />
-                      )}
-                    </View>
-                    <Text style={styles.filterOptionText}>{value}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-            {activeFilterSection === 'Price Range' && (
-              <View style={styles.filterRightSection}>
-                <Text style={styles.filterSectionTitle}>Select Price Range</Text>
-                {priceRangeOptions.map((range) => (
-                  <TouchableOpacity
-                    key={range.label}
-                    style={styles.filterCheckboxContainer}
-                    onPress={() => {
-                      setTempSelectedPriceRanges((prev) =>
-                        prev.includes(range.label) ? prev.filter((r) => r !== range.label) : [...prev, range.label]
-                      );
-                    }}
-                  >
-                    <View
-                      style={[styles.checkbox, tempSelectedPriceRanges.includes(range.label) && styles.checkboxSelected]}
-                    >
-                      {tempSelectedPriceRanges.includes(range.label) && (
-                        <Icon name="check" size={14} color="white" style={styles.checkIcon} />
-                      )}
-                    </View>
-                    <Text style={styles.filterOptionText}>{range.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </ScrollView>
-          <View style={styles.filterActionContainer}>
-            <TouchableOpacity
-              style={styles.clearFilterButton}
-              onPress={() => {
-                setTempSelectedFilterOneValues([]);
-                setTempSelectedPriceRanges([]);
-              }}
-            >
-              <Icon name="clear" size={20} color="#666" style={styles.clearFilterIcon} />
-              <Text style={styles.clearFilterText}>Clear</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.applyFilterButton}
-              onPress={() => {
-                setSelectedFilterOneValues(tempSelectedFilterOneValues);
-                setSelectedPriceRanges(tempSelectedPriceRanges);
-                setFilterModalVisible(false);
-              }}
-            >
-              <Text style={styles.applyFilterText}>Apply</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
-  };
 
   useEffect(() => {
     if (filterModalVisible) {
@@ -763,12 +658,21 @@ export default function GroceriesScreen({ navigation, route }) {
   }
 
   const selectedSubcategoryName = subtotalcategories[0]?.sub_category_name?.trim();
-  const remainingSubcategories = sidebarSubcategories.filter(
-    cat => cat.sub_category_name?.trim() !== selectedSubcategoryName
-  );
 
-  const sortedRemainingSubcategories = [...remainingSubcategories].sort((a, b) => a.id - b.id);
+  const selectedType = sidebarSubcategories.find(
+    cat => cat.sub_category_name?.trim() === selectedSubcategoryName
+  )?.sub_category_type ?? "1"; // default to "1" (meat) if not found
 
+  const type1Subcategories = sidebarSubcategories.filter(cat => cat.sub_category_type === "1");
+  const type2Subcategories = sidebarSubcategories.filter(cat => cat.sub_category_type === "2");
+
+  const preferredGroup = selectedType === "1" ? type1Subcategories : type2Subcategories;
+  const secondaryGroup = selectedType === "1" ? type2Subcategories : type1Subcategories;
+
+  const sortedRemainingSubcategories = [
+    ...preferredGroup.sort((a, b) => a.sub_category_order - b.sub_category_order),
+    ...secondaryGroup.sort((a, b) => a.sub_category_order - b.sub_category_order),
+  ];
 
   const mergedSidebarItems = [
     ...subtotalcategories.map(item => ({
@@ -781,6 +685,7 @@ export default function GroceriesScreen({ navigation, route }) {
       type: 'subcategory',
     })),
   ];
+
 
 
 
@@ -842,27 +747,53 @@ export default function GroceriesScreen({ navigation, route }) {
         <View style={styles.productArea}>
           <View style={styles.filterRow}>
             <View style={styles.filterButtonsContainer}>
+              {/* Type Filter Button */}
               <TouchableOpacity
-                style={[styles.filterBtn, filterOne && styles.filterBtnExpanded]}
-                onPress={() => setFilterModalVisible(true)}
+                style={[styles.filterBtn, selectedFilterOneValues.length > 0 && styles.filterBtnExpanded]}
+                onPress={() => setTypeFilterModalVisible(true)}
               >
                 <Icon name="filter-list" size={16} color="#333" style={styles.filterIcon} />
-                <Text style={styles.filterText}>Filter By{filterOne ? `(${filterOne})` : ''}</Text>
-                {filterOne && (
+                <Text style={styles.filterText}>
+                  Brand{selectedFilterOneValues.length > 0 ? ` (${selectedFilterOneValues.length})` : ''}
+                </Text>
+                {selectedFilterOneValues.length > 0 && (
                   <TouchableOpacity
                     style={styles.deleteIconContainer}
-                    onPress={() => setFilterOne(null)}
+                    onPress={() => setSelectedFilterOneValues([])}
                   >
                     <Icon name="close" size={16} color="#666" />
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
+
+              {/* Price Filter Button */}
+              <TouchableOpacity
+                style={[styles.filterBtn, selectedPriceRanges.length > 0 && styles.filterBtnExpanded]}
+                onPress={() => setPriceFilterModalVisible(true)}
+              >
+                <Icon name="currency-rupee" size={14} color="#333" style={styles.filterIcon} />
+                <Text style={styles.filterText}>
+                  Price{selectedPriceRanges.length > 0 ? ` (${selectedPriceRanges.length})` : ''}
+                </Text>
+                {selectedPriceRanges.length > 0 && (
+                  <TouchableOpacity
+                    style={styles.deleteIconContainer}
+                    onPress={() => setSelectedPriceRanges([])}
+                  >
+                    <Icon name="close" size={16} color="#666" />
+                  </TouchableOpacity>
+                )}
+              </TouchableOpacity>
+
+              {/* Sort Filter Button */}
               <TouchableOpacity
                 style={[styles.filterBtn, sort && styles.filterBtnExpanded]}
                 onPress={() => setSortModalVisible(true)}
               >
-                <Text style={styles.filterText}>Sort By {sort ? `(${sort})` : ''} </Text>
-                <Icon name="arrow-drop-down" size={16} color="#333" style={styles.sortIcon} />
+                <Icon name="sort" size={16} color="#333" style={styles.filterIcon} />
+                <Text style={styles.filterText}>
+                  Sort{sort ? ` (${sort})` : ''}
+                </Text>
                 {sort && (
                   <TouchableOpacity
                     style={styles.deleteIconContainer}
@@ -952,29 +883,94 @@ export default function GroceriesScreen({ navigation, route }) {
         </View>
       )}
 
+
       <Modal
-        isVisible={filterModalVisible}
-        onBackdropPress={() => setFilterModalVisible(false)}
+        isVisible={typeFilterModalVisible}
+        onBackdropPress={() => setTypeFilterModalVisible(false)}
         style={styles.bottomModal}
-        backdropOpacity={0.5}
-        swipeDirection={['down']}
-        onSwipeComplete={() => setFilterModalVisible(false)}
       >
         <View style={styles.bottomModalContent}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>Filter Options</Text>
-          {renderFilterOption()}
+          <Text style={styles.modalTitle}>Select Type</Text>
+          <ScrollView>
+            {getFilterOneOptions().map((value) => (
+              <TouchableOpacity
+                key={value}
+                style={styles.filterCheckboxContainer}
+                onPress={() => {
+                  setSelectedFilterOneValues((prev) =>
+                    prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+                  );
+                }}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    selectedFilterOneValues.includes(value) && styles.checkboxSelected,
+                  ]}
+                >
+                  {selectedFilterOneValues.includes(value) && (
+                    <Icon name="check" size={14} color="white" />
+                  )}
+                </View>
+                <Text style={styles.filterOptionText}>{value}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
           <TouchableOpacity
             style={styles.modalOption}
             onPress={() => {
-              setFilterOne(null);
-              setFilterModalVisible(false);
+              setTypeFilterModalVisible(false);
             }}
           >
-            <Text style={styles.modalOptionText}>Clear Filter</Text>
+            <Text style={styles.modalOptionText}>Done</Text>
           </TouchableOpacity>
         </View>
       </Modal>
+
+
+      <Modal
+        isVisible={priceFilterModalVisible}
+        onBackdropPress={() => setPriceFilterModalVisible(false)}
+        style={styles.bottomModal}
+      >
+        <View style={styles.bottomModalContent}>
+          <Text style={styles.modalTitle}>Select Price Range</Text>
+          <ScrollView>
+            {priceRangeOptions.map((range) => (
+              <TouchableOpacity
+                key={range.label}
+                style={styles.filterCheckboxContainer}
+                onPress={() => {
+                  setSelectedPriceRanges((prev) =>
+                    prev.includes(range.label) ? prev.filter((r) => r !== range.label) : [...prev, range.label]
+                  );
+                }}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    selectedPriceRanges.includes(range.label) && styles.checkboxSelected,
+                  ]}
+                >
+                  {selectedPriceRanges.includes(range.label) && (
+                    <Icon name="check" size={14} color="white" />
+                  )}
+                </View>
+                <Text style={styles.filterOptionText}>{range.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity
+            style={styles.modalOption}
+            onPress={() => {
+              setPriceFilterModalVisible(false);
+            }}
+          >
+            <Text style={styles.modalOptionText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
 
       <Modal
         isVisible={sortModalVisible}
@@ -1069,10 +1065,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedCategoryItem: {
-
-    borderLeftWidth: 3,
-    borderLeftColor: '#9010BF',
+    borderLeftWidth: 5,
+    borderLeftColor: '#8655d2',
+    backgroundColor: '#f3e8ff', // light lavender background
+    borderRadius: 5,
+    shadowColor: '#8655d2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3, // for Android
+    flexDirection: 'column',
+    alignItems: 'center',
   },
+
   categoryIcon: { width: "100%", height: 50, marginBottom: 5, borderRadius: 2, resizeMode: 'contain' },
   selectedCategoryIcon: { width: "100%", height: 50, marginBottom: 5, resizeMode: 'contain' },
   categoryText: {
@@ -1082,7 +1087,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: '100%',
   },
-  selectedCategoryText: { color: '#000', fontWeight: 'bold' },
+  selectedCategoryText: {
+    fontWeight: 'bold',
+    color: '#8655d2',
+  },
   productArea: { width: productAreaWidth, flex: 1 },
   filterRow: {
     flexDirection: 'row',
@@ -1111,6 +1119,11 @@ const styles = StyleSheet.create({
     width: "auto",
     paddingHorizontal: 10,
     justifyContent: 'space-between',
+    borderColor: '#7D29E8',           // Primary color
+    backgroundColor: '#EFE4FF',
+  },
+  filterBtnExpandedText: {
+    color: '#7D29E8', // Match highlight
   },
   filterIcon: { marginRight: 4 },
   sortIcon: { marginLeft: 2 },
@@ -1173,29 +1186,47 @@ const styles = StyleSheet.create({
   weightIconLeft: {
     marginRight: 5,
   },
-  description: {
+  companyName: {
     color: '#666',
-    fontSize: 7,
-    marginBottom: 5,
+    fontSize: 13,
     textAlign: 'center',
     width: '100%',
   },
+  companyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+
+  companyIcon: {
+    marginRight: 5,
+    marginTop: 1,
+  },
+
+  companyName: {
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
+  },
+
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 1,
+    marginTop: 4,
     width: '100%',
   },
+
   productPrice: {
-    color: '#222',
-    fontWeight: 'bold',
-    fontSize: 11,
-    marginRight: 10,
+    color: '#E53935', // 🔴 Red offer price
+    fontWeight: '700',
+    fontSize: 14,
+    marginRight: 8,
   },
+
   productOffer: {
-    color: '#888',
-    fontSize: 7,
+    color: '#9E9E9E', // Muted gray for MRP
+    fontSize: 13,
     textDecorationLine: 'line-through',
   },
   buttonRow: {
@@ -1594,23 +1625,22 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 4,
   },
-  sidebarSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 12,
-    paddingHorizontal: 8,
+  sidebarLabelBanner: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginVertical: 10,
+    borderRadius: 4,
   },
-  sidebarDivider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ccc',
-  },
-  sidebarSectionTitle: {
-    marginHorizontal: 8,
-    fontSize: 8,
+
+  sidebarLabelBannerText: {
+    fontSize: 10,
     fontWeight: '600',
-    color: '#666',
+    color: '#333',
+    textAlign: 'center',
+    textTransform: 'uppercase',
   },
+
 
 });
 

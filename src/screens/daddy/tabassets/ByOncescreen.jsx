@@ -173,9 +173,6 @@ const BasketScreen = ({ navigation, route }) => {
     ? Math.min(totalBeforeWallets - abhiWalletUsed, userWalletAmount)
     : 0;
 
-
-
-
   // console.log('walletAmount', walletData);
   // console.log(userWalletAmount, abhiWalletAmount)
   // console.log('cartItems', cartItems);

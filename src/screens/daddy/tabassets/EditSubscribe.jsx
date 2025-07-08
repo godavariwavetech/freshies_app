@@ -133,8 +133,8 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           navigation.navigate("Wallet");
         } else {
           // Proceed to place order
-
-          setShowConfirmationModal(true);
+           
+          placeSubscriptionOrderHandler();
         }
 
       } else {

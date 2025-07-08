@@ -321,7 +321,7 @@ export const addToWishlist = async (payload) => {
 };
 
 export const removeFromWishlist = async (payload) => {
-
+  console.log("removal payload", payload)
   return await api.post('/public_app/deletewishlist', payload);
 };
 

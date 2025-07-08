@@ -21,7 +21,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
-import { getItemDetails, recommendItems } from '../../../services/services';
+import { addToWishlist, getItemDetails, recommendItems, removeFromWishlist } from '../../../services/services';
 import { combineSlices } from '@reduxjs/toolkit';
 import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import { useDispatch, useSelector } from 'react-redux';
@@ -43,6 +43,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const { status = 0, getCategories } = route.params || {};
   const [showFull, setShowFull] = useState(false);
   const walletData = useSelector((state) => state.wallet);
+  const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
 
 
   const previewLength = 200; // chars
@@ -59,48 +60,50 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
   // Fetch item details if unique_id is provided
   useEffect(() => {
-    const fetchItemDetails = async () => {
-      try {
-        if (route.params?.unique_id) {
-          const response = await getItemDetails(customerId, route.params.unique_id);
-          if (response.data && response.data.length > 0) {
-            const fetchedDetails = response.data;
-            const processedDetails = fetchedDetails.map(detail => ({
-              ...detail,
-              id: detail.id,
-              unique_id: detail.unique_id,
-              name: detail.item_name,
-              image: detail.item_image,
-              description: detail.item_description,
-              filter_one: detail.filter_one,
-              category_id: detail.category_id,
-              sub_category_id: detail.sub_category_id,
-              item_ind: detail.item_ind,
-              quantity_type: detail.quantity_type,
-              price: parseFloat(detail.actual_price),
-              offer: parseFloat(detail.selling_price),
-              productLink: detail.product_link
-            }));
-            setProductDetails(processedDetails);
-            setSelectedWeight(processedDetails[0].quantity_type);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching item details:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to load product details',
-          position: 'top',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchItemDetails();
   }, [route.params?.unique_id]);
 
+  const fetchItemDetails = async () => {
+    try {
+      const response = await getItemDetails(customerId, route.params.unique_id);
+      if (response.data && response.data.length > 0) {
+        const fetchedDetails = response.data;
+        console.log("product details:", fetchedDetails)
+        const processedDetails = fetchedDetails.map(detail => ({
+          ...detail,
+          id: detail.id,
+          unique_id: detail.unique_id,
+          name: detail.item_name,
+          image: detail.item_image,
+          description: detail.item_description,
+          filter_one: detail.filter_one,
+          category_id: detail.category_id,
+          sub_category_id: detail.sub_category_id,
+          item_ind: detail.item_ind,
+          quantity_type: detail.quantity_type,
+          price: parseFloat(detail.actual_price),
+          offer: parseFloat(detail.selling_price),
+          productLink: detail.product_link,
+          wishlist_flag: detail.wishlist_flag,
+          wishlistId: detail.wishlistId
+        }));
+        setProductDetails(processedDetails);
+        console.log(processedDetails[0].wishlistId)
+        setIsFavorite(processedDetails[0].wishlistId);
+        setSelectedWeight(processedDetails[0].quantity_type);
+      }
+    } catch (error) {
+      console.error('Error fetching item details:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to load product details',
+        position: 'top',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Render loading state
   if (isLoading) {
@@ -126,53 +129,55 @@ const ProductDetailScreen = ({ navigation, route }) => {
       </View>
     );
   }
-
   const toggleFavorite = async () => {
-    if (!productDetails) return;
+    if (isUpdatingFavorite) return; // prevent double click
+    if (!productDetails || productDetails.length === 0) return;
+
+    setIsUpdatingFavorite(true);
+
+    const selectedIndex = productDetails.findIndex(p => p.quantity_type === selectedWeight);
+    const item = productDetails[selectedIndex];
+    const isFavorited = item.wishlistId;
+
     try {
-      let updatedFavorites;
-      if (isFavorite) {
-        updatedFavorites = favorites.filter(
-          fav => !(fav.id === productDetails.id && fav.category === productDetails.category)
-        );
-        Toast.show({
-          type: 'error',
-          text1: 'Removed from Favorites',
-          text2: `${productDetails.name} has been removed from your favorites`,
-          visibilityTime: 3000,
-          autoHide: true,
-        });
+      let updatedItem = { ...item };
+
+      if (isFavorited) {
+        const response = await removeFromWishlist({ wishlistId: item.wishlistId });
+        updatedItem.wishlist_flag = 0;
+        updatedItem.wishlistId = null;
       } else {
-        updatedFavorites = [
-          ...favorites,
-          {
-            ...productDetails,
-            category: productDetails.category || 'default',
-            status,
-          },
-        ];
-        Toast.show({
-          type: 'success',
-          text1: 'Added to Favorites',
-          text2: `${productDetails.name} has been added to your favorites`,
-          visibilityTime: 3000,
-          autoHide: true,
+        const response = await addToWishlist({
+          customer_id: customerId,
+          item_id: item.id,
+          unique_id: item.unique_id,
         });
+
+        const newWishlistId = response?.data?.wishlistId;
+        updatedItem.wishlist_flag = 1;
+        updatedItem.wishlistId = newWishlistId;
       }
-      setFavorites(updatedFavorites);
-      setIsFavorite(!isFavorite);
-      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+
+      const updatedProducts = [...productDetails];
+      updatedProducts[selectedIndex] = updatedItem;
+
+      setProductDetails(updatedProducts);
+      setIsFavorite(updatedItem.wishlist_flag === 1);
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      console.error('Wishlist API error:', error?.response?.data || error.message);
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Failed to update favorites. Please try again.',
-        visibilityTime: 3000,
-        autoHide: true,
+        text2: 'Failed to update favorites',
+        position: 'top',
+        topOffset: Platform.OS === 'ios' ? 50 : 30,
       });
+    } finally {
+      setIsUpdatingFavorite(false);
     }
   };
+
+
 
   const handleBuyOnce = async (product) => {
 
@@ -264,13 +269,19 @@ const ProductDetailScreen = ({ navigation, route }) => {
             <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Icon name="arrow-back" size={wp('6%')} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={toggleFavorite}
+              disabled={isUpdatingFavorite}
+            >
               <Icon
                 name={isFavorite ? 'heart' : 'heart-outline'}
                 size={wp('6%')}
-                color={isFavorite ? backgroundColor : '#000'}
+                color={isUpdatingFavorite ? '#ccc' : isFavorite ? backgroundColor : '#000'}
               />
             </TouchableOpacity>
+
+
           </View>
 
           <View style={styles.productInfo}>
@@ -454,7 +465,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
           <TouchableOpacity
             style={[styles.subscribeButton, { borderColor: backgroundColor }]}
             onPress={() => {
-              const isAbhi24Category = false; 
+              const isAbhi24Category = false;
 
               const selectedItem = productDetails.find(
                 item => item.quantity_type === selectedWeight
