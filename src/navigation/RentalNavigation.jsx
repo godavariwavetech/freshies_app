@@ -11,7 +11,7 @@ import CheckoutScreen from '../screens/daddy/CheckoutScreen';
 import SupportScreen from '../screens/daddy/SupportScreen';
 import FeedbackScreen from '../screens/daddy/FeedbackScreen';
 import OrderSuccessScreen from '../screens/daddy/OrderSuccessScreen';
-import OrderDetailsScreen from '../screens/daddy/OrderDetailsScreen';
+import OffersScreen from '../screens/daddy/OrderDetailsScreen';
 import CouponsScreen from '../screens/daddy/CouponsScreen';
 import ServiceLocationsScreen from '../screens/daddy/ServiceLocationsScreen';
 import PrivacyPolicyScreen from '../screens/daddy/PrivacyPolicyScreen';
@@ -77,7 +77,7 @@ export default function RentalNavigation() {
       <Stack.Screen name='Support' component={SupportScreen} />
       <Stack.Screen name='Feedback' component={FeedbackScreen} />
       <Stack.Screen name='OrderSuccess' component={OrderSuccessScreen} />
-      {/* <Stack.Screen name='OrderDetailsScreen' component={OrderDetailsScreen} /> */}
+      <Stack.Screen name='OffersScreen' component={OffersScreen} />
       <Stack.Screen name='Coupons' component={CouponsScreen} />
       <Stack.Screen name='ServiceLocations' component={ServiceLocationsScreen} />
       <Stack.Screen name='PrivacyPolicy' component={PrivacyPolicyScreen} />

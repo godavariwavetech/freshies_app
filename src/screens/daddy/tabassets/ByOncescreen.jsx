@@ -158,6 +158,7 @@ const BasketScreen = ({ navigation, route }) => {
 
   // Apply coupon
   if (coupon) {
+    console.log("aws", coupon)
     if (coupon.type === 'percentage') {
       subtotal -= subtotal * (coupon.discount / 100);
     } else {
@@ -279,7 +280,7 @@ const BasketScreen = ({ navigation, route }) => {
     };
 
     loadCartItems();
-  }, []);
+  }, [route.params]);
 
   // Save cart items to AsyncStorage whenever cart items change
   useEffect(() => {
@@ -298,7 +299,7 @@ const BasketScreen = ({ navigation, route }) => {
     if (!isLoading) {
       saveCartItems();
     }
-  }, [])
+  }, [cartItems])
 
   const handleQuantityChange = (id, action) => {
     const updatedCartItems = cartItems
@@ -375,17 +376,41 @@ const BasketScreen = ({ navigation, route }) => {
           </Text>
         </View>
       </View>
-      <View style={styles.quantityContainer}>
+      <View>
+        <View style={styles.quantityContainer}>
+          <TouchableOpacity onPress={() => handleQuantityChange(item.id, 'decrease')}>
+            {/* <Text style={styles.quantityButton}>-</Text> */}
+            <Icon style={styles.quantityButton} name="remove" size={14} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.quantityText}>{item.quantity}</Text>
+          <TouchableOpacity onPress={() => handleQuantityChange(item.id, 'increase')}>
+            {/* <Text style={styles.quantityButton}>+</Text> */}
+            <Icon style={styles.quantityButton} name="add" size={16} color="#333" />
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
-          onPress={() => handleQuantityChange(item.id, 'decrease')}>
-          <Text style={styles.quantityButton}>-</Text>
-        </TouchableOpacity>
-        <Text style={styles.quantityText}>{item.quantity}</Text>
-        <TouchableOpacity
-          onPress={() => handleQuantityChange(item.id, 'increase')}>
-          <Text style={styles.quantityButton}>+</Text>
+          style={styles.removeButton}
+          onPress={() => {
+            Alert.alert(
+              'Remove Item',
+              'Are you sure you want to remove this item from your cart?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Remove',
+                  style: 'destructive',
+                  onPress: () => handleDelete(item.id),
+                },
+              ],
+            );
+          }}
+        >
+          <Icon name="delete" size={14} color="#D32F2F" style={{ marginRight: 4 }} />
+          <Text style={styles.removeText}>Remove</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 
@@ -535,7 +560,7 @@ const BasketScreen = ({ navigation, route }) => {
         delivery_instruction: deliveryInstructions,
         abhicash_amount: abhiWalletUsed,
         userwallet_amount: userWalletUsed,
-        payment_amount: calculateTotalPrice(),
+        payment_amount:  calculateFinalPrice().toFixed(2),
         sub_order_array: mappedItems,
       };
       console.log('mappeditems', mappedItems);
@@ -676,14 +701,13 @@ const BasketScreen = ({ navigation, route }) => {
     }
   };
 
-
   const calculateFinalPrice = () => {
     const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
     const handlingCharge = Number(applicationCharges?.handling_charges || 0);
     const gst = gstCalculation();
 
     let subtotal = muttonSubtotal + otherSubtotal;
-
+    console.log("before coupon+++++++++++++++", subtotal)
     // Apply coupon on subtotal
     if (coupon) {
       if (coupon.type === 'percentage') {
@@ -692,7 +716,8 @@ const BasketScreen = ({ navigation, route }) => {
         subtotal -= coupon.discount;
       }
     }
-
+    console.log("coupon", coupon)
+    console.log("after coupon+++++++++++++++", subtotal)
     // Full total (after coupon)
     const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
 
@@ -702,7 +727,7 @@ const BasketScreen = ({ navigation, route }) => {
     // User Wallet can apply to full remaining amount
     const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
     const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
-
+   console.log(totalBeforeWallets,abhiWalletUsed,userWalletUsed)
     const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
 
     return Math.max(0, totalAfterWallets);
@@ -803,12 +828,12 @@ const BasketScreen = ({ navigation, route }) => {
           </View>
 
           {/* Swipeable Item List */}
-          <View style={{ maxHeight: 300 }}>
+          <View >
             <SwipeListView
               data={cartItems}
               renderItem={renderItem}
               renderHiddenItem={renderHiddenItem}
-              rightOpenValue={-75}
+              rightOpenValue={-100}
               disableRightSwipe
               keyExtractor={item => item.id}
               scrollEnabled={false}
@@ -833,25 +858,36 @@ const BasketScreen = ({ navigation, route }) => {
             <View style={[styles.couponIcon, { backgroundColor: '#E8F5E9' }]}>
               <Icon name="local-offer" size={24} color={backgroundColor} />
             </View>
+
             {coupon ? (
               <View style={styles.couponAppliedContainer}>
-                <Text style={styles.couponText}>
-                  Saved ₹
-                  {coupon.type === 'percentage'
-                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
-                      2,
-                    )
-                    : coupon.discount.toFixed(2)}
-                </Text>
-                <Text style={[styles.couponCodeText, { color: backgroundColor }]}>
-                  {coupon.code} Applied
-                </Text>
+                <View style={{ width: "85%"}}>
+                  <Text style={styles.couponText}>
+                    Saved ₹
+                    {coupon.type === 'percentage'
+                      ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
+                      : coupon.discount.toFixed(2)}
+                  </Text>
+                  <Text style={[styles.couponCodeText, { color: backgroundColor, marginLeft: 10 }]}>
+                    {coupon.code} Applied
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => setCoupon(null)}
+                  style={styles.removeCouponButton}>
+                  <Icon name="close" size={18} color="#666" />
+                </TouchableOpacity>
               </View>
             ) : (
-              <Text style={styles.couponText}>Apply coupons</Text>
+              <>
+                <Text style={styles.couponText}>Apply coupons</Text>
+                <Icon name="chevron-right" size={24} color="#000" />
+              </>
             )}
-            <Icon name="chevron-right" size={24} color="#000" />
           </TouchableOpacity>
+
+
 
           {(abhiWalletAmount > 0 || userWalletAmount > 0) && (
             <View style={styles.walletSection}>
@@ -926,7 +962,7 @@ const BasketScreen = ({ navigation, route }) => {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Item Total</Text>
               <Text style={styles.summaryValue}>
-                ₹{calculateTotalPrice().toFixed(2)}
+                ₹{(muttonSubtotal + otherSubtotal).toFixed(2)}
               </Text>
             </View>
 
@@ -1146,7 +1182,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomEndRadius: 25,
     borderBottomStartRadius: 25,
-    paddingVertical: '6%',
+    paddingVertical: '5%',
   },
   headerTitle: {
     color: '#fff',
@@ -1155,6 +1191,20 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+
+  removeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: "center",
+    marginTop: 13,
+  },
+
+  removeText: {
+    color: '#D32F2F',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
   locationSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1166,7 +1216,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   locationName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     flex: 1,
   },
@@ -1259,7 +1309,7 @@ const styles = StyleSheet.create({
   },
   quantityButton: {
     fontSize: 18,
-    paddingHorizontal: 10,
+    paddingHorizontal: 3,
     color: '#000',
   },
   quantityText: {
@@ -1309,6 +1359,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  couponAppliedContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  removeCouponButton: {
+    marginLeft: 10,
+    padding: 4,
+  },
+
   deliveryInstructions: {
     backgroundColor: '#fff',
     padding: 15,
@@ -1432,10 +1494,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
-  couponAppliedContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
+
   cartContainer: {
     flex: 1,
     paddingBottom: Platform.OS === 'ios' ? 85 : 60,

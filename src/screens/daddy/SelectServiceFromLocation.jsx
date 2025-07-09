@@ -28,11 +28,12 @@ import { useIsFocused } from '@react-navigation/native';
 const { width, height } = Dimensions.get('window');
 
 const DEFAULT_REGION = {
-  latitude: 16.9979679,
-  longitude: 81.797932,
-  latitudeDelta: 0.0922,
-  longitudeDelta: 0.0421,
+  latitude: 12.98095,
+  longitude: 77.62822,
+  latitudeDelta: 0.01,
+  longitudeDelta: 0.01,
 };
+
 
 
 const SelectServiceFromLocation = ({ navigation, route }) => {
@@ -117,7 +118,6 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     // Only update region if coordinates are valid
     if (isMountedRef.current && mapRef.current?.animateToRegion) {
       // mapRef.current.animateToRegion(newRegion, 1000);
-
       // Try to get address for the coordinates
       getAddressFromCoordinates(newRegion.latitude, newRegion.longitude)
         .catch(error => {

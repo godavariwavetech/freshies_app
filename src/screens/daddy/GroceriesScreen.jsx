@@ -62,7 +62,7 @@ export default function GroceriesScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [productWeights, setProductWeights] = useState({});
-  const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
+  const { location: storedLocation, customerId } = useSelector(state => state.Auth);
   const totalItems = useSelector((state) => state.cart.totalItems);
   const walletData = useSelector((state) => state.wallet);
   const [sidebarSubcategories, setSideBarSubCategories] = useState([]);
@@ -113,7 +113,7 @@ export default function GroceriesScreen({ navigation, route }) {
 
   // Fetch subtotalcategories
   useEffect(() => {
-    const fetchSubcategories = async () => {
+    const subtotalcategories = async () => {
       try {
         const subCats = await getSubCategoriesById({
           sub_category_id: route.params?.subcategory_id,
@@ -133,7 +133,7 @@ export default function GroceriesScreen({ navigation, route }) {
     };
 
     if (route.params?.category_id) {
-      fetchSubcategories();
+      subtotalcategories();
     }
   }, [route.params?.subcategory_id, route.params?.category_id]);
 
@@ -236,7 +236,7 @@ export default function GroceriesScreen({ navigation, route }) {
     try {
       if (isFavorited) {
         const response = await removeFromWishlist({ wishlistId: item.wishlistId });
-          console.log("removal resposne", response)
+        console.log("removal resposne", response)
         const updatedProducts = products.map((product) =>
           product.id === item.id
             ? { ...product, wishlist_flag: 0, wishlistId: null }
@@ -249,9 +249,7 @@ export default function GroceriesScreen({ navigation, route }) {
           item_id: item.id,
           unique_id: item.unique_id,
         });
-
         const newWishlistId = response?.data?.data?.insertId;
-
         const updatedProducts = products.map((product) =>
           product.id === item.id
             ? { ...product, wishlist_flag: 1, wishlistId: newWishlistId }
@@ -273,9 +271,7 @@ export default function GroceriesScreen({ navigation, route }) {
     }
   };
 
-
   const isFavorite = (item) => item?.wishlist_flag === 1;
-
 
   const handleBuyOnce = async (product) => {
     // console.log("firstproduct:", product)
@@ -312,7 +308,6 @@ export default function GroceriesScreen({ navigation, route }) {
       });
     }
   };
-  // Redux-friendly version (in your component file)
 
   const dispatchIncrement = (compositeId, quantityType) => {
     const existingItem = cartItems.find(
@@ -450,7 +445,6 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   };
 
-
   const renderProduct = ({ item }) => {
     const selectedQuantityType = productWeights[item.id] || item.variants[0].quantity_type;
     const selectedVariant = item.variants.find(v => v.quantity_type === selectedQuantityType) || item.variants[0];
@@ -524,6 +518,8 @@ export default function GroceriesScreen({ navigation, route }) {
             onChange={(selected) => {
               setProductWeights((prev) => ({ ...prev, [item.id]: selected.value }));
             }}
+            itemTextStyle={{ fontSize: 13, paddingVertical: 0, margin: 0 }}
+            itemContainerStyle={{ paddingVertical: 0 }}
           />
         ) : (
           <Text style={styles.quantityText}>{selectedVariant.quantity_type}</Text>
@@ -559,7 +555,6 @@ export default function GroceriesScreen({ navigation, route }) {
             >
               <Text style={styles.subscribeText}>Subscribe</Text>
             </TouchableOpacity>
-
           )}
 
           {cartItem ? (
@@ -593,8 +588,6 @@ export default function GroceriesScreen({ navigation, route }) {
       </View>
     );
   };
-
-
 
   useEffect(() => {
     if (filterModalVisible) {
@@ -657,23 +650,41 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   }
 
+  // Get selected subcategory name (used to exclude from others)
   const selectedSubcategoryName = subtotalcategories[0]?.sub_category_name?.trim();
 
-  const selectedType = sidebarSubcategories.find(
+  // Find selected subcategory in sidebar
+  const selectedSubcategory = sidebarSubcategories.find(
     cat => cat.sub_category_name?.trim() === selectedSubcategoryName
-  )?.sub_category_type ?? "1"; // default to "1" (meat) if not found
+  );
 
-  const type1Subcategories = sidebarSubcategories.filter(cat => cat.sub_category_type === "1");
-  const type2Subcategories = sidebarSubcategories.filter(cat => cat.sub_category_type === "2");
+  // Get selected type (default to "1" if not found)
+  const selectedType = selectedSubcategory?.sub_category_type ?? "1";
 
-  const preferredGroup = selectedType === "1" ? type1Subcategories : type2Subcategories;
-  const secondaryGroup = selectedType === "1" ? type2Subcategories : type1Subcategories;
+  // Group sidebar subcategories by sub_category_type dynamically
+  const groupedByType = sidebarSubcategories.reduce((acc, cat) => {
+    const type = cat.sub_category_type;
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(cat);
+    return acc;
+  }, {});
 
+  // Sort and build subcategories list, prioritizing selected type
   const sortedRemainingSubcategories = [
-    ...preferredGroup.sort((a, b) => a.sub_category_order - b.sub_category_order),
-    ...secondaryGroup.sort((a, b) => a.sub_category_order - b.sub_category_order),
+    ...(groupedByType[selectedType] || [])
+      .filter(cat => cat.sub_category_name?.trim() !== selectedSubcategoryName)
+      .sort((a, b) => a.sub_category_order - b.sub_category_order),
+
+    ...Object.entries(groupedByType)
+      .filter(([type]) => type !== selectedType)
+      .flatMap(([, subcats]) =>
+        subcats
+          .filter(cat => cat.sub_category_name?.trim() !== selectedSubcategoryName)
+          .sort((a, b) => a.sub_category_order - b.sub_category_order)
+      ),
   ];
 
+  // Final merged list
   const mergedSidebarItems = [
     ...subtotalcategories.map(item => ({
       ...item,
@@ -685,8 +696,6 @@ export default function GroceriesScreen({ navigation, route }) {
       type: 'subcategory',
     })),
   ];
-
-
 
 
   return (

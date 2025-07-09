@@ -133,7 +133,6 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           navigation.navigate("Wallet");
         } else {
           // Proceed to place order
-           
           placeSubscriptionOrderHandler();
         }
 
@@ -227,7 +226,30 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           <View style={styles.productDetails}>
             <Text style={styles.productCategory}>{productDetails.filter_one || 'Category'}</Text>
             <Text style={styles.productName}>{productDetails.name?.trim()}</Text>
-            <Text style={styles.productWeight}>{productDetails.variant?.quantity_type || productDetails.quantity_type}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+              <Text style={styles.productWeight}>
+                {productDetails.variant?.quantity_type || productDetails.quantity_type}
+              </Text>
+
+              <View style={styles.quantityContainer}>
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => setQuantity(prev => Math.max(1, prev - 1))}
+                >
+                  <Text style={styles.quantityButtonText}>-</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.quantityText}>{quantity}</Text>
+
+                <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => setQuantity(prev => prev + 1)}
+                >
+                  <Text style={styles.quantityButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={styles.productPrice}>
                 ₹{parseFloat(productDetails.variant?.selling_price || productDetails.selling_price || 0) * quantity}
@@ -235,23 +257,6 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
               <Text style={styles.actualPrice}>
                 ₹{parseFloat(productDetails.variant?.actual_price || productDetails.price || "")}
               </Text>
-            </View>
-
-            {/* Quantity Selector */}
-            <View style={styles.quantityContainer}>
-              <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => setQuantity(prev => Math.max(1, prev - 1))}
-              >
-                <Text style={styles.quantityButtonText}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.quantityText}>{quantity}</Text>
-              <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => setQuantity(prev => prev + 1)}
-              >
-                <Text style={styles.quantityButtonText}>+</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -566,6 +571,8 @@ const styles = StyleSheet.create({
     fontSize: wp('4%'),
     color: '#666',
     marginBottom: hp('0.5%'),
+    width: "50%",
+     backgroundColor: "green",
   },
   productPrice: {
     fontSize: wp('5%'),
@@ -803,7 +810,8 @@ const styles = StyleSheet.create({
   productWeight: {
     fontSize: 14,
     color: '#555',
-    marginVertical: 4,
+    
+    width: "50%",
   },
 
   productPrice: {

@@ -289,8 +289,11 @@ const MySubscriptionScreen = ({ navigation, route }) => {
               {actionType === 'resume' ? 'Resume Subscription' : 'Pause Subscription'}
             </Text>
             <Text style={styles.modalMessage}>
-              Are you sure you want to {actionType} this subscription for{' '}
-              {selectedSubscription?.name}?
+              Are you sure you want to{' '}
+              <Text style={{ fontWeight: 'bold', fontSize: 18 }}>
+                {actionType.charAt(0).toUpperCase() + actionType.slice(1)}
+              </Text>{' '}
+              this subscription for {selectedSubscription?.name}?
             </Text>
             <View style={styles.modalButtonContainer}>
               <Pressable

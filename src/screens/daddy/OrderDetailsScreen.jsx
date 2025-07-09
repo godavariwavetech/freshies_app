@@ -1,889 +1,340 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
+  FlatList,
   StatusBar,
-  Linking,
-  BackHandler,
-  RefreshControl,
-  Alert,
-  TextInput,
+  SafeAreaView,
+  ActivityIndicator,
+  Platform,
+  StyleSheet
 } from 'react-native';
-import {
-  responsiveHeight,
-  responsiveWidth,
-} from 'react-native-responsive-dimensions';
-import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import HeaderPick2 from './tabassets/HeaderPick2';
-import MapView, {Marker, PROVIDER_GOOGLE, Polyline} from 'react-native-maps';
-import {useDispatch} from 'react-redux';
-import {getOrderDetails, getOrders} from '../../redux/reducers/daddy';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import CustomModal from '../../components/CustomModal';
-import {cancelOrder, submitReview} from '../../redux/reducers/reviews';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Toast from 'react-native-toast-message'; // Ensure toast is configured globally
+import { getCoupons } from '../../services/services';
+import LinearGradient from 'react-native-linear-gradient';
 
 
-const OrderDetailsScreen = ({navigation, route}) => {
-  const dispatch = useDispatch();
-  const [subOrderData, setSubOrderData] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
-  const [orderDetails, setOrderDetails] = useState(null);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showRatingModal, setShowRatingModal] = useState(false);
+// Assuming styles are defined in a separate file
 
-  const getOrderData = async () => {
-    const response = await dispatch(
-      getOrders({orderId: route.params?.orderDetails?.id}),
-    );
-    if (response.payload?.data) {
-      setOrderDetails(response.payload.data[0]);
-    }
-  };
 
-  const fetchOrderItems = async () => {
-    if (!orderDetails?.id) return;
-    const response = await dispatch(
-      getOrderDetails({orderId: orderDetails.id}),
-    );
-    if (response.payload?.data) {
-      setSubOrderData(response.payload.data);
-    }
-  };
+const OffersScreen = ({ navigation }) => {
+  const [coupons, setCoupons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getOrderData();
-  }, [route.params?.orderDetails?.id]);
+    const fetchCoupons = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getCoupons(); // Assuming this returns the provided API data
 
-  useEffect(() => {
-    fetchOrderItems();
-  }, [orderDetails]);
-
-  useEffect(() => {
-    const backAction = () => {
-      handleBackPress();
-      return true;
+        // Filter only active coupons (optional)
+        const validCoupons = response.filter(coupon => coupon.coupon_status === 0);
+        setCoupons(validCoupons);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error fetching coupons:', err);
+        setError(err.message || 'Failed to load offers');
+        setIsLoading(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to load offers. Please try again.',
+          position: 'top',
+          topOffset: Platform.OS === 'ios' ? 50 : 30,
+        });
+      }
     };
 
-    const backHandler = route.params?.fromOrderSuccess
-      ? BackHandler.addEventListener('hardwareBackPress', backAction)
-      : null;
-
-    return () => backHandler && backHandler.remove();
-  }, [route.params]);
-
-  // Status mapping
-  const STATUS_MAP = {
-    0: 'Order Placed',
-    1: 'Order Accepted',
-    2: 'Preparing Your Order',
-    3: 'Order Completed',
-    4: 'Order Cancelled by You',
-    5: 'Order Rejected by Restaurant',
-    6: 'Order Not Received',
-    7: 'Waiting for Payment',
-    8: 'Delivery Partner Assigned',
-  };
-
-  // Update orderData status
-  const orderData = {
-    restaurant: {
-      name: orderDetails?.shop_name,
-      orderTime: orderDetails?.order_time,
-      image: orderDetails?.shop_image,
-    },
-    status: STATUS_MAP[orderDetails?.order_status] || 'Unknown Status',
-    estimatedTime: orderDetails?.slot_timings,
-    deliveryAgent: {
-      name: orderDetails?.delivery_boy_array
-        ? orderDetails?.delivery_boy_array[0]?.delivery_boy_name
-        : 'N/A',
-      status: 'On the way to pick order',
-      phone: orderDetails?.delivery_boy_array
-        ? orderDetails?.delivery_boy_array[0]?.delivery_boy_mobile_number
-        : 'N/A',
-    },
-    delivery: {
-      type: 'Home',
-      address: orderDetails?.delivery_address,
-      addressDetails: '',
-      name: 'Rajesh',
-      phone: orderDetails?.shop_phone_number,
-    },
-    billing: {
-      amount: orderDetails?.grand_total,
-      savings: orderDetails?.total_saving_amount,
-      couponDiscount: orderDetails?.coupon_amount,
-      couponCode: '',
-      subtotal: orderDetails?.grand_total - orderDetails?.delivery_charges || 0,
-      gst: 0,
-      deliveryCharge: orderDetails?.delivery_charges,
-      total: orderDetails?.grand_total,
-    },
-    tracking: {
-      restaurant: {
-        latitude: parseFloat(orderDetails?.shop_latitude),
-        longitude: parseFloat(orderDetails?.shop_longitude),
-      },
-      delivery: {
-        latitude: parseFloat(orderDetails?.order_latitude),
-        longitude: parseFloat(orderDetails?.order_longitude),
-      },
-      current: {
-        latitude: parseFloat(orderDetails?.order_latitude),
-        longitude: parseFloat(orderDetails?.order_longitude),
-      },
-    },
-  };
-
-  // Safely parse delivery_boy_array
-  try {
-    let deliveryBoys = orderDetails?.delivery_boy_array;
-    if (deliveryBoys === "'0'" || deliveryBoys === "'[]'" || !deliveryBoys) {
-      deliveryBoys = '[]';
-    }
-    deliveryBoys =
-      deliveryBoys && typeof deliveryBoys === 'string'
-        ? JSON.parse(deliveryBoys.replace(/'/g, '"'))
-        : [];
-    if (Array.isArray(deliveryBoys) && deliveryBoys.length > 0) {
-      orderData.deliveryAgent.name = deliveryBoys[0]?.delivery_boy_name || 'N/A';
-      orderData.deliveryAgent.phone =
-        deliveryBoys[0]?.delivery_boy_mobile_number || 'N/A';
-    } else {
-      orderData.deliveryAgent.name = 'N/A';
-      orderData.deliveryAgent.phone = 'N/A';
-    }
-  } catch (error) {
-    console.error('Error parsing delivery_boy_array:', error);
-    orderData.deliveryAgent.name = 'N/A';
-    orderData.deliveryAgent.phone = 'N/A';
-  }
-
-  const handleCallDriver = () => {
-    Linking.openURL(`tel:${orderData.deliveryAgent.phone}`);
-  };
-
-  const handleCallRestaurant = () => {
-    Linking.openURL(`tel:${orderData.shop_phone_number}`);
-  };
-
-  const handleBackPress = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{name: 'BottomNavigation'}],
-    });
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await getOrderData();
-    await fetchOrderItems();
-    setRefreshing(false);
-  };
-
-  const handleCancelOrder = async () => {
-    try {
-      await dispatch(cancelOrder({orderId: orderDetails.id}));
-      route.params?.fromOrderSuccess ? handleBackPress() : navigation.goBack();
-      setShowCancelModal(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to cancel order');
-      setShowCancelModal(false);
-    }
-  };
-
-  const handleSubmitReview = async () => {
-    try {
-      if (rating === 0) {
-        setShowRatingModal(true);
-        return;
-      }
-      await dispatch(
-        submitReview({
-          shopId: orderDetails?.shop_id,
-          orderId: route.params?.orderDetails?.id,
-          rating,
-          comment,
-        }),
-      );
-      setShowSuccessModal(true);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit review');
-    }
-  };
-
-  useEffect(() => {
-    // getMessaging().onMessage(async remoteMessage => {
-    //   onRefresh();
-    // });
+    fetchCoupons();
   }, []);
 
-
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#348338" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('CheckoutScreen')}>
-          <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.title}>Order Details</Text>
-          {orderDetails?.order_id && (
-            <Text style={styles.orderId}>
-              Order ID: #{orderDetails.order_id} / {orderDetails?.id}
-            </Text>
-          )}
-        </View>
+  const renderCoupon = ({ item }) => (
+    <View style={styles.couponCard}>
+      <View style={styles.couponHeader}>
+        <MaterialCommunityIcons name="tag-outline" size={24} color="#8655d2" />
+        <Text style={styles.couponName}>{item.coupon_name}</Text>
       </View>
-
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }>
-        {/* Map View (Commented Out) */}
-        {/* <View style={styles.mapContainer}>
-          <MapView
-            provider={PROVIDER_GOOGLE}
-            style={styles.map}
-            initialRegion={{
-              latitude: orderData.tracking.restaurant.latitude,
-              longitude: orderData.tracking.restaurant.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}>
-            <Marker coordinate={orderData.tracking.restaurant} title="Restaurant">
-              <MaterialIcons name="restaurant" size={30} color="#348338" />
-            </Marker>
-            <Marker
-              coordinate={orderData.tracking.delivery}
-              title="Delivery Location">
-              <MaterialIcons name="location-on" size={30} color="#348338" />
-            </Marker>
-            <Marker
-              coordinate={orderData.tracking.current}
-              title="Delivery Agent">
-              <MaterialIcons name="delivery-dining" size={30} color="#348338" />
-            </Marker>
-            <Polyline
-              coordinates={[
-                orderData.tracking.restaurant,
-                orderData.tracking.current,
-                orderData.tracking.delivery,
-              ]}
-              strokeColor="#348338"
-              strokeWidth={3}
-              lineDashPattern={[5, 5]}
-            />
-          </MapView>
-        </View> */}
-
-        {/* Restaurant Info */}
-        <View style={styles.restaurantInfo}>
-          <Image
-            source={{uri: orderData.restaurant.image}}
-            style={styles.restaurantImage}
-          />
-          <View style={styles.restaurantDetails}>
-            <Text style={styles.restaurantName}>
-              {orderData.restaurant.name}
-            </Text>
-            <Text style={styles.orderTime}>
-              Ordered At:- {orderDetails?.order_date} {orderData.restaurant.orderTime}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={handleCallRestaurant}
-            style={styles.callButton}>
-            <MaterialIcons name="call" size={24} color="#348338" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Order Status */}
-        <View
-          style={[
-            styles.statusContainer,
-            orderDetails?.order_status === 4 && styles.cancelledStatus,
-            orderDetails?.order_status === 5 && styles.rejectedStatus,
-          ]}>
-          <View style={styles.statusHeader}>
-            <Text style={styles.statusText}>{orderData.status}</Text>
-            <View style={styles.estimatedTime}>
-              <Text style={styles.estimatedTimeValue}>
-                {orderDetails?.customer_otp}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Delivery Agent */}
-        {orderDetails?.order_status >= 8 && (
-          <View style={styles.agentContainer}>
-            <View style={styles.agentHeader}>
-              <Text style={styles.sectionTitle}>Delivery Agent</Text>
-              <TouchableOpacity
-                onPress={handleCallDriver}
-                style={styles.callAgentButton}>
-                <MaterialIcons name="call" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.agentInfo}>
-              <View style={styles.agentDetails}>
-                <Text style={styles.agentName}>
-                  {orderData.deliveryAgent.name}
-                </Text>
-                <Text style={styles.agentStatus}>
-                  {orderData.deliveryAgent.status}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Cart Items */}
-        <View style={styles.cartSection}>
-          <Text style={styles.sectionTitle}>Cart Items</Text>
-          {subOrderData?.map(item => (
-            <View key={item.id}>
-              <View style={styles.cartItem}>
-                <View style={styles.itemDetails}>
-                  <HeaderPick2 />
-                  <Text style={styles.itemName}>{item.item_name}</Text>
-                  <Text style={styles.itemPrice}>₹{item.item_price}</Text>
-                </View>
-                <View style={styles.quantityInfo}>
-                  <Text style={styles.quantity}>x{item.sub_item_count}</Text>
-                  <Text style={styles.itemTotal}>
-                    ₹{item.item_total_amount}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.dottedLineContainer}>
-                {Array(20)
-                  .fill(0)
-                  .map((_, index) => (
-                    <View key={index} style={styles.dot} />
-                  ))}
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Delivery Details */}
-        <View style={styles.deliveryDetails}>
-          <Text style={styles.sectionTitle}>Delivery Details</Text>
-          <View style={styles.addressCard}>
-            <View style={styles.addressSection}>
-              <View style={styles.addressInfo}>
-                <Text style={styles.addressText}>
-                  {orderData.delivery.address}
-                  {'\n'}
-                  {orderData.delivery.addressDetails}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Billing */}
-        <View style={styles.billingSection}>
-          <Text style={styles.sectionTitle}>Billing</Text>
-          <View style={styles.billingCard}>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Amount</Text>
-              <Text style={styles.billValue}>₹{orderData.billing.amount}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Savings</Text>
-              <Text style={styles.savingsValue}>
-                ₹{orderData.billing.savings}
-              </Text>
-            </View>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Coupon Discount</Text>
-              <Text style={styles.savingsValue}>
-                ₹{orderData.billing.couponDiscount}
-              </Text>
-            </View>
-            <Text style={styles.couponCode}>
-              "{orderData.billing.couponCode}"
-            </Text>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Total</Text>
-              <Text style={styles.savingsValue}>
-                ₹{orderData.billing.total}
-              </Text>
-            </View>
-            <View style={styles.dottedLineContainer}>
-              {Array(20)
-                .fill(0)
-                .map((_, index) => (
-                  <View key={index} style={styles.dot} />
-                ))}
-            </View>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Delivery Charge</Text>
-              <Text style={styles.billValue}>
-                ₹{orderData.billing.deliveryCharge}
-              </Text>
-            </View>
-            <Text style={styles.gstNote}>(GST Included)</Text>
-            <View style={styles.dottedLineContainer}>
-              {Array(20)
-                .fill(0)
-                .map((_, index) => (
-                  <View key={index} style={styles.dot} />
-                ))}
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>TOTAL</Text>
-              <Text style={styles.totalValue}>₹{orderData.billing.total}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Cancel button */}
-        {orderDetails?.order_status === 0 && (
-          <View style={styles.actionButtonContainer}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setShowCancelModal(true)}>
-              <Text style={styles.cancelButtonText}>Cancel Order</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Review Section */}
-        {orderDetails?.order_status === 3 && (
-          <View style={styles.reviewSection}>
-            <Text style={styles.sectionTitle}>Rate Your Experience</Text>
-            <View style={styles.ratingContainer}>
-              {[1, 2, 3, 4, 5].map(star => (
-                <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                  <FontAwesome5
-                    name="star"
-                    solid={star <= rating}
-                    size={30}
-                    color={star <= rating ? '#FFD700' : '#E0E0E0'}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Write your review..."
-              multiline
-              numberOfLines={4}
-              value={comment}
-              onChangeText={setComment}
-            />
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleSubmitReview}>
-              <Text style={styles.submitButtonText}>Submit Review</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
-
-      <CustomModal
-        visible={showCancelModal}
-        title="Confirm Cancellation"
-        message="Are you sure you want to cancel this order?"
-        confirmText="Yes, Cancel"
-        cancelText="No, Keep Order"
-        onConfirm={handleCancelOrder}
-        onCancel={() => setShowCancelModal(false)}
-      />
-
-      <CustomModal
-        visible={showSuccessModal}
-        title="Thank You!"
-        message="Your review has been submitted successfully."
-        confirmText="OK"
-        cancelText=""
-        onConfirm={() => setShowSuccessModal(false)}
-        showCancel={false}
-      />
-
-      <CustomModal
-        visible={showRatingModal}
-        title="Rating Required"
-        message="Please select at least one star before submitting"
-        confirmText="OK"
-        cancelText=""
-        onConfirm={() => setShowRatingModal(false)}
-        showCancel={false}
-      />
+      <Text style={styles.couponDescription}>{item.coupon_description}</Text>
+      <Text style={styles.couponMeta}>
+        {item.coupon_percentage}% off • Max ₹{item.coupon_max_price_limit}
+      </Text>
+      {item.coupon_upto_price > 0 && (
+        <Text style={styles.couponMetaSmall}>
+          Minimum cart value: ₹{item.coupon_upto_price}
+        </Text>
+      )}
     </View>
   );
+
+  return (
+    <ScrollView style={styles.container}>
+      <SafeAreaView >
+        <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
+
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Available Offers</Text>
+        </View>
+
+        {/* Offers List */}
+        <View style={styles.couponsSection}>
+          {/* Refer & Earn Card — Always Visible */}
+          <LinearGradient
+            colors={['#a77be9', '#8655d2']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.referCard}
+          >
+            {/* Badge */}
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>🔥 Trending</Text>
+            </View>
+
+            {/* Content */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ReferAndEarnScreen')}
+              style={{ flex: 1 }}
+              activeOpacity={0.85}
+            >
+              <View style={styles.couponHeader}>
+                <MaterialCommunityIcons name="gift-outline" size={26} color="#fff" />
+                <Text style={styles.referTitle}>Refer & Earn</Text>
+              </View>
+              <Text style={styles.referDescription}>
+                Invite friends and earn rewards! Tap to view more.
+              </Text>
+              <Text style={styles.referMeta}>Share your referral code & get benefits</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+
+
+          {/* Rest of the offers logic */}
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#8655d2" />
+          ) : coupons.length === 0 ? (
+            <View style={styles.emptyCouponsContainer}>
+              <Icon name="local-offer" size={80} color="#999" />
+              <Text style={styles.emptyCouponsText}>No offers available</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={coupons}
+              renderItem={renderCoupon}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.couponList}
+            />
+          )}
+        </View>
+
+      </SafeAreaView>
+    </ScrollView>
+  );
 };
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F8F8',
   },
   header: {
-    backgroundColor: '#348338', // Changed from #065E2C
-    height: responsiveHeight(15),
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingBottom: responsiveHeight(3),
-    paddingLeft: responsiveWidth(5),
-  },
-  backButton: {
-    width: responsiveWidth(7),
-    marginBottom: responsiveHeight(2),
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  orderId: {
-    fontSize: 12,
-    color: '#fff',
-    opacity: 0.8,
-    marginTop: 4,
-  },
-  content: {
-    flex: 1,
-  },
-  mapContainer: {
-    height: responsiveHeight(30),
-    width: '100%',
-  },
-  map: {
-    flex: 1,
-  },
-  restaurantInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: responsiveWidth(5),
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    backgroundColor: '#8655d2',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
-  restaurantImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F0F0F0',
-  },
-  restaurantDetails: {
-    flex: 1,
-    marginLeft: responsiveWidth(3),
-  },
-  restaurantName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  orderTime: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  callButton: {
-    padding: responsiveWidth(2),
-  },
-  statusContainer: {
-    padding: responsiveWidth(5),
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
-    flex: 1,
-  },
-  estimatedTime: {
-    alignItems: 'center',
-  },
-  estimatedTimeValue: {
+  headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#348338', // Changed from #065E2C
+    color: '#FFF',
+    fontWeight: 'bold',
+    marginLeft: 16,
   },
-  estimatedTimeLabel: {
-    fontSize: 10,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 4,
+  couponsSection: {
+    paddingTop: 16,
+    paddingHorizontal: 8,
   },
-  agentContainer: {
-    padding: responsiveWidth(5),
+  couponCard: {
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 3,
   },
-  agentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: responsiveHeight(2),
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  callAgentButton: {
-    backgroundColor: '#348338', // Changed from #065E2C
-    padding: responsiveWidth(2),
-    borderRadius: 20,
-  },
-  agentInfo: {
+  couponHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  agentDetails: {
-    flex: 1,
-  },
-  agentName: {
+  couponName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#000',
+    fontWeight: 'bold',
+    color: '#8655d2',
+    marginLeft: 8,
   },
-  agentStatus: {
+  couponDescription: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+    color: '#444',
+    marginBottom: 4,
   },
-  cartSection: {
-    padding: responsiveWidth(5),
+  couponMeta: {
+    fontSize: 13,
+    color: '#555',
   },
-  cartItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: responsiveHeight(1),
-  },
-  itemDetails: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 16,
-    color: '#000',
-    fontWeight: '500',
-  },
-  itemPrice: {
-    fontSize: 14,
-    color: '#348338', // Changed from #065E2C
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  quantityInfo: {
-    alignItems: 'flex-end',
-  },
-  quantity: {
-    fontSize: 14,
-    color: '#666',
-  },
-  itemTotal: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginTop: 4,
-  },
-  deliveryDetails: {
-    padding: responsiveWidth(5),
-  },
-  addressCard: {
-    borderWidth: 1,
-    borderColor: '#348338', // Changed from #065E2C
-    borderRadius: 8,
-    padding: responsiveWidth(4),
-    marginTop: responsiveHeight(1),
-  },
-  addressSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: responsiveHeight(2),
-  },
-  addressInfo: {
-    flex: 1,
-    marginLeft: responsiveWidth(3),
-  },
-  addressType: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
-  },
-  addressText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-    lineHeight: 20,
-  },
-  contactSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  contactInfo: {
-    flex: 1,
-    marginLeft: responsiveWidth(3),
-  },
-  contactName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
-  },
-  contactPhone: {
-    fontSize: 14,
-    color: '#666',
+  couponMetaSmall: {
+    fontSize: 12,
+    color: '#777',
     marginTop: 2,
   },
-  billingSection: {
-    padding: responsiveWidth(5),
-  },
-  billingCard: {
-    borderWidth: 1,
-    borderColor: '#348338', // Changed from #065E2C
-    borderRadius: 8,
-    padding: responsiveWidth(4),
-    marginTop: responsiveHeight(1),
-  },
-  billRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: responsiveHeight(1),
-  },
-  billLabel: {
-    fontSize: 14,
-    color: '#525252',
-  },
-  billValue: {
-    fontSize: 14,
-    color: '#000',
-    fontWeight: '500',
-  },
-  savingsValue: {
-    fontSize: 14,
-    color: '#525252',
-    fontWeight: '500',
-  },
-  gstValue: {
-    fontSize: 14,
-    color: '#FFCB18',
-    fontWeight: '500',
-  },
-  couponCode: {
-    fontSize: 12,
-    color: '#348338', // Changed from #065E2C
-    marginLeft: responsiveWidth(2),
-    marginBottom: responsiveHeight(1),
-  },
-  gstNote: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: responsiveHeight(1),
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: responsiveHeight(1),
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  dottedLineContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: responsiveHeight(1),
-    width: responsiveWidth(80),
-    overflow: 'hidden',
-    alignSelf: 'center',
-  },
-  dot: {
-    width: 7,
-    height: 2,
-    backgroundColor: '#D8D8D8',
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  actionButtonContainer: {
-    marginVertical: 20,
-    paddingHorizontal: 20,
-  },
-  cancelButton: {
-    backgroundColor: '#E63B3B',
-    borderRadius: 8,
-    padding: 15,
+  emptyCouponsContainer: {
     alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  reviewSection: {
-    marginVertical: 20,
-    paddingHorizontal: 20,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
     justifyContent: 'center',
-    gap: 10,
-    marginVertical: 15,
+    marginTop: 50,
   },
-  commentInput: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  submitButton: {
-    backgroundColor: '#348338', // Changed from #065E2C
-    borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
-  },
-  submitButtonText: {
-    color: '#FFF',
-    fontWeight: '600',
+  emptyCouponsText: {
     fontSize: 16,
+    color: '#999',
+    marginTop: 12,
+    fontWeight: '600',
   },
-  cancelledStatus: {
-    backgroundColor: '#FFE5E5',
-    borderColor: '#FF0000',
+  referCard: {
+    borderRadius: 12,
+    marginHorizontal: 8,
+    marginBottom: 16,
+    padding: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
-  rejectedStatus: {
-    backgroundColor: '#FFF3CD',
-    borderColor: '#FFC107',
+  referTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 8,
   },
+  referDescription: {
+    fontSize: 14,
+    color: '#f5f5f5',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  referMeta: {
+    fontSize: 13,
+    color: '#ddd',
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#ffdd55',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+  },
+  couponCard: {
+    backgroundColor: '#F3EDFB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  
+  couponName: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginLeft: 8,
+    color: '#8655d2',
+  },
+  
+  couponDescription: {
+    fontSize: 14,
+    color: '#444',
+    marginTop: 4,
+  },
+  
+  couponMeta: {
+    fontSize: 13,
+    color: '#555',
+    marginTop: 4,
+  },
+  
+  couponMetaSmall: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 2,
+  },
+  
+  referCard: {
+    borderRadius: 12,
+    marginHorizontal: 8,
+    marginBottom: 16,
+    padding: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  
+  badge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  
+  referTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 8,
+  },
+  
+  referDescription: {
+    fontSize: 14,
+    color: '#f0f0f0',
+    marginTop: 8,
+  },
+  
+  referMeta: {
+    fontSize: 13,
+    color: '#ddd',
+  },
+  
 });
 
-export default OrderDetailsScreen;
+export default OffersScreen
+
+

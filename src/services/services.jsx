@@ -71,7 +71,6 @@ export const getItems = async (subcategory_id, customerId,filter_one) => {
     }
     console.log("payload 88888888", payload)
     const response = await api.post('/public_app/getitems', payload);
-    console.log("final response", response.data.data)
     if (response.data.status === 200) {
       return response.data; // Return the full response
     } else {

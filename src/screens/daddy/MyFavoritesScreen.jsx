@@ -29,14 +29,13 @@ const MyFavoritesScreen = () => {
   const [loading, setLoading] = useState(true)
   const [updatingFavoriteId, setUpdatingFavoriteId] = useState(null);
 
-
   const loadFavorites = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getWishlist(customerId);
       if (res.status === 200 && Array.isArray(res.data)) {
         const mapped = res.data.map(item => ({
-          id: item.item_id,
+          id: item.id,
           name: item.item_name,
           image: item.item_image,
           category: item.category_id, // or pass category name if available

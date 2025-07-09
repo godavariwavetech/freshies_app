@@ -37,6 +37,8 @@ import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import UserProfileScreen from '../user/ProfileScreen';
 
 
+
+
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
@@ -56,9 +58,7 @@ const ProfileScreen = () => {
   }, []);
   // Favorites state
   const [favorites, setFavorites] = useState([]);
-
   useFocusEffect(useCallback(() => {
-
   }, []))
 
   // Load favorites on component mount
@@ -140,7 +140,6 @@ const ProfileScreen = () => {
     }
   };
 
-
   return (
     <ScrollView
       style={styles.container}
@@ -184,12 +183,8 @@ const ProfileScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
       >
-        {/* <View style={styles.ordersHeader}>
-          <Text style={styles.ordersTitle}>Your Orders</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('PreviousOrdersScreen')}>
-            <Text style={styles.viewAll}>View All</Text>
-          </TouchableOpacity>
-        </View> */}
+
+
         <View style={styles.menuOptions}>
           {/* Account */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('UserProfileScreen')}>
@@ -205,6 +200,17 @@ const ProfileScreen = () => {
             <View style={styles.menuItemLeft}>
               <Icon name="favorite" size={24} color="#8655d2" />
               <Text style={styles.menuText}>My Favorites</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItemMain}
+            onPress={() => navigation.navigate('PreviousOrdersScreen')}
+          >
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="clipboard-list-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Your Orders</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
@@ -226,6 +232,17 @@ const ProfileScreen = () => {
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="gift-outline" size={24} color="#8655d2" />
               <Text style={styles.menuText}>Refer & Earn</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItemMain}
+            onPress={() => navigation.navigate('OffersScreen')}
+          >
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="tag-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Offers</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
@@ -272,14 +289,7 @@ const ProfileScreen = () => {
           )}
 
 
-          {/* Check for Updates */}
-          {/* <TouchableOpacity style={styles.menuItemMain} onPress={handleCheckForUpdate}>
-            <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="update" size={24} color="#8655d2" />
-              <Text style={styles.menuText}>Check for Updates</Text>
-            </View>
-            <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity> */}
+
 
           {/* About Us */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/about')}>
@@ -308,6 +318,8 @@ const ProfileScreen = () => {
 
 
       </ScrollView>
+
+
       <CustomModal
         visible={updateModalVisible}
         title={showUpdateModal ? 'Update Available' : 'App Updated'}
