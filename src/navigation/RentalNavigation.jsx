@@ -49,6 +49,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import SubscriptionDetailsScreen from '../screens/SubscriptionDetailsScreen';
 import UserProfileScreen from '../screens/user/ProfileScreen';
 import ReferAndEarnScreen from '../screens/ReferAndEarnScreen';
+import FAQScreen from '../screens/FAQScreen';
 
 const Stack = createStackNavigator();
 
@@ -109,7 +110,8 @@ export default function RentalNavigation() {
       <Stack.Screen name='ViewTrack' component={ViewTrack} />
       <Stack.Screen name='MyFavoritesScreen' component={MyFavoritesScreen}/>
       <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
-      <Stack.Screen name="ReferAndEarnScreen" component={ReferAndEarnScreen} />    
+      <Stack.Screen name="ReferAndEarnScreen" component={ReferAndEarnScreen} />
+      <Stack.Screen name="FAQScreen" component={FAQScreen} />  
       <Stack.Screen
         name="CategoriesScreen"
         component={CategoriesScreen}

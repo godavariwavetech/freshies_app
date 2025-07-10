@@ -176,7 +176,6 @@ const ApplyCouponScreen = ({ navigation, route }) => {
   );
 
   return (
-    <ScrollView>
       <SafeAreaView style={styles.container}>
         <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
         {/* Header */}
@@ -252,7 +251,6 @@ const ApplyCouponScreen = ({ navigation, route }) => {
           )}
         </View>
       </SafeAreaView>
-    </ScrollView>
   );
 };
 

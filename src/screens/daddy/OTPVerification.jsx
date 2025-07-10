@@ -28,6 +28,10 @@ import { actionLogin, addCustomer, setCustormarId, setMobile, setReferalCode, se
 import Geolocation from '@react-native-community/geolocation';
 import { checkAddressExistence } from '../../redux/reducers/daddy';
 import { customerLogin } from '../../services/services';
+import { useColorScheme } from 'react-native';
+
+
+
 
 
 
@@ -37,6 +41,8 @@ export default function OTPVerification({ navigation, route }) {
   console.log(route.params?.user_ind, route.params)
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.95)).current;
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
   const dispatch = useDispatch();
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -104,7 +110,7 @@ export default function OTPVerification({ navigation, route }) {
             user_ind: 1,
             referral_code: referralCode.trim() || '',
           });
-    
+
           if (loginResponse.status === 200) {
             console.log("loginresponse", loginResponse)
             dispatch(setCustormarId(loginResponse.data.customer_id))
@@ -246,9 +252,17 @@ export default function OTPVerification({ navigation, route }) {
               <TextInput
                 key={index}
                 ref={el => (inputRefs.current[index] = el)}
-                style={styles.otpBox}
+                style={[
+                  styles.otpBox,
+                  {
+                    color: isDarkMode ? '#fff' : '#000',
+                    borderColor: isDarkMode ? '#555' : '#ccc',
+                    backgroundColor: isDarkMode ? '#222' : '#fff',
+                  },
+                ]}
                 keyboardType="numeric"
                 maxLength={1}
+                placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
                 value={digit}
                 onChangeText={value => handleOTPChange(value, index)}
                 onKeyPress={({ nativeEvent }) => {
@@ -314,31 +328,38 @@ export default function OTPVerification({ navigation, route }) {
 
             <TextInput
               placeholder="Enter Username"
+              placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
               value={newUsername}
               onChangeText={setNewUsername}
               style={{
                 width: '100%',
                 borderWidth: 1,
-                borderColor: '#ccc',
+                borderColor: isDarkMode ? '#555' : '#ccc',
                 borderRadius: 8,
                 padding: 12,
                 marginBottom: 12,
+                color: isDarkMode ? '#fff' : '#000',
+                backgroundColor: isDarkMode ? '#222' : '#fff',
               }}
             />
 
             <TextInput
               placeholder="Referral Code (Optional)"
+              placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
               value={referralCode}
               onChangeText={setReferralCode}
               style={{
                 width: '100%',
                 borderWidth: 1,
-                borderColor: formError.includes("Referral") ? 'red' : '#ccc',
+                borderColor: formError.includes("Referral") ? 'red' : (isDarkMode ? '#555' : '#ccc'),
                 borderRadius: 8,
                 padding: 12,
                 marginBottom: 16,
+                color: isDarkMode ? '#fff' : '#000',
+                backgroundColor: isDarkMode ? '#222' : '#fff',
               }}
             />
+
 
             {formError ? (
               <Text style={{ color: 'red', marginBottom: 10 }}>{formError}</Text>

@@ -195,7 +195,9 @@ export const placeOrder = createAsyncThunk(
     { orderDetails },
     { getState, rejectWithValue, fulfillWithValue }
   ) => {
+    console.log("response123456")
     const response = await api.post("/public_app/orderplaced", orderDetails)
+   
     if (response) {
       if (response.data) {
         return fulfillWithValue(response.data);

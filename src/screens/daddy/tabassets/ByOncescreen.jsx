@@ -98,14 +98,13 @@ const BasketScreen = ({ navigation, route }) => {
   const walletData = useSelector(state => state.wallet);
 
 
-  const gstCalculation = () => {
+  const gstCalculation = (subtotal) => {
     const gstAmmount =
-      calculateTotalPrice() *
+      subtotal *
       (Number(applicationCharges?.gst_percentage) / 100);
     return gstAmmount;
   };
 
-  // Calculate total price
   const calculateTotalPrice = () => {
     const subtotal = cartItems.reduce(
       (total, item) =>
@@ -113,16 +112,6 @@ const BasketScreen = ({ navigation, route }) => {
         Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
       0,
     );
-    // Apply coupon if available
-    if (coupon) {
-      if (coupon.type === 'percentage') {
-        // Percentage discount
-        return subtotal - subtotal * (coupon.discount / 100);
-      } else if (coupon.type === 'flat') {
-        // Flat discount
-        return Math.max(0, subtotal - coupon.discount);
-      }
-    }
     return subtotal;
   };
 
@@ -139,8 +128,8 @@ const BasketScreen = ({ navigation, route }) => {
         otherSubtotal += itemTotal;
       }
     });
-    // console.log('muttonSubtotal', muttonSubtotal);
-    // console.log('otherSubtotal', otherSubtotal);
+    console.log('muttonSubtotal', muttonSubtotal);
+    console.log('otherSubtotal', otherSubtotal);
     return { muttonSubtotal, otherSubtotal };
   };
 
@@ -152,31 +141,24 @@ const BasketScreen = ({ navigation, route }) => {
   const userWalletAmount = Number(walletData?.user_balance_amount ?? 0);
   const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
   const handlingCharge = Number(applicationCharges?.handling_charges || 0);
-  const gst = gstCalculation();
-
   let subtotal = muttonSubtotal + otherSubtotal;
-
   // Apply coupon
   if (coupon) {
     console.log("aws", coupon)
     if (coupon.type === 'percentage') {
-      subtotal -= subtotal * (coupon.discount / 100);
+      subtotal -= subtotal * (coupon.coupon_percentage / 100);
     } else {
       subtotal -= coupon.discount;
     }
   }
-
+  const gst = gstCalculation(subtotal);
   const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
-
+  console.log("totalBeforeWallets", totalBeforeWallets)
   const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
+  const userWalletUsed = useUserWallet ? Math.min(totalBeforeWallets - abhiWalletUsed, userWalletAmount) : 0;
+  const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
 
-  const userWalletUsed = useUserWallet
-    ? Math.min(totalBeforeWallets - abhiWalletUsed, userWalletAmount)
-    : 0;
 
-  // console.log('walletAmount', walletData);
-  // console.log(userWalletAmount, abhiWalletAmount)
-  // console.log('cartItems', cartItems);
 
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
@@ -463,7 +445,7 @@ const BasketScreen = ({ navigation, route }) => {
   const handlePlaceOrder = async () => {
     try {
       setIsProcessingPayment(true);
-
+      
       const mappedItems = cartItems.map(item => {
         // Determine which price values to use
         const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
@@ -511,7 +493,7 @@ const BasketScreen = ({ navigation, route }) => {
         return acc + (savingPerItem > 0 ? savingPerItem * quantity : 0);
       }, 0);
 
-
+      
       let payload = {
         customer_id: customerId,
         customer_name: '',
@@ -527,7 +509,7 @@ const BasketScreen = ({ navigation, route }) => {
           ).toFixed(2) || 0,
         total_saving_amount: totalSavingAmount.toFixed(2),
         coupon_amount:
-          (calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || '',
+          ( calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || '',
         delivery_charges: applicationCharges.delivery_fixed_charges || 0,
         grand_total: (
           calculateTotalPrice() +
@@ -560,17 +542,24 @@ const BasketScreen = ({ navigation, route }) => {
         delivery_instruction: deliveryInstructions,
         abhicash_amount: abhiWalletUsed,
         userwallet_amount: userWalletUsed,
-        payment_amount:  calculateFinalPrice().toFixed(2),
+        payment_amount: (
+          calculateTotalPrice() +
+          Number(applicationCharges?.delivery_fixed_charges || 0) +
+          Number(applicationCharges?.handling_charges || 0) +
+          gstCalculation() -
+          (couponAmount || 0)
+        ).toFixed(2),
         sub_order_array: mappedItems,
       };
+     
       console.log('mappeditems', mappedItems);
-      console.log('----------------', payload);
-      const finalPrice = parseFloat(calculateFinalPrice());
-      console.log("final price 00000", finalPrice)
+      console.log('payload', payload);
+      const finalPrice = parseFloat(totalAfterWallets);
+   
       if ((finalPrice === 0) || selectedPaymentMethod === 'COD') {
         const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
+        console.log("waitingggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",responseCod)
         if (!responseCod.payload) return;
-        console.log("responseeeeeeeeeeeeeeeeeeeeeeeee", responseCod)
         const orderDetails = {
           orderId: responseCod?.payload?.id || '',
           totalAmount: calculateTotalPrice(),
@@ -607,7 +596,6 @@ const BasketScreen = ({ navigation, route }) => {
       payload.order_status = 7;
       const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
       if (!pacedResponse.payload) return;
-
       // Prepare order details only once
       const orderDetails = {
         orderId: pacedResponse.payload.id,
@@ -617,8 +605,8 @@ const BasketScreen = ({ navigation, route }) => {
             calculateTotalPrice() +
             Number(applicationCharges?.delivery_fixed_charges || 0) +
             Number(applicationCharges?.handling_charges || 0) +
-            gstCalculation()
-          ).toFixed(2) - (couponAmount || 0),
+            gstCalculation()- (couponAmount || 0)
+          ).toFixed(2) ,
         couponAmount: couponAmount || 0,
         deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
         totalSavings: totalSavingAmount,
@@ -701,37 +689,37 @@ const BasketScreen = ({ navigation, route }) => {
     }
   };
 
-  const calculateFinalPrice = () => {
-    const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
-    const handlingCharge = Number(applicationCharges?.handling_charges || 0);
-    const gst = gstCalculation();
+  // const calculateFinalPrice = () => {
+  //   const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
+  //   const handlingCharge = Number(applicationCharges?.handling_charges || 0);
+  //   const gst = gstCalculation();
 
-    let subtotal = muttonSubtotal + otherSubtotal;
-    console.log("before coupon+++++++++++++++", subtotal)
-    // Apply coupon on subtotal
-    if (coupon) {
-      if (coupon.type === 'percentage') {
-        subtotal -= subtotal * (coupon.discount / 100);
-      } else {
-        subtotal -= coupon.discount;
-      }
-    }
-    console.log("coupon", coupon)
-    console.log("after coupon+++++++++++++++", subtotal)
-    // Full total (after coupon)
-    const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
+  //   let subtotal = muttonSubtotal + otherSubtotal;
+  //   console.log("before coupon+++++++++++++++", subtotal)
+  //   // Apply coupon on subtotal
+  //   if (coupon) {
+  //     if (coupon.type === 'percentage') {
+  //       subtotal -= subtotal * (coupon.discount / 100);
+  //     } else {
+  //       subtotal -= coupon.discount;
+  //     }
+  //   }
+  //   console.log("coupon", coupon)
+  //   console.log("after coupon+++++++++++++++", subtotal)
+  //   // Full total (after coupon)
+  //   const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
 
-    // Abhi Wallet can only be used for mutton subtotal (no change needed)
-    const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
+  //   // Abhi Wallet can only be used for mutton subtotal (no change needed)
+  //   const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
 
-    // User Wallet can apply to full remaining amount
-    const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
-    const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
-   console.log(totalBeforeWallets,abhiWalletUsed,userWalletUsed)
-    const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
+  //   // User Wallet can apply to full remaining amount
+  //   const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
+  //   const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
+  //   console.log(totalBeforeWallets, abhiWalletUsed, userWalletUsed)
+  //   const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
 
-    return Math.max(0, totalAfterWallets);
-  };
+  //   return Math.max(0, totalAfterWallets);
+  // };
 
 
   if (isLoading) {
@@ -747,7 +735,7 @@ const BasketScreen = ({ navigation, route }) => {
     );
   }
 
-  const couponAmount = coupon?.discount ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2) : '0.00';
+  const couponAmount = coupon?.discount ? (( muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(2) : '0.00';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -755,7 +743,7 @@ const BasketScreen = ({ navigation, route }) => {
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
       {/* Header */}
       <View style={[styles.header, { backgroundColor }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.navigate("BottomNavigation")}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
@@ -841,17 +829,12 @@ const BasketScreen = ({ navigation, route }) => {
           </View>
 
           {/* Apply Coupons Section */}
-          <TouchableOpacity
+          {totalAfterWallets !== 0 &&  <TouchableOpacity
             style={styles.couponSection}
             onPress={() =>
               navigation.navigate('ApplyCuponScreen', {
                 cartItems,
-                totalAmount: (
-                  calculateTotalPrice() +
-                  Number(applicationCharges?.delivery_fixed_charges) +
-                  Number(applicationCharges?.handling_charges) +
-                  gstCalculation()
-                ).toFixed(2),
+                totalAmount: totalBeforeWallets.toFixed(2),
                 status: route.params?.status,
               })
             }>
@@ -861,11 +844,11 @@ const BasketScreen = ({ navigation, route }) => {
 
             {coupon ? (
               <View style={styles.couponAppliedContainer}>
-                <View style={{ width: "85%"}}>
+                <View style={{ width: "85%" }}>
                   <Text style={styles.couponText}>
                     Saved ₹
                     {coupon.type === 'percentage'
-                      ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(2)
+                      ? (( muttonSubtotal+ otherSubtotal) * (coupon.discount / 100)).toFixed(2)
                       : coupon.discount.toFixed(2)}
                   </Text>
                   <Text style={[styles.couponCodeText, { color: backgroundColor, marginLeft: 10 }]}>
@@ -885,10 +868,8 @@ const BasketScreen = ({ navigation, route }) => {
                 <Icon name="chevron-right" size={24} color="#000" />
               </>
             )}
-          </TouchableOpacity>
-
-
-
+          </TouchableOpacity>}
+  
           {(abhiWalletAmount > 0 || userWalletAmount > 0) && (
             <View style={styles.walletSection}>
               {abhiWalletAmount > 0 && muttonSubtotal > 0 && (
@@ -1008,7 +989,7 @@ const BasketScreen = ({ navigation, route }) => {
                 <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
                   -₹
                   {coupon.type === 'percentage'
-                    ? (calculateTotalPrice() * (coupon.discount / 100)).toFixed(
+                    ? (( muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(
                       2,
                     )
                     : coupon.discount}
@@ -1040,12 +1021,12 @@ const BasketScreen = ({ navigation, route }) => {
             )}
 
             {/* Final To Pay */}
-            <View style={styles.summaryRow}>
+            <View style={[styles.summaryRow, { borderTopWidth: 1, borderColor: "#ddd", paddingTop: 4, borderStyle: 'dashed' }]}>
               <Text style={[styles.summaryLabel, styles.totalLabel]}>
                 To Pay
               </Text>
               <Text style={[styles.summaryValue, styles.totalValue]}>
-                ₹{calculateFinalPrice().toFixed(2)}
+                ₹{totalAfterWallets.toFixed(2)}
               </Text>
             </View>
           </View>

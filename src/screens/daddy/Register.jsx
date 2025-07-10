@@ -27,6 +27,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getUserLoginOTP } from '../../services/services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import CustomModal from '../components/CustomModal';
+import { useColorScheme } from 'react-native';
 
 
 
@@ -43,6 +44,8 @@ export default function Register({ navigation, route }) {
   const loading = useSelector(state => state.Auth.loading);
   const [phoneSuggestions, setPhoneSuggestions] = useState([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export default function Register({ navigation, route }) {
     loadPhoneHistory();
     dispatch(setInitial());
   }, []);
-  
+
 
   const showErrorModal = (title, message) => {
     setModalContent({ title, message });
@@ -99,10 +102,10 @@ export default function Register({ navigation, route }) {
             phoneNumber: phoneNumber,
             otp: response.loginotp,
             isFromCart: route.params?.isFromCart || null,
-            user_ind : response.user_ind,
+            user_ind: response.user_ind,
             message: response.message
             // username: username.trim()
-          });          
+          });
         } else {
           Alert.alert('Error', 'Failed to generate OTP');
         }
@@ -167,47 +170,47 @@ export default function Register({ navigation, route }) {
             <TextInput
               style={styles.input}
               placeholder="Enter Phone Number"
-              placeholderTextColor={'#3D3D3D'}
+              placeholderTextColor={isDarkMode ? '#CCCCCC' : '#3D3D3D'}
               keyboardType="phone-pad"
               value={phoneNumber}
               onChangeText={(text) => {
                 const numericText = text.replace(/[^0-9]/g, '');
                 setPhoneNumber(numericText);
-              
+
                 const filtered = phoneSuggestions.filter(item =>
                   item.startsWith(numericText)
                 );
                 setFilteredSuggestions(filtered);
-              }}              
+              }}
               maxLength={10}
             />
 
-{filteredSuggestions.length > 0 && (
-  <View style={{
-    backgroundColor: '#fff',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginTop: 5,
-    maxHeight: 150,
-  }}>
-    {filteredSuggestions.map((suggestion, index) => (
-      <TouchableOpacity
-        key={index}
-        onPress={() => {
-          setPhoneNumber(suggestion);
-          setFilteredSuggestions([]); // hide dropdown
-        }}
-        style={{
-          padding: 10,
-          borderBottomColor: '#eee',
-          borderBottomWidth: index !== filteredSuggestions.length - 1 ? 1 : 0,
-        }}>
-        <Text style={{ color: '#000' }}>{suggestion}</Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-)}
+            {filteredSuggestions.length > 0 && (
+              <View style={{
+                backgroundColor: '#fff',
+                borderColor: '#ccc',
+                borderWidth: 1,
+                borderRadius: 8,
+                marginTop: 5,
+                maxHeight: 150,
+              }}>
+                {filteredSuggestions.map((suggestion, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      setPhoneNumber(suggestion);
+                      setFilteredSuggestions([]); // hide dropdown
+                    }}
+                    style={{
+                      padding: 10,
+                      borderBottomColor: '#eee',
+                      borderBottomWidth: index !== filteredSuggestions.length - 1 ? 1 : 0,
+                    }}>
+                    <Text style={{ color: '#000' }}>{suggestion}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
           </View>
           <TouchableOpacity

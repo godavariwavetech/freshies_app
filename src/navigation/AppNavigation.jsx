@@ -18,7 +18,6 @@ const AuthNavigation = () => {
       <Stack.Screen name="Register" component={Register} />
       <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} />
       <Stack.Screen name="OTPVerification" component={OTPVerification} />
-
     </Stack.Navigator>
   );
 };

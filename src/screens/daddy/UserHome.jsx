@@ -21,6 +21,10 @@ import PromoCard from '../../components/promocards';
 import Skeleton from './Skeleton';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import { useDispatch, useSelector } from 'react-redux';
+import { useColorScheme } from 'react-native';
+
+
+
 
 // Placeholder image URI
 const placeholderImage = 'https://via.placeholder.com/100';
@@ -36,6 +40,9 @@ function UserHome() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
 
 
   // Fetch subcategories and derive categories
@@ -109,6 +116,7 @@ function UserHome() {
     try {
       setRefreshing(true);
       // Re-fetch or reload your data here
+      setRefreshKey(prev => prev + 1); // Trigger refetch
       await loadSubCategories(); // Replace with your actual fetch logic
     } catch (err) {
       console.error('Refresh error:', err);
@@ -175,15 +183,23 @@ function UserHome() {
             style={styles.searchIcon}
           />
           <TextInput
-            placeholderTextColor="#666666"
             placeholder="Search for meat, groceries & pickles"
-            style={styles.searchInput}
+            placeholderTextColor={isDarkMode ? '#aaaaaa' : '#666666'}
+            style={[
+              styles.searchInput,
+              {
+                // color: isDarkMode ? '#ffffff' : '#000000',
+                // backgroundColor: isDarkMode ? '#1c1c1e' : '#ffffff',
+                borderColor: isDarkMode ? '#444' : '#ccc', // if border is used
+              },
+            ]}
             value={searchQuery}
             onChangeText={handleSearch}
             editable={true}
             onFocus={() => setSearchQuery('')}
             accessibilityLabel="Search products"
           />
+
         </TouchableOpacity>
       </View>
       <ScrollView
@@ -194,7 +210,7 @@ function UserHome() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <PromoCard />
+        <PromoCard refreshKey={refreshKey} />
         {/* Dynamically render sections for each category */}
         {categories.length === 0 && !isLoading && !error ? (
           <Text style={styles.errorText}>No categories available</Text>
@@ -231,7 +247,7 @@ function UserHome() {
                           />
                         </View>
 
-                        <View style={{ minHeight: 20, justifyContent: 'center'}}>
+                        <View style={{ minHeight: 20, justifyContent: 'center' }}>
                           <Text style={styles.categoryGridTextSmall} numberOfLines={2} ellipsizeMode="tail">
                             {subcategory.sub_category_name}
                           </Text>

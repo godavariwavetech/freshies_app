@@ -330,7 +330,7 @@ const { width } = Dimensions.get('window');
 const PADDING_HORIZONTAL = 12; // Left and right padding
 const CARD_WIDTH = width - 2 * PADDING_HORIZONTAL; // Card width matches screen width minus padding
 
-const PromoCard = () => {
+const PromoCard = ({refreshKey}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [banners, setBanners] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -354,7 +354,7 @@ const PromoCard = () => {
       }
     };
     loadBanners();
-  }, []);
+  }, [refreshKey]);
 
   // Auto-scroll logic
   useEffect(() => {
