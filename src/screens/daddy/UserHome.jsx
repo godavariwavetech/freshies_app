@@ -22,6 +22,8 @@ import Skeleton from './Skeleton';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import { useDispatch, useSelector } from 'react-redux';
 import { useColorScheme } from 'react-native';
+import SearchBarWithScrollPlaceholder from '../../components/Searchbar';
+
 
 
 
@@ -43,12 +45,16 @@ function UserHome() {
   const [refreshKey, setRefreshKey] = useState(0);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
-
-
+  const placeholderOptions = ['meat', 'groceries', 'pickles'];
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const {address} = useSelector(state => state.Auth);
+    
   // Fetch subcategories and derive categories
   useEffect(() => {
     loadSubCategories();
   }, []);
+
+
 
   const loadSubCategories = async () => {
     try {
@@ -92,20 +98,11 @@ function UserHome() {
     type: sub.category_name || 'Unknown',
   }));
 
-  const handleSearch = (text) => {
-    setSearchQuery(text);
-    const results = allProducts.filter((product) =>
-      product.category_name.toLowerCase().includes(text.toLowerCase())
-    );
-    setSearchResults(results);
-    // navigation.navigate('CategoriesScreen', {
-    //   searchResults: results,
-    //   searchQuery: text,
-    // });
-  };
+
 
   const handleSubCategories = async (subcategory) => {
     navigation.navigate('GroceriesScreen', {
+      item_id: "",
       subcategory_id: parseInt(subcategory.id),
       subcategory_name: subcategory.category_name,
       category_id: subcategory.category_id,
@@ -143,7 +140,7 @@ function UserHome() {
             <View>
               <Text style={styles.locationTitle}>Delivery to:</Text>
               <Text style={styles.locationAddress} numberOfLines={1}>
-                Select your delivery location
+                {address || "Select your delivery location"} 
               </Text>
             </View>
           </TouchableOpacity>
@@ -177,30 +174,13 @@ function UserHome() {
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity style={styles.searchContainer}>
-          <Image
-            source={require('./tabassets/searchhome.png')}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            placeholder="Search for meat, groceries & pickles"
-            placeholderTextColor={isDarkMode ? '#aaaaaa' : '#666666'}
-            style={[
-              styles.searchInput,
-              {
-                // color: isDarkMode ? '#ffffff' : '#000000',
-                // backgroundColor: isDarkMode ? '#1c1c1e' : '#ffffff',
-                borderColor: isDarkMode ? '#444' : '#ccc', // if border is used
-              },
-            ]}
-            value={searchQuery}
-            onChangeText={handleSearch}
-            editable={true}
-            onFocus={() => setSearchQuery('')}
-            accessibilityLabel="Search products"
-          />
+        <SearchBarWithScrollPlaceholder
+          navigation={navigation}
+          isDarkMode={isDarkMode}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
 
-        </TouchableOpacity>
       </View>
       <ScrollView
         showsVerticalScrollIndicator={false}

@@ -33,8 +33,10 @@ import {
 } from '../../../services/services';
 import RazorpayCheckout from 'react-native-razorpay';
 import {
+  addToCart,
   clearCart,
   setDeliveryInstructions,
+  removeFromCart
 } from '../../../redux/reducers/cartReducer';
 import { haversineDistance } from '../distanceCalculator';
 import {
@@ -44,7 +46,7 @@ import {
   setShopAddress,
 } from '../../../redux/reducers/auth';
 import { setWalletData } from '../../../redux/reducers/walletSlice';
-
+// import {addToCart} from "../../../redux/reducers/cartReducer"
 
 const paymentMethods = ['Pay Online', 'COD'];
 const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
@@ -96,7 +98,7 @@ const BasketScreen = ({ navigation, route }) => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const walletData = useSelector(state => state.wallet);
-
+  
 
   const gstCalculation = (subtotal) => {
     const gstAmmount =
@@ -270,10 +272,10 @@ const BasketScreen = ({ navigation, route }) => {
       try {
         // Save cart items to AsyncStorage
         await AsyncStorage.setItem('cartItems', JSON.stringify(cartItems));
-        await AsyncStorage.setItem(
-          'persistentCartItems',
-          JSON.stringify(cartItems),
-        );
+        // await AsyncStorage.setItem(
+        //   'persistentCartItems',
+        //   JSON.stringify(cartItems),
+        // );
       } catch (error) {
         console.error('Error saving cart items:', error);
       }
@@ -306,9 +308,12 @@ const BasketScreen = ({ navigation, route }) => {
     setCartItems(updatedCartItems);
   };
 
-  const handleDelete = id => {
+  const handleDelete = async (id,quantityType) => {
+    console.log('handleDelete called with:', id, quantityType);
     const updatedCartItems = cartItems.filter(item => item.id !== id);
+    dispatch(removeFromCart({ id, quantityType }));
     setCartItems(updatedCartItems);
+    
   };
 
   const handleClearCart = async () => {
@@ -382,7 +387,7 @@ const BasketScreen = ({ navigation, route }) => {
                 {
                   text: 'Remove',
                   style: 'destructive',
-                  onPress: () => handleDelete(item.id),
+                  onPress: () => handleDelete(item.id,item.variant?.quantity_type || item?.quantity_type || item.weight),
                 },
               ],
             );
@@ -413,7 +418,7 @@ const BasketScreen = ({ navigation, route }) => {
               {
                 text: 'Remove',
                 style: 'destructive',
-                onPress: () => handleDelete(item.id),
+                onPress: () => handleDelete(item.id,item.variant?.quantity_type || item?.quantity_type || item.weight),
               },
             ],
           );

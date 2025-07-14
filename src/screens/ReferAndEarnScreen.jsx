@@ -46,13 +46,13 @@ const ReferAndEarnScreen = ({ navigation }) => {
 
   const handleShare = async () => {
     try {
-      await Share.share({
-        message: `Hey! Use my referral code ${referralCode} to sign up on Abhi24 and earn exciting rewards!`,
-      });
+      const message = `Hey! Use my referral code ${referralCode} to sign up on Abhi24 and earn exciting rewards!\nDownload the app here: https://play.google.com/store/apps/details?id=com.Abhi24&hl=en`;
+      await Share.share({ message });
     } catch (error) {
       console.error('Error sharing referral:', error);
     }
   };
+  
 
   return (
     <View style={styles.container}>

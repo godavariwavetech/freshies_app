@@ -50,6 +50,8 @@ import SubscriptionDetailsScreen from '../screens/SubscriptionDetailsScreen';
 import UserProfileScreen from '../screens/user/ProfileScreen';
 import ReferAndEarnScreen from '../screens/ReferAndEarnScreen';
 import FAQScreen from '../screens/FAQScreen';
+import GlobalSearchScreen from '../screens/GlobalSearchScreen';
+import QualityFAQS from '../screens/QualityFaqs';
 
 const Stack = createStackNavigator();
 
@@ -69,6 +71,7 @@ export default function RentalNavigation() {
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName='BottomNavigation'>
       <Stack.Screen name='BottomNavigation' component={BottomNavigation} />
       <Stack.Screen name='RestaurantScreen' component={RestaurantScreen} />
+      <Stack.Screen name="GlobalSearchScreen" component={GlobalSearchScreen} />
       <Stack.Screen name='UserProfileScreen' component={UserProfileScreen} />
       <Stack.Screen name='CategorieItems' component={CategorieItems} />
       <Stack.Screen name='AddressList' component={AddressListScreen} />
@@ -112,6 +115,7 @@ export default function RentalNavigation() {
       <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
       <Stack.Screen name="ReferAndEarnScreen" component={ReferAndEarnScreen} />
       <Stack.Screen name="FAQScreen" component={FAQScreen} />  
+      <Stack.Screen name="QualityFAQS" component={QualityFAQS} />      
       <Stack.Screen
         name="CategoriesScreen"
         component={CategoriesScreen}

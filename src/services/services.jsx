@@ -56,10 +56,12 @@ export const getBanners = async () => {
 };
 
 // API call to fetch items by subcategory and category
-export const getItems = async (subcategory_id, customerId,filter_one) => {
+export const getItems = async (subcategory_id, customerId,filter_one,item_id) => {
   try {
+    console.log(">>>>>>>>>>>>>>>>>>", item_id)
     let payload = {
       customer_id: customerId,
+      item_id: item_id
     };
 
     if (!filter_one) {
@@ -488,6 +490,25 @@ export const updateUserProfile = async (payload) => {
     console.log("rees", error.message)
     console.error('❌ Update profile error:', error);
     throw error;
+  }
+};
+
+export const fetchSearchResults = async (searchTerm) => {
+  if (!searchTerm?.trim()) return [];
+
+  try {
+    const response = await api.post('/public_app/searchallitems', {
+      searchterm: searchTerm,
+    });
+
+    if (response?.data?.status === 200) {
+      return response.data.data;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error('Search error:', error);
+    return [];
   }
 };
 

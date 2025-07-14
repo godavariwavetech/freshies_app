@@ -42,8 +42,9 @@ const weightOptions = [
 
 export default function GroceriesScreen({ navigation, route }) {
   const dispatch = useDispatch();
-  const { status = 0, subcategory_id, category_id, subcategory_name, filter_one } = route.params || {};
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id);
+  const { status = 0, subcategory_id, category_id, subcategory_name, filter_one, item_id, subtotal_category_id } = route.params || {};
+  console.log("itemID", item_id)
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id || "");
   const [subtotalcategories, setSubtotalcategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,16 +140,17 @@ export default function GroceriesScreen({ navigation, route }) {
 
 
   const fetchItems = async () => {
-    if (!selectedSubcategoryId || !category_id) return;
+
     try {
       setIsLoading(true);
       setError(null);
-      const response = await getItems(selectedSubcategoryId, customerId, filter_one);
+      const response = await getItems(selectedSubcategoryId, customerId, filter_one, item_id);
+      console.log("**********************", response)
       const items = response.data || [];
       // Group items strictly by unique_id and sub_category_id
       const groupedItems = items.reduce((acc, item) => {
         // Only process items matching the selected subcategory
-        if (item.subtotal_category_id === selectedSubcategoryId) {
+        if (item.subtotal_category_id === selectedSubcategoryId || item.id || subtotal_category_id) {
           // Find existing group or create new one
           let existingGroup = acc.find(group => group.unique_id == item.unique_id);
 
@@ -366,7 +368,7 @@ export default function GroceriesScreen({ navigation, route }) {
       filtered = filtered.filter((product) =>
         selectedPriceRanges.some((rangeLabel) => {
           const range = priceRangeOptions.find((r) => r.label === rangeLabel);
-          const adjustedPrice = parseFloat(product.variants[0].actual_price) || 0;
+          const adjustedPrice = parseFloat(product.variants[0].selling_price) || 0;
           return adjustedPrice >= range.min && adjustedPrice <= range.max;
         })
       );
@@ -386,12 +388,12 @@ export default function GroceriesScreen({ navigation, route }) {
         filtered.sort((a, b) => a.name.localeCompare(b.name));
       } else if (sort === 'Z to A') {
         filtered.sort((a, b) => b.name.localeCompare(a.name));
-      } else if (sort === 'Price (Low to High)') {
+      } else if (sort === '(Low to High)') {
         filtered.sort(
           (a, b) =>
             parseFloat(a.variants[0].selling_price) - parseFloat(b.variants[0].selling_price)
         );
-      } else if (sort === 'Price (High to Low)') {
+      } else if (sort === '(High to Low)') {
         filtered.sort(
           (a, b) =>
             parseFloat(b.variants[0].selling_price) - parseFloat(a.variants[0].selling_price)
@@ -741,6 +743,39 @@ export default function GroceriesScreen({ navigation, route }) {
         </View>
       </View>
 
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: '#fff',
+          borderWidth: 1,
+          borderColor: '#ccc',
+          borderRadius: 8,
+          margin: 10,
+          paddingHorizontal: 10,
+        }}
+      >
+        <Ionicons name="search-outline" size={20} color="#888" style={{ marginRight: 8 }} />
+        <TextInput
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search products..."
+          placeholderTextColor="#888"
+          style={{
+            flex: 1,
+            fontSize: 14,
+            color: '#000',
+            paddingVertical: 8,
+          }}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color="#888" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+
       <View style={styles.mainContent}>
         <View style={styles.sideMenu}>
           <FlatList
@@ -801,7 +836,7 @@ export default function GroceriesScreen({ navigation, route }) {
               >
                 <Icon name="sort" size={16} color="#333" style={styles.filterIcon} />
                 <Text style={styles.filterText}>
-                  Sort{sort ? ` (${sort})` : ''}
+                  {sort ? `${sort}` : 'Sort'}
                 </Text>
                 {sort && (
                   <TouchableOpacity
@@ -994,8 +1029,8 @@ export default function GroceriesScreen({ navigation, route }) {
           <Text style={styles.modalTitle}>Sort By</Text>
           {renderSortOption('A to Z')}
           {renderSortOption('Z to A')}
-          {renderSortOption('Price (Low to High)')}
-          {renderSortOption('Price (High to Low)')}
+          {renderSortOption('₹ (Low to High)')}
+          {renderSortOption('₹ (High to Low)')}
           <TouchableOpacity
             style={styles.modalOption}
             onPress={() => {
@@ -1018,7 +1053,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#888',

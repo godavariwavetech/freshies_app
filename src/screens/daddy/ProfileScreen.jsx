@@ -186,7 +186,7 @@ const ProfileScreen = () => {
 
 
         <View style={styles.menuOptions}>
-          {/* 1. Account */}
+          {/* 👤 Account */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('UserProfileScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
@@ -195,7 +195,6 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 2. Your Orders */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('PreviousOrdersScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="clipboard-list-outline" size={24} color="#8655d2" />
@@ -204,7 +203,6 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 3. My Favorites */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('MyFavoritesScreen')}>
             <View style={styles.menuItemLeft}>
               <Icon name="favorite" size={24} color="#8655d2" />
@@ -213,7 +211,7 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 4. Offers */}
+          {/* 💰 Offers & Referrals */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('OffersScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="tag-outline" size={24} color="#8655d2" />
@@ -222,7 +220,6 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 5. Refer & Earn */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('ReferAndEarnScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="gift-outline" size={24} color="#8655d2" />
@@ -231,7 +228,7 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 6. Help and Support */}
+          {/* ❓ Support & Info */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('Support')}>
             <View style={styles.menuItemLeft}>
               <Feather name="user" size={24} color="#8655d2" />
@@ -240,7 +237,6 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 7. FAQs */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('FAQScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="help-circle-outline" size={24} color="#8655d2" />
@@ -249,7 +245,15 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 8. Policies */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('QualityFAQS')}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="check-decagram" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Quality</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          {/* 📜 Policies */}
           <TouchableOpacity
             style={styles.menuItemMain}
             onPress={() => {
@@ -266,10 +270,7 @@ const ProfileScreen = () => {
 
           {isPoliciesExpanded && (
             <>
-              <TouchableOpacity
-                style={styles.menuItemMain}
-                onPress={() => openLink('https://abhi24.in/privacypolicy')}
-              >
+              <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/privacypolicy')}>
                 <View style={styles.menuItemLeft}>
                   <MaterialCommunityIcons name="file-document-outline" size={22} color="#8655d2" />
                   <Text style={styles.menuText}>Privacy Policy</Text>
@@ -277,10 +278,7 @@ const ProfileScreen = () => {
                 <MaterialCommunityIcons name="open-in-new" size={20} color="#666" />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.menuItemMain}
-                onPress={() => openLink('https://abhi24.in/terms')}
-              >
+              <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/terms')}>
                 <View style={styles.menuItemLeft}>
                   <MaterialCommunityIcons name="file-certificate-outline" size={22} color="#8655d2" />
                   <Text style={styles.menuText}>Terms & Conditions</Text>
@@ -290,11 +288,8 @@ const ProfileScreen = () => {
             </>
           )}
 
-          {/* 9. About Us */}
-          <TouchableOpacity
-            style={styles.menuItemMain}
-            onPress={() => openLink('https://abhi24.in/about')}
-          >
+          {/* ℹ️ About */}
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/about')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="file-document-outline" size={22} color="#8655d2" />
               <Text style={styles.menuText}>About Us</Text>
@@ -302,7 +297,7 @@ const ProfileScreen = () => {
             <MaterialCommunityIcons name="open-in-new" size={20} color="#666" />
           </TouchableOpacity>
 
-          {/* 10. Logout */}
+          {/* 🔓 Logout */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => setLogoutModalVisible(true)}>
             <View style={styles.menuItemLeft}>
               <Feather name="log-out" size={24} color="#8655d2" />
@@ -311,11 +306,12 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          {/* 11. App Version */}
+          {/* 🔢 App Version */}
           <View style={styles.versionContainer}>
             <Text style={styles.versionText}>App Version: {appVersion || '1.0.0'}</Text>
           </View>
         </View>
+
 
 
 
@@ -459,18 +455,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: 6,
   },
-  
+
   menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  
+
   menuText: {
     marginLeft: 12,
     fontSize: 15,
     color: '#222',
   },
-  
+
   menuItemMain: {
     paddingVertical: 15,
     borderBottomWidth: 1,

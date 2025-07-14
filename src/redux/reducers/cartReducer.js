@@ -41,6 +41,7 @@ const cartSlice = createSlice({
     },
     removeFromCart: (state, action) => {
       const { id, quantityType } = action.payload;
+      console.log("Removing item from cart:", id, quantityType);
       state.items = state.items.filter(
         item => !(item.id === id && item.variant?.quantity_type === quantityType)
       );
@@ -97,7 +98,7 @@ export const {
   updateQuantity,
   clearCart,
   loadCartFromStorage,
-  setDeliveryInstructions
+  setDeliveryInstructions,
 } = cartSlice.actions;
 
 export default cartSlice.reducer; 
