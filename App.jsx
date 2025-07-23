@@ -140,7 +140,9 @@ const App = () => {
 
   const handleUpdate = async () => {
     try {
-      await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24");
+      // await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24");
+      await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24&pcampaignid=web_share");
+     
     } catch (error) {
       
     } finally {

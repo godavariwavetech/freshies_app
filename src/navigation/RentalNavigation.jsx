@@ -62,6 +62,7 @@ export default function RentalNavigation() {
   useEffect(() => {
     const fetchWallet = async () => {
       const data = await WalletAPI.getWalletAmounts(customerId);
+      console.log("wallet data",data);
       dispatch(setWalletData(data)); 
     };
     fetchWallet();

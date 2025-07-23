@@ -54,8 +54,6 @@ function UserHome() {
     loadSubCategories();
   }, []);
 
-
-
   const loadSubCategories = async () => {
     try {
       setIsLoading(true);

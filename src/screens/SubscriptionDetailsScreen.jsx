@@ -1,93 +1,126 @@
-// screens/SubscriptionDetailsScreen.js
 import React from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import dayjs from 'dayjs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
-export default function SubscriptionDetailsScreen({ route, navigation }) {
+export default function SubscriptionDetailsScreen({ navigation, route }) {
     const { item } = route.params;
-    console.log(item)
-    const today = dayjs('2025-06-25'); // mock current date
+    console.log("item-details", item)
+    const today = dayjs();  // mock current date
     const startDate = dayjs(item.startDate);
     const upcoming = startDate.isAfter(today) ? startDate : today.add(1, 'day');
 
     const completedDates = [];
-    for (let i = 1; i <= 5; i++) {
-        completedDates.push(today.subtract(i, 'day').format('ddd, DD MMM YYYY'));
-    }
+    //   for (let i = 1; i <= 5; i++) {
+    //     completedDates.push(today.subtract(i, 'day').format('ddd, DD MMM YYYY'));
+    //   }
 
     return (
         <ScrollView style={styles.container}>
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => {
-                        console.log('Back pressed');
-                        navigation.goBack();
-                    }}
-                >
-                     <Icon name="arrow-back" size={wp('6%')} color="#fff" />
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Icon name="arrow-back" size={wp('6%')} color="#fff" />
                 </TouchableOpacity>
+                <Text style={styles.headerTitle}>Subscription Details</Text>
 
-                <Text style={styles.absoluteTitle}>Subscription Details</Text>
-
-                <View style={{ width: 22 }} />
             </View>
 
-            <View style={{ paddingHorizontal: 16 }}>
+            {/* Content */}
+            <View style={styles.content}>
                 <Image source={{ uri: item.image }} style={styles.image} />
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.info}>₹{item.price}</Text>
-                <Text style={styles.info}>Start Date: {item.startDate}</Text>
-                <Text style={styles.info}>Schedule: {item.schedule}</Text>
 
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.price}>₹{item.price}</Text>
+                <Text style={styles.detail}>Start Date: {item.startDate}</Text>
+                <Text style={styles.detail}>Schedule: {item.schedule}</Text>
+
+                {/* Upcoming Delivery */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>📅 Upcoming Delivery</Text>
                     <Text style={styles.dateText}>{upcoming.format('ddd, DD MMM YYYY')}</Text>
                 </View>
 
+                {/* Completed Deliveries */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>✅ Completed Deliveries</Text>
-                    {completedDates.map((d, index) => (
-                        <Text key={index} style={styles.dateText}>{d}</Text>
-                    ))}
+
+                    {completedDates.length > 0 ? (
+                        completedDates.map((d, index) => (
+                            <Text key={index} style={styles.dateText}>{d}</Text>
+                        ))
+                    ) : (
+                        <Text style={[styles.dateText, { fontStyle: 'italic', color: '#999' }]}>
+                            No completed deliveries yet.
+                        </Text>
+                    )}
                 </View>
+
             </View>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { backgroundColor: '#fff', flex: 1 },
-    backBtn: { marginBottom: 10, color: "white", backgroundColor: "white" },
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     header: {
+        backgroundColor: '#8655d2',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginBottom: 16,
-        backgroundColor: '#8655d2'
     },
-
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: 'white',
-    },
-    absoluteTitle: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
+        color: '#fff',
         textAlign: 'center',
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: 'white',
+        flex: 1,
     },
-    image: { width: '100%', height: 200, borderRadius: 10, marginBottom: 10 },
-    name: { fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
-    info: { fontSize: 15, color: '#555', marginBottom: 4 },
-    section: { marginTop: 20 },
-    sectionTitle: { fontWeight: 'bold', fontSize: 16, marginBottom: 8 },
-    dateText: { fontSize: 14, color: '#444', marginBottom: 4 },
+    content: {
+        paddingHorizontal: 16,
+        paddingBottom: 24,
+    },
+    image: {
+        width: '100%',
+        height: 200,
+        borderRadius: 12,
+        marginVertical: 16,
+    },
+    name: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 6,
+        color: '#333',
+    },
+    price: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+        color: '#444',
+    },
+    detail: {
+        fontSize: 14,
+        color: '#555',
+        marginBottom: 4,
+    },
+    section: {
+        marginTop: 24,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        color: '#000',
+    },
+    dateText: {
+        fontSize: 14,
+        color: '#444',
+        marginBottom: 4,
+    },
 });

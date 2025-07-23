@@ -29,6 +29,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
           ...data[0],
           refer_content: JSON.parse(data[0].refer_content),
         };
+        console.log("parsedData", parsedData);
         setRefferalData(parsedData);
       } catch (error) {
         console.error('Failed to load application charges', error);
@@ -46,12 +47,19 @@ const ReferAndEarnScreen = ({ navigation }) => {
 
   const handleShare = async () => {
     try {
-      const message = `Hey! Use my referral code ${referralCode} to sign up on Abhi24 and earn exciting rewards!\nDownload the app here: https://play.google.com/store/apps/details?id=com.Abhi24&hl=en`;
+      const bulletPoints = Array.isArray(refferalData?.refer_content)
+        ? refferalData.refer_content.slice(0, 2).map((item) => `• ${item}`).join('\n')
+        : '';
+  
+      const message = `Hey! Use my referral code *${referralCode}* to sign up on Abhi24.\n\n📲 Download the app: https://play.google.com/store/apps/details?id=com.Abhi24&hl=en\n\n${bulletPoints}`;
+  
       await Share.share({ message });
     } catch (error) {
       console.error('Error sharing referral:', error);
     }
   };
+  
+  
   
 
   return (

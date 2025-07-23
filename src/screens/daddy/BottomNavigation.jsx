@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, Text, Image, Pressable, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, Platform, StyleSheet, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { tab1 } from './tabassets';
 import {
@@ -30,14 +30,17 @@ import SubscriptionPage from '../daddy/tabassets/SubscriptionPage';
 import ProductDetailsScreen from '../daddy/tabassets/ProductDetailsScreen';
 import PreviousOrdersScreen from '../PreviousOrdersScreen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { getUserData } from '../../services/services';
+import { applicationCharges, getUserData } from '../../services/services';
 import { setUseDetails } from '../../redux/reducers/auth';
+import { useNavigationState } from '@react-navigation/native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { setStoreData } from '../../redux/reducers/auth';
 const Tab = createBottomTabNavigator();
 
 export default function BottomNavigation() {
   const dispatch = useDispatch();
   const { cartItems } = useSelector((state) => state.Dashboard);
-  const { customerId,userDetails } = useSelector(state => state.Auth);
+  const { customerId,userDetails,storeData } = useSelector(state => state.Auth);
  
   useEffect(() => {
     const getUserProfile = async () => {
@@ -54,100 +57,128 @@ export default function BottomNavigation() {
     getUserProfile();
   }, []);
 
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarButton: props => (
-          <Pressable
-            {...props}
-            android_ripple={null}
-            style={({ pressed }) => [
-              props.style,
-              { opacity: pressed ? 1 : 1 },
-            ]}
-          />
-        ),
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'Home') {
-            iconName = focused ? <HomeSvg color={'#4B3395'} /> : <HomeInactive />;
-          } else if (route.name === 'Reorder') {
-            iconName = focused ? (
-              <ReorderInactive color={'#4B3395'} />
-            ) : (
-              <ReorderInactive color={'gray'} />
-            );
-          } else if (route.name === 'Categories') {
-            iconName = focused ? (
-              <CategoryInactive color={'#4B3395'} />
-            ) : (
-              <Categoreis />
-            );
-          } else if (route.name === 'Cart') {
-            iconName = (
-              <View>
-                {focused ? <CartInactive color={'#4B3395'} /> : <Cart />}
-                {cartItems.length > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{cartItems.length}</Text>
-                  </View>
-                )}
-              </View>
-            );
-          } else if (route.name === 'Profile') {
-            iconName = focused ? (
-              <ProfileSvg color={'#4B3395'} />
-            ) : (
-              <ProfileSvg color={'gray'} />
-            );
-          } else if (route.name === 'PreviousOrdersScreen') {
-            iconName = (
-              <Ionicons
-                name={focused ? 'receipt' : 'receipt-outline'} // example icon
-                size={24}
-                color={focused ? '#4B3395' : 'gray'}
-              />
-            );
-          }
-        
-          return iconName;
-        },
 
-        tabBarActiveTintColor: '#4B3395',
-        tabBarInactiveTintColor: 'gray',
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
-        tabBarStyle: {
-          height: Platform.OS === 'ios' ? 85 : 60,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          elevation: 0,
-          backgroundColor: '#fff',
-          borderTopWidth: 1,
-          borderTopColor: '#E5E5E5',
-        },
-        tabBarHideOnKeyboard: true,
-        contentStyle: {},
-      })}>
-      <Tab.Screen
-        name="Home"
-        component={UserHome}
-        options={{
-          tabBarLabel: 'Home',
+  useEffect(() => {
+    const loadApplicationCharges = async () => {
+      try {
+        const data = await applicationCharges();
+        console.log("data -----------------",data);
+        dispatch(setStoreData(data[0]));
+      } catch (error) {
+        console.error('Failed to load application charges', error);
+      }
+    };
+    loadApplicationCharges();
+  }, []);
+  console.log("storeData",storeData);
+  // Get the current tab name
+  const navigationState = useNavigationState(state => state);
+  const currentTab = navigationState.routes[navigationState.index]?.name;
+
+  // WhatsApp handler
+  const openWhatsApp = () => {
+    const phoneNumber = storeData?.contact_number; // Change to your WhatsApp number
+    const url = `https://wa.me/${phoneNumber}`;
+    Linking.openURL(url).catch(() => {
+      alert('Make sure WhatsApp is installed on your device');
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarButton: props => (
+            <Pressable
+              {...props}
+              android_ripple={null}
+              style={({ pressed }) => [
+                props.style,
+                { opacity: pressed ? 1 : 1 },
+              ]}
+            />
+          ),
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+            if (route.name === 'Home') {
+              iconName = focused ? <HomeSvg color={'#4B3395'} /> : <HomeInactive />;
+            } else if (route.name === 'Reorder') {
+              iconName = focused ? (
+                <ReorderInactive color={'#4B3395'} />
+              ) : (
+                <ReorderInactive color={'gray'} />
+              );
+            } else if (route.name === 'Categories') {
+              iconName = focused ? (
+                <CategoryInactive color={'#4B3395'} />
+              ) : (
+                <Categoreis />
+              );
+            } else if (route.name === 'Cart') {
+              iconName = (
+                <View>
+                  {focused ? <CartInactive color={'#4B3395'} /> : <Cart />}
+                  {cartItems.length > 0 && (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>{cartItems.length}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            } else if (route.name === 'Profile') {
+              iconName = focused ? (
+                <ProfileSvg color={'#4B3395'} />
+              ) : (
+                <ProfileSvg color={'gray'} />
+              );
+            } else if (route.name === 'PreviousOrdersScreen') {
+              iconName = (
+                <Ionicons
+                  name={focused ? 'receipt' : 'receipt-outline'} // example icon
+                  size={24}
+                  color={focused ? '#4B3395' : 'gray'}
+                />
+              );
+            }
+          
+            return iconName;
+          },
+
+          tabBarActiveTintColor: '#4B3395',
+          tabBarInactiveTintColor: 'gray',
+          tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
+          tabBarStyle: {
+            height: Platform.OS === 'ios' ? 85 : 60,
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            elevation: 0,
+            backgroundColor: '#fff',
+            borderTopWidth: 1,
+            borderTopColor: '#E5E5E5',
+          },
+          tabBarHideOnKeyboard: true,
           contentStyle: {},
-        }}
-      />
-      <Tab.Screen
-        name="Reorder"
-        component={SubscriptionPage}
-        options={{
-          tabBarLabel: 'Subscriptions',
-          contentStyle: {},
-        }}
-      />
-      {/* <Tab.Screen
+        })}>
+        <Tab.Screen
+          name="Home"
+          component={UserHome}
+          options={{
+            tabBarLabel: 'Home',
+            contentStyle: {},
+          }}
+        />
+        <Tab.Screen
+          name="Reorder"
+          component={SubscriptionPage}
+          options={{
+            tabBarLabel: 'Subscriptions',
+            contentStyle: {},
+          }}
+        />
+        {/* <Tab.Screen
         name="Categories"
         component={CategoriesScreen}
         options={{
@@ -155,7 +186,7 @@ export default function BottomNavigation() {
           contentStyle: {},
         }}
       /> */}
-      {/* <Tab.Screen
+        {/* <Tab.Screen
         name="Cart"
         component={BuyOncescreen}
         options={{
@@ -163,23 +194,33 @@ export default function BottomNavigation() {
           contentStyle: {},
         }}
       /> */}
-      <Tab.Screen
-        name="PreviousOrdersScreen"
-        component={PreviousOrdersScreen}
-        options={{
-          tabBarLabel: 'Orders', // shorter label
-        }}
-      />
-       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        key={userDetails}
-        options={{
-          tabBarLabel: 'Profile',
-          contentStyle: {},
-        }}
-      />
-    </Tab.Navigator>
+        <Tab.Screen
+          name="PreviousOrdersScreen"
+          component={PreviousOrdersScreen}
+          options={{
+            tabBarLabel: 'Orders', // shorter label
+          }}
+        />
+         <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          key={userDetails}
+          options={{
+            tabBarLabel: 'Profile',
+            contentStyle: {},
+          }}
+        />
+      </Tab.Navigator>
+      {/* Floating WhatsApp Icon (hide on Profile tab) */}
+      {currentTab !== 'Profile' && (
+        <Pressable
+          onPress={openWhatsApp}
+          style={styles.whatsappButton}
+        >
+          <FontAwesome name="whatsapp" size={32} color="#fff" />
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -200,5 +241,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '700',
+  },
+  whatsappButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: Platform.OS === 'ios' ? 100 : 80,
+    backgroundColor: '#25D366',
+    borderRadius: 30,
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
   },
 });

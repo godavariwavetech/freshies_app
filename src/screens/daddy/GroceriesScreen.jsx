@@ -27,6 +27,8 @@ import { RootState } from '../../redux/store'; // adjust path
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 import { compose } from '@reduxjs/toolkit';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 const { width, height } = Dimensions.get('window');
 const productCardWidth = (width * 0.8 - 32) / 2;
@@ -73,8 +75,6 @@ export default function GroceriesScreen({ navigation, route }) {
   const [priceFilterModalVisible, setPriceFilterModalVisible] = useState(false);
   const [updatingFavoriteId, setUpdatingFavoriteId] = useState(null);
 
-
-
   const priceRangeOptions = [
     { label: '₹0 - ₹100', min: 0, max: 100 },
     { label: '₹101 - ₹250', min: 101, max: 250 },
@@ -82,7 +82,6 @@ export default function GroceriesScreen({ navigation, route }) {
     { label: '₹501 - ₹1000', min: 501, max: 1000 },
     { label: 'Above ₹1000', min: 1001, max: Infinity },
   ];
-
 
   // Fetch subcategories and derive categories
   useEffect(() => {
@@ -138,9 +137,7 @@ export default function GroceriesScreen({ navigation, route }) {
     }
   }, [route.params?.subcategory_id, route.params?.category_id]);
 
-
   const fetchItems = async () => {
-
     try {
       setIsLoading(true);
       setError(null);
@@ -225,8 +222,15 @@ export default function GroceriesScreen({ navigation, route }) {
   };
   // Fetch items
   useEffect(() => {
-    fetchItems();
+    fetchItems(); // For initial mount or route param change
   }, [selectedSubcategoryId, route.params?.category_id]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      fetchItems(); // For reloading on focus
+    }, [selectedSubcategoryId])
+  );
+  
 
 
   const toggleFavorite = async (item) => {
@@ -652,52 +656,39 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   }
 
-  // Get selected subcategory name (used to exclude from others)
-  const selectedSubcategoryName = subtotalcategories[0]?.sub_category_name?.trim();
+// Step 1: Normalize and find the selected item's index
+const selectedSubcategoryName = subtotalcategories[0]?.sub_category_name?.trim().toLowerCase();
 
-  // Find selected subcategory in sidebar
-  const selectedSubcategory = sidebarSubcategories.find(
-    cat => cat.sub_category_name?.trim() === selectedSubcategoryName
-  );
+const selectedIndex = sidebarSubcategories.findIndex(
+  cat => cat.sub_category_name?.trim().toLowerCase() === selectedSubcategoryName
+);
 
-  // Get selected type (default to "1" if not found)
-  const selectedType = selectedSubcategory?.sub_category_type ?? "1";
+// Step 2: Rotate array after selected index (excluding selected item)
+let reorderedSidebarSubcategories = [];
 
-  // Group sidebar subcategories by sub_category_type dynamically
-  const groupedByType = sidebarSubcategories.reduce((acc, cat) => {
-    const type = cat.sub_category_type;
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(cat);
-    return acc;
-  }, {});
+if (selectedIndex !== -1) {
+  const after = sidebarSubcategories.slice(selectedIndex + 1);
+  const before = sidebarSubcategories.slice(0, selectedIndex);
+  reorderedSidebarSubcategories = [...after, ...before];
+}
 
-  // Sort and build subcategories list, prioritizing selected type
-  const sortedRemainingSubcategories = [
-    ...(groupedByType[selectedType] || [])
-      .filter(cat => cat.sub_category_name?.trim() !== selectedSubcategoryName)
-      .sort((a, b) => a.sub_category_order - b.sub_category_order),
+// Step 3: Add type to each item
+const sidebarItems = reorderedSidebarSubcategories.map(item => ({
+  ...item,
+  type: 'subcategory',
+}));
 
-    ...Object.entries(groupedByType)
-      .filter(([type]) => type !== selectedType)
-      .flatMap(([, subcats]) =>
-        subcats
-          .filter(cat => cat.sub_category_name?.trim() !== selectedSubcategoryName)
-          .sort((a, b) => a.sub_category_order - b.sub_category_order)
-      ),
-  ];
+// Step 4: Final merged list (subtotal + label + reordered subcategories)
+const mergedSidebarItems = [
+  ...subtotalcategories.map(item => ({
+    ...item,
+    type: 'subtotal',
+  })),
+  { type: 'label', title: 'Explore More' },
+  ...sidebarItems,
+];
 
-  // Final merged list
-  const mergedSidebarItems = [
-    ...subtotalcategories.map(item => ({
-      ...item,
-      type: 'subtotal',
-    })),
-    { type: 'label', title: 'Explore More' },
-    ...sortedRemainingSubcategories.map(item => ({
-      ...item,
-      type: 'subcategory',
-    })),
-  ];
+
 
 
   return (
@@ -1142,8 +1133,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 0,
     backgroundColor: '#fff',
+    marginBottom: 10
   },
   filterButtonsContainer: {
     flexDirection: 'row',

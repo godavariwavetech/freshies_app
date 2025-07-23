@@ -98,12 +98,17 @@ const BasketScreen = ({ navigation, route }) => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const walletData = useSelector(state => state.wallet);
-  
 
-  const gstCalculation = (subtotal) => {
-    const gstAmmount =
-      subtotal *
-      (Number(applicationCharges?.gst_percentage) / 100);
+
+  const gstCalculation = () => {
+    const subtotal = cartItems.reduce(
+      (total, item) =>
+        total +
+        Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
+      0,
+    );
+    const gstAmmount = subtotal * (Number(applicationCharges?.gst_percentage) / 100);
+    console.log("gstcalculated amount", gstAmmount)
     return gstAmmount;
   };
 
@@ -114,6 +119,7 @@ const BasketScreen = ({ navigation, route }) => {
         Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
       0,
     );
+    console.log("subtotalamount:::::::", subtotal)
     return subtotal;
   };
 
@@ -266,25 +272,6 @@ const BasketScreen = ({ navigation, route }) => {
     loadCartItems();
   }, [route.params]);
 
-  // Save cart items to AsyncStorage whenever cart items change
-  useEffect(() => {
-    const saveCartItems = async () => {
-      try {
-        // Save cart items to AsyncStorage
-        await AsyncStorage.setItem('cartItems', JSON.stringify(cartItems));
-        // await AsyncStorage.setItem(
-        //   'persistentCartItems',
-        //   JSON.stringify(cartItems),
-        // );
-      } catch (error) {
-        console.error('Error saving cart items:', error);
-      }
-    };
-    if (!isLoading) {
-      saveCartItems();
-    }
-  }, [cartItems])
-
   const handleQuantityChange = (id, action) => {
     const updatedCartItems = cartItems
       .map(item =>
@@ -308,12 +295,12 @@ const BasketScreen = ({ navigation, route }) => {
     setCartItems(updatedCartItems);
   };
 
-  const handleDelete = async (id,quantityType) => {
+  const handleDelete = async (id, quantityType) => {
     console.log('handleDelete called with:', id, quantityType);
     const updatedCartItems = cartItems.filter(item => item.id !== id);
     dispatch(removeFromCart({ id, quantityType }));
     setCartItems(updatedCartItems);
-    
+
   };
 
   const handleClearCart = async () => {
@@ -387,7 +374,7 @@ const BasketScreen = ({ navigation, route }) => {
                 {
                   text: 'Remove',
                   style: 'destructive',
-                  onPress: () => handleDelete(item.id,item.variant?.quantity_type || item?.quantity_type || item.weight),
+                  onPress: () => handleDelete(item.id, item.variant?.quantity_type || item?.quantity_type || item.weight),
                 },
               ],
             );
@@ -418,7 +405,7 @@ const BasketScreen = ({ navigation, route }) => {
               {
                 text: 'Remove',
                 style: 'destructive',
-                onPress: () => handleDelete(item.id,item.variant?.quantity_type || item?.quantity_type || item.weight),
+                onPress: () => handleDelete(item.id, item.variant?.quantity_type || item?.quantity_type || item.weight),
               },
             ],
           );
@@ -450,7 +437,7 @@ const BasketScreen = ({ navigation, route }) => {
   const handlePlaceOrder = async () => {
     try {
       setIsProcessingPayment(true);
-      
+
       const mappedItems = cartItems.map(item => {
         // Determine which price values to use
         const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
@@ -498,7 +485,13 @@ const BasketScreen = ({ navigation, route }) => {
         return acc + (savingPerItem > 0 ? savingPerItem * quantity : 0);
       }, 0);
 
-      
+      const couponAmount = coupon?.coupon_percentage
+        ? (calculateTotalPrice() * (coupon.coupon_percentage / 100)).toFixed(2)
+        : '0.00';
+
+      console.log(" calculateTotalPrice()", calculateTotalPrice())
+      console.log("gstCalculation()", gstCalculation())
+      console.log("counpun amount", calculateTotalPrice(), (coupon?.coupon_percentage / 100))
       let payload = {
         customer_id: customerId,
         customer_name: '',
@@ -507,20 +500,19 @@ const BasketScreen = ({ navigation, route }) => {
         item_count: cartItems.length,
         total_amount:
           (
-            calculateTotalPrice() +
+            Number(calculateTotalPrice()) +
             Number(applicationCharges?.delivery_fixed_charges) +
             Number(applicationCharges?.handling_charges) +
-            gstCalculation()
+            Number(gstCalculation())
           ).toFixed(2) || 0,
         total_saving_amount: totalSavingAmount.toFixed(2),
-        coupon_amount:
-          ( calculateTotalPrice() * (coupon?.discount / 100)).toFixed(2) || '',
+        coupon_amount: couponAmount,
         delivery_charges: applicationCharges.delivery_fixed_charges || 0,
         grand_total: (
           calculateTotalPrice() +
           Number(applicationCharges?.delivery_fixed_charges) +
           Number(applicationCharges?.handling_charges) +
-          gstCalculation()
+          Number(gstCalculation())
         ).toFixed(2) || 0,
         location_id: locationId,
         location_name: locationName,
@@ -551,19 +543,17 @@ const BasketScreen = ({ navigation, route }) => {
           calculateTotalPrice() +
           Number(applicationCharges?.delivery_fixed_charges || 0) +
           Number(applicationCharges?.handling_charges || 0) +
-          gstCalculation() -
-          (couponAmount || 0)
+          Number(gstCalculation())
         ).toFixed(2),
         sub_order_array: mappedItems,
       };
-     
+
       console.log('mappeditems', mappedItems);
       console.log('payload', payload);
       const finalPrice = parseFloat(totalAfterWallets);
-   
-      if ((finalPrice === 0) || selectedPaymentMethod === 'COD') {
+      console.log("final price", finalPrice)
+      if ((finalPrice === 0) || selectedPaymentMethod === 'COD' && address) {
         const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
-        console.log("waitingggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",responseCod)
         if (!responseCod.payload) return;
         const orderDetails = {
           orderId: responseCod?.payload?.id || '',
@@ -610,8 +600,8 @@ const BasketScreen = ({ navigation, route }) => {
             calculateTotalPrice() +
             Number(applicationCharges?.delivery_fixed_charges || 0) +
             Number(applicationCharges?.handling_charges || 0) +
-            gstCalculation()- (couponAmount || 0)
-          ).toFixed(2) ,
+            gstCalculation() - (couponAmount || 0)
+          ).toFixed(2),
         couponAmount: couponAmount || 0,
         deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
         totalSavings: totalSavingAmount,
@@ -740,18 +730,21 @@ const BasketScreen = ({ navigation, route }) => {
     );
   }
 
-  const couponAmount = coupon?.discount ? (( muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(2) : '0.00';
+  const couponAmount = coupon?.discount ? ((muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(2) : '0.00';
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Status Bar */}
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
-      {/* Header */}
       <View style={[styles.header, { backgroundColor }]}>
         <TouchableOpacity onPress={() => navigation.navigate("BottomNavigation")}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
+
         <Text style={styles.headerTitle}>Cart</Text>
+
+        {/* Invisible spacer to balance the back icon */}
+        <View style={{ width: 24 }} />
       </View>
       {/* Location Section */}
       <View style={styles.locationSection}>
@@ -834,7 +827,7 @@ const BasketScreen = ({ navigation, route }) => {
           </View>
 
           {/* Apply Coupons Section */}
-          {totalAfterWallets !== 0 &&  <TouchableOpacity
+          {totalAfterWallets !== 0 && <TouchableOpacity
             style={styles.couponSection}
             onPress={() =>
               navigation.navigate('ApplyCuponScreen', {
@@ -853,7 +846,7 @@ const BasketScreen = ({ navigation, route }) => {
                   <Text style={styles.couponText}>
                     Saved ₹
                     {coupon.type === 'percentage'
-                      ? (( muttonSubtotal+ otherSubtotal) * (coupon.discount / 100)).toFixed(2)
+                      ? ((muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(2)
                       : coupon.discount.toFixed(2)}
                   </Text>
                   <Text style={[styles.couponCodeText, { color: backgroundColor, marginLeft: 10 }]}>
@@ -874,7 +867,7 @@ const BasketScreen = ({ navigation, route }) => {
               </>
             )}
           </TouchableOpacity>}
-  
+
           {(abhiWalletAmount > 0 || userWalletAmount > 0) && (
             <View style={styles.walletSection}>
               {abhiWalletAmount > 0 && muttonSubtotal > 0 && (
@@ -994,7 +987,7 @@ const BasketScreen = ({ navigation, route }) => {
                 <Text style={[styles.summaryValue, { color: '#4CAF50' }]}>
                   -₹
                   {coupon.type === 'percentage'
-                    ? (( muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(
+                    ? ((muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(
                       2,
                     )
                     : coupon.discount}
@@ -1161,14 +1154,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: '#D32F2F', // Will be overridden by backgroundColor
-    padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomEndRadius: 25,
-    borderBottomStartRadius: 25,
     paddingVertical: '5%',
+    paddingHorizontal: 10,
+    borderBottomStartRadius: 25,
+    borderBottomEndRadius: 25,
   },
   headerTitle: {
     color: '#fff',

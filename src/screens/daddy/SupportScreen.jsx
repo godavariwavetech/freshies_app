@@ -4,18 +4,34 @@ import LinearGradient from 'react-native-linear-gradient';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useSelector } from 'react-redux';
 
 const SupportScreen = ({ navigation }) => {
+  const { storeData } = useSelector(state => state.Auth);
+
   const handleCall = () => {
-    Linking.openURL('tel:+8074709926');
+    Linking.openURL(`tel:${storeData?.contact_number}`);
   };
 
   const handleEmail = () => {
-    Linking.openURL('mailto:abhi24web@gmail.com');
+    const email = storeData?.mail_id?.trim();
+    const subject = encodeURIComponent("Support");
+    const body = encodeURIComponent("Hi, I need assistance with...");
+  
+    if (email) {
+      const mailUrl = `mailto:${email}?subject=${subject}&body=${body}`;
+      Linking.openURL(mailUrl).catch(() => {
+        Alert.alert("Error", "No email app found or unable to open email client.");
+      });
+    } else {
+      Alert.alert("Error", "No valid email ID found.");
+    }
   };
 
   const handleWhatsApp = () => {
-    Linking.openURL('https://wa.me/918074709926');
+    console.log("storeData?.contact_number",storeData?.contact_number);
+    Linking.openURL(`https://wa.me/${storeData?.contact_number}`);
+    
   };
 
   return (

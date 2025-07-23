@@ -53,7 +53,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
     let firstSelectedDate = null;
 
     if (type === 'Weekly') {
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 0; i <= 4; i++) {
         const date = start.add(i * 7, 'day').format('YYYY-MM-DD');
         newMarks[date] = {
           selected: true,
@@ -62,7 +62,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         if (!firstSelectedDate) firstSelectedDate = date;
       }
     } else if (type === 'Alternate Days') {
-      for (let i = 1; i <= 13; i += 2) {
+      for (let i = 0; i <= 13; i += 2) {
         const date = start.add(i, 'day').format('YYYY-MM-DD');
         newMarks[date] = {
           selected: true,

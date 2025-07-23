@@ -21,7 +21,8 @@ const initialState = {
   shopAddress: {},
   username: "",
   referralCode: "",
-  userDetails: {}
+  userDetails: {},
+  storeData: {}
 };
 
 export const verifyMobile = createAsyncThunk(
@@ -187,7 +188,10 @@ export const AuthSlice = createSlice({
     },
     setUseDetails: (state,action) => {
       state.userDetails = action.payload
-    } 
+    },
+    setStoreData: (state,action) => {
+      state.storeData = action.payload
+    }
   },
   extraReducers: builder => {
     builder.addCase(loginAction.pending, (state, action) => {
@@ -275,6 +279,6 @@ export const AuthSlice = createSlice({
   },
 });
 
-export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag,setUseDetails, setRestaurnatDetails, setOrderOfferAmount,setReferalCode, setAddress,setShopAddress,setUserName,setCustormarId } = AuthSlice.actions;
+export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag,setUseDetails, setRestaurnatDetails, setOrderOfferAmount,setReferalCode, setAddress,setShopAddress,setUserName,setCustormarId,setStoreData } = AuthSlice.actions;
 
 export default AuthSlice.reducer;

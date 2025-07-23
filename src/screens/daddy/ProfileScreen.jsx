@@ -42,7 +42,7 @@ import UserProfileScreen from '../user/ProfileScreen';
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { customerId, username, userDetails } = useSelector(state => state.Auth);
+  const { customerId, username, userDetails, storeData } = useSelector(state => state.Auth);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
