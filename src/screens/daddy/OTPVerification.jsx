@@ -29,6 +29,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { checkAddressExistence } from '../../redux/reducers/daddy';
 import { customerLogin } from '../../services/services';
 import { useColorScheme } from 'react-native';
+import { type } from 'metro/private/integration_tests/basic_bundle/TypeScript';
 
 
 
@@ -38,7 +39,6 @@ import { useColorScheme } from 'react-native';
 
 export default function OTPVerification({ navigation, route }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  console.log(route.params?.user_ind, route.params)
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.95)).current;
   const colorScheme = useColorScheme();
@@ -56,6 +56,7 @@ export default function OTPVerification({ navigation, route }) {
   const [newUsername, setNewUsername] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [formError, setFormError] = useState('');
+  const [responseOtp, setResponseOtp] = useState(route.params.otp || "")
 
   useEffect(() => {
     if (showNewUserModal) {
@@ -97,9 +98,9 @@ export default function OTPVerification({ navigation, route }) {
     }
     const enteredOtp = otp.join('');
     setLoader(true);
-    console.log(enteredOtp, route.params.otp.toString());
+    console.log(enteredOtp, typeof(enteredOtp), responseOtp, typeof(responseOtp));
     try {
-      if (enteredOtp === route.params.otp.toString()) {
+      if (enteredOtp.trim() === String(responseOtp).trim()) {
         if (route.params?.user_ind === 1) {
           // ✅ Existing user 
           const loginResponse = await customerLogin({
@@ -141,32 +142,50 @@ export default function OTPVerification({ navigation, route }) {
     }
   };
 
+
   const handleOTPChange = (value, index) => {
     let newOtp = [...otp];
+  
+    // Only allow paste in first box
+    if (index === 0 && value.length === otp.length) {
+      newOtp = value.split('');
+      setOtp(newOtp);
+      inputRefs.current[otp.length - 1]?.focus(); // focus last input
+      setError('');
+      return;
+    }
+  
+    // Normal single character entry
     newOtp[index] = value;
     setOtp(newOtp);
     setError('');
-
-    // Move to the next input field
+  
+    // Move forward
     if (value && index < otp.length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
-    // If the input is empty, move back to the previous field
+  
+    // Move backward if cleared
     if (!value && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
+  
 
   const maskPhoneNumber = number => {
     if (!number) return '';
     return number.replace(/(\d{2})\d{5}(\d{3})/, '$1*****$2');
   };
 
-  const resendOtpHandler = () => {
+ 
+
+  const resendOtpHandler = async () => {
     setError("")
     setTimer(60);
     setOtp(['', '', '', '']);
-    dispatch(verifyCustomerMobile({ customer_mobile_number: route.params?.phoneNumber }));
+    const response = await dispatch(verifyCustomerMobile({ customer_mobile_number: route.params?.phoneNumber }));
+    console.log("resend Otp", response, typeof(response.payload.loginotp))
+    setResponseOtp(response.payload.loginotp.toString())
   };
 
   const handleNewUserSubmit = async () => {
@@ -250,27 +269,20 @@ export default function OTPVerification({ navigation, route }) {
           <View style={styles.otpContainer}>
             {otp.map((digit, index) => (
               <TextInput
-                key={index}
-                ref={el => (inputRefs.current[index] = el)}
-                style={[
-                  styles.otpBox,
-                  {
-                    color: isDarkMode ? '#fff' : '#000',
-                    borderColor: isDarkMode ? '#555' : '#ccc',
-                    backgroundColor: isDarkMode ? '#222' : '#fff',
-                  },
-                ]}
-                keyboardType="numeric"
-                maxLength={1}
-                placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
-                value={digit}
-                onChangeText={value => handleOTPChange(value, index)}
-                onKeyPress={({ nativeEvent }) => {
-                  if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
-                    inputRefs.current[index - 1]?.focus();
-                  }
-                }}
-              />
+              key={index}
+              ref={el => (inputRefs.current[index] = el)}
+              style={[styles.otpBox, { borderColor: isDarkMode ? '#555' : '#ccc' }]}
+              keyboardType="numeric"
+              maxLength={index === 0 ? otp.length : 1} // only first input allows full paste
+              placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
+              value={digit}
+              onChangeText={value => handleOTPChange(value, index)}
+              onKeyPress={({ nativeEvent }) => {
+                if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
+                  inputRefs.current[index - 1]?.focus();
+                }
+              }}
+            />
             ))}
           </View>
           {error ? <Text style={styles.errorText}>{error}</Text> : null}

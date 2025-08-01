@@ -420,12 +420,6 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           >
             <Text style={styles.footerBtnTextOutline}>View Track</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity
-            style={styles.footerBtnFilled}
-            onPress={() => setCancelAlertVisible(true)}
-          >
-            <Text style={styles.footerBtnTextFilled}>Cancel Order</Text>
-          </TouchableOpacity> */}
         </View>
       </ScrollView>
 

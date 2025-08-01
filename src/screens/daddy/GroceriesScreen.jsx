@@ -45,7 +45,7 @@ const weightOptions = [
 export default function GroceriesScreen({ navigation, route }) {
   const dispatch = useDispatch();
   const { status = 0, subcategory_id, category_id, subcategory_name, filter_one, item_id, subtotal_category_id } = route.params || {};
-  console.log("itemID", item_id)
+  console.log("homepageParams",route.params)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id || "");
   const [subtotalcategories, setSubtotalcategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -93,7 +93,7 @@ export default function GroceriesScreen({ navigation, route }) {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
       setSideBarSubCategories(fetchedSubCategories);
-      console.log('fetchedSubCategories', fetchedSubCategories);
+      console.log('fetchedSubCategories22222222222222222222222', fetchedSubCategories);
       const uniqueCategories = [
         ...new Map(
           fetchedSubCategories.map((sub) => [
@@ -119,7 +119,7 @@ export default function GroceriesScreen({ navigation, route }) {
           sub_category_id: route.params?.subcategory_id,
         });
         setSelectedSubcategoryId(subCats[0]?.id);
-        console.log("subcategories", subCats)
+        console.log("subcategories11111111111", subCats)
         setSubtotalcategories(subCats);
       } catch (error) {
         Toast.show({
@@ -142,7 +142,7 @@ export default function GroceriesScreen({ navigation, route }) {
       setIsLoading(true);
       setError(null);
       const response = await getItems(selectedSubcategoryId, customerId, filter_one, item_id);
-      console.log("**********************", response)
+     
       const items = response.data || [];
       // Group items strictly by unique_id and sub_category_id
       const groupedItems = items.reduce((acc, item) => {
@@ -656,13 +656,10 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   }
 
-// Step 1: Normalize and find the selected item's index
-const selectedSubcategoryName = subtotalcategories[0]?.sub_category_name?.trim().toLowerCase();
-
 const selectedIndex = sidebarSubcategories.findIndex(
-  cat => cat.sub_category_name?.trim().toLowerCase() === selectedSubcategoryName
+  cat => cat.id === subcategory_id
 );
-
+console.log("selectedIndex", selectedIndex)
 // Step 2: Rotate array after selected index (excluding selected item)
 let reorderedSidebarSubcategories = [];
 
@@ -687,8 +684,6 @@ const mergedSidebarItems = [
   { type: 'label', title: 'Explore More' },
   ...sidebarItems,
 ];
-
-
 
 
   return (

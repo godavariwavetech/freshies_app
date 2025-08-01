@@ -483,11 +483,12 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: CARD_WIDTH,
-    height: 100,
+    height: 120,
     borderRadius: 15,
     overflow: 'hidden', // 🔥 This ensures image corners get clipped
     marginHorizontal: PADDING_HORIZONTAL / 2,
-    backgroundColor: '#eee', // Optional placeholder background
+    backgroundColor: '#fff', // Optional placeholder background
+    padding: 2
   },
   card: {
     flex: 1,
@@ -495,7 +496,8 @@ const styles = StyleSheet.create({
   backgroundImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'stretch', // or 'stretch' if needed
+    resizeMode: 'cover', // or 'stretch' if needed
+    borderRadius: 15,
   },
   flatListContent: {
     paddingHorizontal: PADDING_HORIZONTAL / 2, // Adjusted to ensure proper card spacing

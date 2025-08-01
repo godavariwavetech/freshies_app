@@ -52,6 +52,7 @@ import ReferAndEarnScreen from '../screens/ReferAndEarnScreen';
 import FAQScreen from '../screens/FAQScreen';
 import GlobalSearchScreen from '../screens/GlobalSearchScreen';
 import QualityFAQS from '../screens/QualityFaqs';
+import HelthTips from '../screens/HelthTips';
 
 const Stack = createStackNavigator();
 
@@ -116,7 +117,8 @@ export default function RentalNavigation() {
       <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} />
       <Stack.Screen name="ReferAndEarnScreen" component={ReferAndEarnScreen} />
       <Stack.Screen name="FAQScreen" component={FAQScreen} />  
-      <Stack.Screen name="QualityFAQS" component={QualityFAQS} />      
+      <Stack.Screen name="QualityFAQS" component={QualityFAQS} />  
+      <Stack.Screen name="HelthTips" component={HelthTips} />    
       <Stack.Screen
         name="CategoriesScreen"
         component={CategoriesScreen}

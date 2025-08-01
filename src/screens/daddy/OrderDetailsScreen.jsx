@@ -18,23 +18,24 @@ import { getCoupons } from '../../services/services';
 import LinearGradient from 'react-native-linear-gradient';
 
 
+
 // Assuming styles are defined in a separate file
 
-
+ 
 const OffersScreen = ({ navigation }) => {
   const [coupons, setCoupons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCoupons = async () => {
+    const fetchCouponsApi = async () => {
       try {
         setIsLoading(true);
         const response = await getCoupons(); // Assuming this returns the provided API data
-
+       
         // Filter only active coupons (optional)
-        const validCoupons = response.filter(coupon => coupon.coupon_status === 0);
-        setCoupons(validCoupons);
+        // const validCoupons = response.filter(coupon => coupon.coupon_status === 0);
+        setCoupons(response);
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching coupons:', err);
@@ -50,7 +51,7 @@ const OffersScreen = ({ navigation }) => {
       }
     };
 
-    fetchCoupons();
+    fetchCouponsApi();
   }, []);
 
   const renderCoupon = ({ item }) => (
@@ -173,6 +174,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
+    
   },
   couponHeader: {
     flexDirection: 'row',
@@ -261,6 +263,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 3,
     elevation: 2,
+    borderWidth: 1,
   },
   
   couponName: {

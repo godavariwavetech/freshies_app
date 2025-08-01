@@ -50,9 +50,11 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
   const backgroundColor = '#8655d2';
 
+  console.log("Route Params", route.params)
+
   useEffect(() => {
     const subcategoryItems = async () => {
-      const response = await recommendItems(route.params.item.subcategory_id);
+      const response = await recommendItems(route.params.item.sub_category_id);
       setRecommendedItems(response.data)
     }
     subcategoryItems()
@@ -327,7 +329,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
               selectedWeight === item.quantity_type && (
                 <React.Fragment key={`price-${item.id}`}>
                   <Text style={styles.actualPriceText}>
-                    Seelling Price: ₹{item.offer}
+                    Selling Price: ₹{item.offer}
                   </Text>
                   <Text style={styles.offerPriceText}>
                     Actual Price: ₹{item.price}

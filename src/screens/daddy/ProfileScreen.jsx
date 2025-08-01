@@ -253,6 +253,16 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('HelthTips')}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="heart-pulse" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>Health Tips</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+
+
           {/* 📜 Policies */}
           <TouchableOpacity
             style={styles.menuItemMain}

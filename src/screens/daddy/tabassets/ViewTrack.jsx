@@ -68,6 +68,8 @@ const ViewTrackScreen = ({ navigation, route }) => {
     }
   };
 
+  // placed 0, accepted 1, ongoing 2, completed 3, user canceled 4, rejected 5, user not received 6, waiting for payment 7, Delivery boy accepted 8
+
 
   const trackingSteps = [
     {
