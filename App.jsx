@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import SplashScreen from 'react-native-splash-screen'
-import { Alert, Linking, PermissionsAndroid, Platform, View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
+import { Alert, Linking, BackHandler, PermissionsAndroid, Platform, View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
 import { checkNotifications, requestNotifications } from 'react-native-permissions';
 import VersionCheck from 'react-native-version-check';
 import CustomAlert from './src/components/CustomAlert';
@@ -13,7 +13,7 @@ import { setIsNetworkConnected } from './src/redux/reducers/addressSlice';
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import RootNavigation from './src/navigation/AppNavigation';
-import {OneSignal, LogLevel} from 'react-native-onesignal'; // Import OneSignal
+import { OneSignal, LogLevel } from 'react-native-onesignal'; // Import OneSignal
 
 // OneSignal App ID
 const ONESIGNAL_APP_ID = '2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14'; // 🔁 Replace this with your real App ID
@@ -104,14 +104,21 @@ const App = () => {
 
   }, []);
 
-   const checkAndRequestPermissions = async () => {
+  useEffect(() => {
+    if (showUpdateModal) {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
+      return () => backHandler.remove();
+    }
+  }, [showUpdateModal]);
+
+  const checkAndRequestPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          
+
         }
       } catch (err) {
         console.warn(err);
@@ -120,7 +127,7 @@ const App = () => {
       const { status } = await checkNotifications();
       if (status !== 'granted') {
         const { status: newStatus } = await requestNotifications(['alert', 'sound']);
-        
+
       }
     }
   };
@@ -134,7 +141,7 @@ const App = () => {
         setShowUpdateModal(false);
       }
     } catch (error) {
-      
+
     }
   };
 
@@ -142,11 +149,12 @@ const App = () => {
     try {
       // await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24");
       await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24&pcampaignid=web_share");
-     
+
     } catch (error) {
-      
+      console.error('Failed to open Play Store:', error);
     } finally {
-      setShowUpdateModal(false);
+      // Force close app after redirecting
+      BackHandler.exitApp();
     }
   };
 
