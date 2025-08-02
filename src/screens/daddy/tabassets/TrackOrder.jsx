@@ -20,6 +20,11 @@ import CustomAlert from '../../../components/CustomAlert';
 import CustomModal from '../../../components/CustomModal';
 import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import Clipboard from '@react-native-clipboard/clipboard';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
+
 
 
 const OrderDetailsScreen = ({ navigation, route }) => {
@@ -204,19 +209,45 @@ const OrderDetailsScreen = ({ navigation, route }) => {
       case 0:
         return 'Placed';
       case 1:
-        return 'Packed';
-      case 2:
-        return 'Shipped';
-      case 3:
         return 'Accepted';
+      case 2:
+        return 'Ongoing';
+      case 3:
+        return 'Completed';
       case 4:
-        return 'Delivered';
+        return 'User Canceled';
       case 5:
-        return 'Cancelled';
+        return 'Rejected';
+      case 6:
+        return 'User Not Received';
+      case 7:
+        return 'Waiting for Payment';
+      case 8:
+        return 'Delivery Boy Accepted';
       default:
         return 'Pending';
     }
   };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 0: // Placed
+      case 3: // Completed
+        return 'green';
+      case 1: // Accepted
+      case 2: // Ongoing
+      case 7: // Waiting for Payment
+      case 8: // Delivery Boy Accepted
+        return '#FFA500'; // Orange
+      case 4: // User Canceled
+      case 5: // Rejected
+      case 6: // User Not Received
+        return '#FF3B30'; // Red
+      default:
+        return '#808080'; // Grey (Unknown Status)
+    }
+  };
+
 
   const usedAbhicash = parseFloat(orderDetails?.abhicash_amount || 0) > 0;
   const usedWallet = parseFloat(orderDetails?.userwallet_amount || 0) > 0;
@@ -224,6 +255,12 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   const walletLabel = usedAbhicash && usedWallet
     ? 'Wallets'
     : 'Wallet';
+
+// Example usage
+const formatIndianDateTime = (dateString) => {
+  return dayjs(dateString, 'YYYY-MM-DD hh:mm A').format('D MMMM YYYY, hh:mm A');
+};
+
 
   return (
     <View style={styles.container}>
@@ -252,14 +289,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
           <Text
             style={[
               styles.shippingValue,
-              {
-                color:
-                  status === 0
-                    ? 'green'
-                    : status === 3
-                      ? '#FFA500'
-                      : '#FF3B30',
-              },
+              { color: getStatusColor(status) }
             ]}
             numberOfLines={1}
           >
@@ -279,27 +309,23 @@ const OrderDetailsScreen = ({ navigation, route }) => {
             <Text
               style={[
                 styles.shippingValue,
-                {
-                  color:
-                    status === 0
-                      ? 'green'
-                      : status === 3
-                        ? '#FFA500'
-                        : '#FF3B30',
-                },
+                { color: getStatusColor(status) }
               ]}
+              numberOfLines={1}
             >
               {getOrderStatusLabel(status)}
-
             </Text>
 
           </View>
 
-          {/* <View style={styles.shippingRow}>
-            <Text style={styles.shippingLabel}>Customer ID:</Text>
-            <Text style={styles.shippingValue}>{customerId}</Text>
-          </View> */}
-
+          {status === 3 && (
+            <View style={styles.shippingRow}>
+              <Text style={styles.shippingLabel}>Completed On:</Text>
+              <Text style={styles.shippingValue}>
+                {formatIndianDateTime(orderDetails?.orderDeliverdDateTime)}
+              </Text>
+            </View>
+          )}
           <View style={styles.shippingRow}>
             <Text style={styles.shippingLabel}>Mobile:</Text>
             <Text style={styles.shippingValue}>+91 {mobileNumber}</Text>
@@ -307,7 +333,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
 
           <View style={styles.shippingRow}>
             <Text style={styles.shippingLabel}>Location:</Text>
-            <Text style={styles.shippingValue}>{address}</Text>
+            <Text style={styles.shippingValue}>{orderDetails?.deliveryAddress || address}</Text>
           </View>
         </View>
 

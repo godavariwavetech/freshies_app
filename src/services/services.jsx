@@ -231,14 +231,16 @@ export const applicationCharges = async () => {
 export const updateOrderStatus = createAsyncThunk(
   "updateOrderStatus",
   async (
-    { paymentId, rzpId, orderId, orderStatus },
+    { paymentId, rzpId, orderId, orderStatus, customerId  },
     { getState, rejectWithValue, fulfillWithValue }
   ) => {
+    console.log("customerId >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", customerId)
     const response = await api.post("/public_app/updatepaymentdetails", {
       "payment_id": paymentId,
       "razorpay_order_id": rzpId,
       "id": orderId,
       "order_status": orderStatus,
+      "customer_id": customerId,
     })
     if (response) {
       if (response.data) {

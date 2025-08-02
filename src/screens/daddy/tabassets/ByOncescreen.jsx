@@ -77,7 +77,9 @@ const BasketScreen = ({ navigation, route }) => {
     customerId,
     mobileNumber,
     shopAddress,
-  } = useSelector(state => state.Auth);
+  } = useSelector(state => state.Auth); 
+
+  console.log("hellow", customerId )
   const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
@@ -434,282 +436,6 @@ const BasketScreen = ({ navigation, route }) => {
     </View>
   );
 
-  // const handlePlaceOrder = async () => {
-  //   try {
-  //     setIsProcessingPayment(true);
-
-  //     const mappedItems = cartItems.map(item => {
-  //       // Determine which price values to use
-  //       const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
-  //       const sellingPrice =
-  //         item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0;
-  //       const quantityType =
-  //         item?.variant?.quantity_type ?? item?.quantity_type ?? '';
-  //       const filterOne = item?.variant?.filter_one ?? item?.filter_one ?? '';
-
-  //       return {
-  //         item_name: item?.name || '',
-  //         item_image: item?.image || '',
-  //         item_id: item?.id?.toString() || '',
-  //         category_id: item?.category_id?.toString() || '',
-  //         sub_category_id:
-  //           item?.sub_category_id?.toString() ||
-  //           item?.subcategory_id?.toString() ||
-  //           '',
-  //         category_name: item?.category_name || '',
-  //         sub_category_name: item?.sub_category_name || '',
-  //         actualitem_price: actualPrice.toString(),
-  //         item_price: sellingPrice.toString(),
-  //         sub_item_count: (item?.quantity ?? 1).toString(),
-  //         item_total_amount: (
-  //           (item?.totalPrice ?? sellingPrice * (item?.quantity ?? 1)) ||
-  //           0
-  //         ).toString(),
-  //         item_description: item?.description || '',
-  //         saving_price: (
-  //           parseFloat(actualPrice) - parseFloat(sellingPrice)
-  //         ).toString(),
-  //         filter_one: filterOne,
-  //         quantity_type: quantityType,
-  //         shop_id: item?.shop_id?.toString() || '',
-  //         value: item?.value,
-  //       };
-  //     });
-
-  //     const totalSavingAmount = cartItems.reduce((acc, item) => {
-  //       const actualPrice = parseFloat(item?.variant?.actual_price ?? item?.price ?? 0);
-  //       const sellingPrice = parseFloat(item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0);
-  //       const quantity = item?.quantity ?? 1;
-
-  //       const savingPerItem = actualPrice - sellingPrice;
-  //       return acc + (savingPerItem > 0 ? savingPerItem * quantity : 0);
-  //     }, 0);
-
-  //     const couponAmount = coupon?.coupon_percentage
-  //       ? (calculateTotalPrice() * (coupon.coupon_percentage / 100)).toFixed(2)
-  //       : '0.00';
-
-  //     console.log(" calculateTotalPrice()", calculateTotalPrice())
-  //     console.log("gstCalculation()", gstCalculation())
-  //     console.log("counpun amount", calculateTotalPrice(), (coupon?.coupon_percentage / 100))
-  //     let payload = {
-  //       customer_id: customerId,
-  //       customer_name: '',
-  //       customer_mobile_number: mobileNumber,
-  //       category_id: '',
-  //       item_count: cartItems.length,
-  //       total_amount:
-  //         (
-  //           Number(calculateTotalPrice()) +
-  //           Number(applicationCharges?.delivery_fixed_charges) +
-  //           Number(applicationCharges?.handling_charges) +
-  //           Number(gstCalculation())
-  //         ).toFixed(2) || 0,
-  //       total_saving_amount: totalSavingAmount.toFixed(2),
-  //       coupon_amount: couponAmount,
-  //       delivery_charges: applicationCharges.delivery_fixed_charges || 0,
-  //       grand_total: (
-  //         calculateTotalPrice() +
-  //         Number(applicationCharges?.delivery_fixed_charges) +
-  //         Number(applicationCharges?.handling_charges) +
-  //         Number(gstCalculation())
-  //       ).toFixed(2) || 0,
-  //       location_id: locationId,
-  //       location_name: locationName,
-  //       payment_type: selectedPaymentMethod,
-  //       payment_id: '',
-  //       razorpay_order_id: '',
-  //       order_status: 1,
-  //       order_instructions: '',
-  //       coupon_type: coupon?.coupon_type || '',
-  //       coupon_id: coupon?.id || '',
-  //       delivery_address: address,
-  //       order_latitude: storedLocation.latitude,
-  //       order_longitude: storedLocation.longitude,
-  //       order_distance: orderDistance || shopAddress.distance_km || '',
-  //       ext_del_charge: applicationCharges?.delivery_fixed_charges,
-  //       shop_id: shopAddress.id || '',
-  //       actual_total_amount: calculateTotalPrice() || 0,
-  //       order_type: 'Online',
-  //       delivery_charges_gst: gstCalculation().toFixed(2) || 0,
-  //       handling_charges: applicationCharges.handling_charges || 0,
-  //       packing_charges: '',
-  //       packing_charges_gst: '',
-  //       donation_charges: '',
-  //       delivery_instruction: deliveryInstructions,
-  //       abhicash_amount: abhiWalletUsed,
-  //       userwallet_amount: userWalletUsed,
-  //       payment_amount: totalAfterWallets.toFixed(2),
-  //       sub_order_array: mappedItems,
-  //     };
-
-  //     console.log('mappeditems', mappedItems);
-  //     console.log('payload', payload);
-  //     const finalPrice = parseFloat(totalAfterWallets);
-  //     console.log("final price", finalPrice)
-  //     if ((finalPrice === 0) || selectedPaymentMethod === 'COD' && address) {
-  //       const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
-  //       if (!responseCod.payload) return;
-  //       const orderDetails = {
-  //         orderId: responseCod?.payload?.id || '',
-  //         totalAmount: calculateTotalPrice(),
-  //         grandTotal: (
-  //           calculateTotalPrice() +
-  //           Number(applicationCharges?.delivery_fixed_charges || 0) +
-  //           Number(applicationCharges?.handling_charges || 0) +
-  //           gstCalculation() -
-  //           (couponAmount || 0)
-  //         ).toFixed(2),
-  //         couponAmount: couponAmount || 0,
-  //         deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
-  //         totalSavings: totalSavingAmount || 0,
-  //         paymentType: selectedPaymentMethod,
-  //         shopName: '',
-  //         orderDate: responseCod.payload.order_date,
-  //         orderTime: responseCod.payload.order_date,
-  //         deliveryAddress: address,
-  //         shopAddress: '',
-  //         shopPhoneNumber: '',
-  //         order_id: responseCod.payload.order_id,
-  //         delivery_charges_gst: gstCalculation().toFixed(2) || 0,
-  //         handling_charges: applicationCharges?.handling_charges || 0,
-  //         abhicash_amount: abhiWalletUsed,
-  //         userwallet_amount: userWalletUsed,
-  //       };
-  //       if (responseCod.payload.status === 200) {
-  //         fetchWallet()
-  //         navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
-  //       }
-  //       return;
-  //     }
-
-  //     payload.order_status = 7;
-  //     const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
-  //     if (!pacedResponse.payload) return;
-  //     // Prepare order details only once
-  //     const orderDetails = {
-  //       orderId: pacedResponse.payload.id,
-  //       totalAmount: calculateTotalPrice(),
-  //       grandTotal:
-  //         (
-  //           calculateTotalPrice() +
-  //           Number(applicationCharges?.delivery_fixed_charges || 0) +
-  //           Number(applicationCharges?.handling_charges || 0) +
-  //           gstCalculation() - (couponAmount || 0)
-  //         ).toFixed(2),
-  //       couponAmount: couponAmount || 0,
-  //       deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
-  //       totalSavings: totalSavingAmount,
-  //       paymentType: selectedPaymentMethod,
-  //       shopName: '',
-  //       orderDate: pacedResponse.payload.order_date,
-  //       orderTime: pacedResponse.payload.order_date,
-  //       deliveryAddress: address,
-  //       shopAddress: '',
-  //       shopPhoneNumber: '',
-  //       order_id: pacedResponse.payload.order_id,
-  //       delivery_charges_gst: gstCalculation().toFixed(2) || 0,
-  //       handling_charges: applicationCharges?.handling_charges || 0,
-  //       abhicash_amount: abhiWalletUsed,
-  //       userwallet_amount: userWalletUsed,
-  //     };
-
-  //     const options = {
-  //       description: 'Order Payment',
-  //       image: '',
-  //       currency: 'INR',
-  //       key: pacedResponse.payload.key_id,
-  //       order_id: pacedResponse.payload.razorpay_order_id,
-  //       amount: 1000,
-  //       name: 'Abhi 24',
-  //       prefill: {
-  //         contact: mobileNumber,
-  //         name: selectedAddress?.customer_name,
-  //       },
-  //       theme: { color: '#8655d2' },
-  //     };
-
-  //     RazorpayCheckout.open(options)
-  //       .then(async data => {
-  //         payload.payment_id = data.razorpay_payment_id;
-  //         payload.razorpay_order_id = data.razorpay_order_id;
-  //         payload.order_status = 0;
-
-  //         await dispatch(
-  //           updateOrderStatus({
-  //             paymentId: data.razorpay_payment_id,
-  //             rzpId: data.razorpay_order_id,
-  //             orderId: pacedResponse.payload.id,
-  //             orderStatus: 0,
-  //           }),
-  //         );
-  //         fetchWallet()
-  //         navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
-  //       })
-  //       .catch(error => {
-  //         let errorMessage = 'Transaction was not completed.';
-
-  //         // Handle user cancel case explicitly
-  //         if (
-  //           error?.code === 0 ||
-  //           error?.description === 'The payment was cancelled'
-  //         ) {
-  //           console.log('User exited Razorpay payment screen.');
-  //           return; // Don’t show alert for user cancel
-  //         }
-
-  //         // Extract more specific error messages if available
-  //         if (typeof error === 'object') {
-  //           if (error.description) {
-  //             errorMessage = error.description;
-  //           } else if (error.error?.description) {
-  //             errorMessage = error.error.description;
-  //           } else if (error.reason) {
-  //             errorMessage = error.reason.replace(/_/g, ' ');
-  //           }
-  //         }
-  //         console.error('Payment failed:', error);
-  //         Alert.alert('Payment Failed', errorMessage);
-  //       });
-  //   } catch (error) {
-  //     console.error('Order Payment Error:', error);
-  //     Alert.alert('Error', 'Something went wrong. Please try again.');
-  //   } finally {
-  //     setIsProcessingPayment(false);
-  //   }
-  // };
-
-  // const calculateFinalPrice = () => {
-  //   const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
-  //   const handlingCharge = Number(applicationCharges?.handling_charges || 0);
-  //   const gst = gstCalculation();
-
-  //   let subtotal = muttonSubtotal + otherSubtotal;
-  //   console.log("before coupon+++++++++++++++", subtotal)
-  //   // Apply coupon on subtotal
-  //   if (coupon) {
-  //     if (coupon.type === 'percentage') {
-  //       subtotal -= subtotal * (coupon.discount / 100);
-  //     } else {
-  //       subtotal -= coupon.discount;
-  //     }
-  //   }
-  //   console.log("coupon", coupon)
-  //   console.log("after coupon+++++++++++++++", subtotal)
-  //   // Full total (after coupon)
-  //   const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
-
-  //   // Abhi Wallet can only be used for mutton subtotal (no change needed)
-  //   const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
-
-  //   // User Wallet can apply to full remaining amount
-  //   const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
-  //   const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
-  //   console.log(totalBeforeWallets, abhiWalletUsed, userWalletUsed)
-  //   const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
-
-  //   return Math.max(0, totalAfterWallets);
-  // };
 
 
   const handlePlaceOrder = async () => {
@@ -772,7 +498,7 @@ const BasketScreen = ({ navigation, route }) => {
         payment_type: selectedPaymentMethod,
         payment_id: '',
         razorpay_order_id: '',
-        order_status: selectedPaymentMethod === 'COD' || totalAfterWallets === 0 ? 1 : 7,
+        order_status: selectedPaymentMethod === 'COD' || totalAfterWallets === 0 ? 0 : 7,
         order_instructions: '',
         coupon_type: coupon?.coupon_type || '',
         coupon_id: coupon?.id || '',
@@ -853,15 +579,23 @@ const BasketScreen = ({ navigation, route }) => {
             order_status: 0,
           };
 
-          await dispatch(updateOrderStatus({
-            paymentId: data.razorpay_payment_id,
-            rzpId: data.razorpay_order_id,
-            orderId: orderResponse.payload.id,
-            orderStatus: 0,
-          }));
-
-          fetchWallet();
-          navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
+          try {
+            console.log("customerId >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", customerId)
+            const updateResult = await dispatch(updateOrderStatus({
+              paymentId: data.razorpay_payment_id,
+              rzpId: data.razorpay_order_id,
+              orderId: orderResponse.payload.id,
+              orderStatus: 0,
+              customerId: customerId,
+            })).unwrap();  // unwrap() will throw error if rejected
+            console.log("updateResult >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", updateResult)
+            await fetchWallet();  // Ensure wallet is updated before proceeding
+          
+            navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
+          } catch (err) {
+            console.error('Payment update failed:', err);
+            Alert.alert('Error', 'Payment status update failed. Please contact support.');
+          }
         })
         .catch(error => {
           if (
@@ -1841,4 +1575,304 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BasketScreen;
+export default BasketScreen; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // const handlePlaceOrder = async () => {
+  //   try {
+  //     setIsProcessingPayment(true);
+
+  //     const mappedItems = cartItems.map(item => {
+  //       // Determine which price values to use
+  //       const actualPrice = item?.variant?.actual_price ?? item?.price ?? 0;
+  //       const sellingPrice =
+  //         item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0;
+  //       const quantityType =
+  //         item?.variant?.quantity_type ?? item?.quantity_type ?? '';
+  //       const filterOne = item?.variant?.filter_one ?? item?.filter_one ?? '';
+
+  //       return {
+  //         item_name: item?.name || '',
+  //         item_image: item?.image || '',
+  //         item_id: item?.id?.toString() || '',
+  //         category_id: item?.category_id?.toString() || '',
+  //         sub_category_id:
+  //           item?.sub_category_id?.toString() ||
+  //           item?.subcategory_id?.toString() ||
+  //           '',
+  //         category_name: item?.category_name || '',
+  //         sub_category_name: item?.sub_category_name || '',
+  //         actualitem_price: actualPrice.toString(),
+  //         item_price: sellingPrice.toString(),
+  //         sub_item_count: (item?.quantity ?? 1).toString(),
+  //         item_total_amount: (
+  //           (item?.totalPrice ?? sellingPrice * (item?.quantity ?? 1)) ||
+  //           0
+  //         ).toString(),
+  //         item_description: item?.description || '',
+  //         saving_price: (
+  //           parseFloat(actualPrice) - parseFloat(sellingPrice)
+  //         ).toString(),
+  //         filter_one: filterOne,
+  //         quantity_type: quantityType,
+  //         shop_id: item?.shop_id?.toString() || '',
+  //         value: item?.value,
+  //       };
+  //     });
+
+  //     const totalSavingAmount = cartItems.reduce((acc, item) => {
+  //       const actualPrice = parseFloat(item?.variant?.actual_price ?? item?.price ?? 0);
+  //       const sellingPrice = parseFloat(item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0);
+  //       const quantity = item?.quantity ?? 1;
+
+  //       const savingPerItem = actualPrice - sellingPrice;
+  //       return acc + (savingPerItem > 0 ? savingPerItem * quantity : 0);
+  //     }, 0);
+
+  //     const couponAmount = coupon?.coupon_percentage
+  //       ? (calculateTotalPrice() * (coupon.coupon_percentage / 100)).toFixed(2)
+  //       : '0.00';
+
+  //     console.log(" calculateTotalPrice()", calculateTotalPrice())
+  //     console.log("gstCalculation()", gstCalculation())
+  //     console.log("counpun amount", calculateTotalPrice(), (coupon?.coupon_percentage / 100))
+  //     let payload = {
+  //       customer_id: customerId,
+  //       customer_name: '',
+  //       customer_mobile_number: mobileNumber,
+  //       category_id: '',
+  //       item_count: cartItems.length,
+  //       total_amount:
+  //         (
+  //           Number(calculateTotalPrice()) +
+  //           Number(applicationCharges?.delivery_fixed_charges) +
+  //           Number(applicationCharges?.handling_charges) +
+  //           Number(gstCalculation())
+  //         ).toFixed(2) || 0,
+  //       total_saving_amount: totalSavingAmount.toFixed(2),
+  //       coupon_amount: couponAmount,
+  //       delivery_charges: applicationCharges.delivery_fixed_charges || 0,
+  //       grand_total: (
+  //         calculateTotalPrice() +
+  //         Number(applicationCharges?.delivery_fixed_charges) +
+  //         Number(applicationCharges?.handling_charges) +
+  //         Number(gstCalculation())
+  //       ).toFixed(2) || 0,
+  //       location_id: locationId,
+  //       location_name: locationName,
+  //       payment_type: selectedPaymentMethod,
+  //       payment_id: '',
+  //       razorpay_order_id: '',
+  //       order_status: 1,
+  //       order_instructions: '',
+  //       coupon_type: coupon?.coupon_type || '',
+  //       coupon_id: coupon?.id || '',
+  //       delivery_address: address,
+  //       order_latitude: storedLocation.latitude,
+  //       order_longitude: storedLocation.longitude,
+  //       order_distance: orderDistance || shopAddress.distance_km || '',
+  //       ext_del_charge: applicationCharges?.delivery_fixed_charges,
+  //       shop_id: shopAddress.id || '',
+  //       actual_total_amount: calculateTotalPrice() || 0,
+  //       order_type: 'Online',
+  //       delivery_charges_gst: gstCalculation().toFixed(2) || 0,
+  //       handling_charges: applicationCharges.handling_charges || 0,
+  //       packing_charges: '',
+  //       packing_charges_gst: '',
+  //       donation_charges: '',
+  //       delivery_instruction: deliveryInstructions,
+  //       abhicash_amount: abhiWalletUsed,
+  //       userwallet_amount: userWalletUsed,
+  //       payment_amount: totalAfterWallets.toFixed(2),
+  //       sub_order_array: mappedItems,
+  //     };
+
+  //     console.log('mappeditems', mappedItems);
+  //     console.log('payload', payload);
+  //     const finalPrice = parseFloat(totalAfterWallets);
+  //     console.log("final price", finalPrice)
+  //     if ((finalPrice === 0) || selectedPaymentMethod === 'COD' && address) {
+  //       const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
+  //       if (!responseCod.payload) return;
+  //       const orderDetails = {
+  //         orderId: responseCod?.payload?.id || '',
+  //         totalAmount: calculateTotalPrice(),
+  //         grandTotal: (
+  //           calculateTotalPrice() +
+  //           Number(applicationCharges?.delivery_fixed_charges || 0) +
+  //           Number(applicationCharges?.handling_charges || 0) +
+  //           gstCalculation() -
+  //           (couponAmount || 0)
+  //         ).toFixed(2),
+  //         couponAmount: couponAmount || 0,
+  //         deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
+  //         totalSavings: totalSavingAmount || 0,
+  //         paymentType: selectedPaymentMethod,
+  //         shopName: '',
+  //         orderDate: responseCod.payload.order_date,
+  //         orderTime: responseCod.payload.order_date,
+  //         deliveryAddress: address,
+  //         shopAddress: '',
+  //         shopPhoneNumber: '',
+  //         order_id: responseCod.payload.order_id,
+  //         delivery_charges_gst: gstCalculation().toFixed(2) || 0,
+  //         handling_charges: applicationCharges?.handling_charges || 0,
+  //         abhicash_amount: abhiWalletUsed,
+  //         userwallet_amount: userWalletUsed,
+  //       };
+  //       if (responseCod.payload.status === 200) {
+  //         fetchWallet()
+  //         navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
+  //       }
+  //       return;
+  //     }
+
+  //     payload.order_status = 7;
+  //     const pacedResponse = await dispatch(placeOrder({ orderDetails: payload }));
+  //     if (!pacedResponse.payload) return;
+  //     // Prepare order details only once
+  //     const orderDetails = {
+  //       orderId: pacedResponse.payload.id,
+  //       totalAmount: calculateTotalPrice(),
+  //       grandTotal:
+  //         (
+  //           calculateTotalPrice() +
+  //           Number(applicationCharges?.delivery_fixed_charges || 0) +
+  //           Number(applicationCharges?.handling_charges || 0) +
+  //           gstCalculation() - (couponAmount || 0)
+  //         ).toFixed(2),
+  //       couponAmount: couponAmount || 0,
+  //       deliveryCharges: applicationCharges?.delivery_fixed_charges || 0,
+  //       totalSavings: totalSavingAmount,
+  //       paymentType: selectedPaymentMethod,
+  //       shopName: '',
+  //       orderDate: pacedResponse.payload.order_date,
+  //       orderTime: pacedResponse.payload.order_date,
+  //       deliveryAddress: address,
+  //       shopAddress: '',
+  //       shopPhoneNumber: '',
+  //       order_id: pacedResponse.payload.order_id,
+  //       delivery_charges_gst: gstCalculation().toFixed(2) || 0,
+  //       handling_charges: applicationCharges?.handling_charges || 0,
+  //       abhicash_amount: abhiWalletUsed,
+  //       userwallet_amount: userWalletUsed,
+  //     };
+
+  //     const options = {
+  //       description: 'Order Payment',
+  //       image: '',
+  //       currency: 'INR',
+  //       key: pacedResponse.payload.key_id,
+  //       order_id: pacedResponse.payload.razorpay_order_id,
+  //       amount: 1000,
+  //       name: 'Abhi 24',
+  //       prefill: {
+  //         contact: mobileNumber,
+  //         name: selectedAddress?.customer_name,
+  //       },
+  //       theme: { color: '#8655d2' },
+  //     };
+
+  //     RazorpayCheckout.open(options)
+  //       .then(async data => {
+  //         payload.payment_id = data.razorpay_payment_id;
+  //         payload.razorpay_order_id = data.razorpay_order_id;
+  //         payload.order_status = 0;
+
+  //         await dispatch(
+  //           updateOrderStatus({
+  //             paymentId: data.razorpay_payment_id,
+  //             rzpId: data.razorpay_order_id,
+  //             orderId: pacedResponse.payload.id,
+  //             orderStatus: 0,
+  //           }),
+  //         );
+  //         fetchWallet()
+  //         navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
+  //       })
+  //       .catch(error => {
+  //         let errorMessage = 'Transaction was not completed.';
+
+  //         // Handle user cancel case explicitly
+  //         if (
+  //           error?.code === 0 ||
+  //           error?.description === 'The payment was cancelled'
+  //         ) {
+  //           console.log('User exited Razorpay payment screen.');
+  //           return; // Don’t show alert for user cancel
+  //         }
+
+  //         // Extract more specific error messages if available
+  //         if (typeof error === 'object') {
+  //           if (error.description) {
+  //             errorMessage = error.description;
+  //           } else if (error.error?.description) {
+  //             errorMessage = error.error.description;
+  //           } else if (error.reason) {
+  //             errorMessage = error.reason.replace(/_/g, ' ');
+  //           }
+  //         }
+  //         console.error('Payment failed:', error);
+  //         Alert.alert('Payment Failed', errorMessage);
+  //       });
+  //   } catch (error) {
+  //     console.error('Order Payment Error:', error);
+  //     Alert.alert('Error', 'Something went wrong. Please try again.');
+  //   } finally {
+  //     setIsProcessingPayment(false);
+  //   }
+  // };
+
+  // const calculateFinalPrice = () => {
+  //   const deliveryCharge = Number(applicationCharges?.delivery_fixed_charges || 0);
+  //   const handlingCharge = Number(applicationCharges?.handling_charges || 0);
+  //   const gst = gstCalculation();
+
+  //   let subtotal = muttonSubtotal + otherSubtotal;
+  //   console.log("before coupon+++++++++++++++", subtotal)
+  //   // Apply coupon on subtotal
+  //   if (coupon) {
+  //     if (coupon.type === 'percentage') {
+  //       subtotal -= subtotal * (coupon.discount / 100);
+  //     } else {
+  //       subtotal -= coupon.discount;
+  //     }
+  //   }
+  //   console.log("coupon", coupon)
+  //   console.log("after coupon+++++++++++++++", subtotal)
+  //   // Full total (after coupon)
+  //   const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
+
+  //   // Abhi Wallet can only be used for mutton subtotal (no change needed)
+  //   const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
+
+  //   // User Wallet can apply to full remaining amount
+  //   const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
+  //   const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
+  //   console.log(totalBeforeWallets, abhiWalletUsed, userWalletUsed)
+  //   const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
+
+  //   return Math.max(0, totalAfterWallets);
+  // };
+
