@@ -19,20 +19,19 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { getUserData, updateUserProfile } from '../../services/services';
 import { launchImageLibrary } from 'react-native-image-picker';
 import deliveryBoy from '../../screens/daddy/tabassets/deliveryBoy.png';
-import { setUseDetails } from '../../redux/reducers/auth';
+import { setUseDetails, actionLogout } from '../../redux/reducers/auth';
 
 const UserProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const editButtonRef = useRef(new Animated.Value(1)).current;
-  const { mobileNumber, referralCode, username, address } = useSelector(
+  const { mobileNumber, referralCode, username, address, customerId } = useSelector(
     state => state.Auth,
   );
   const [base64Image, setBase64Image] = useState('');
   const [imageUri, setImageUri] = useState(userData?.profile_image || '');
   const [editMode, setEditMode] = useState(false);
   const [editedUsername, setEditedUsername] = useState(username);
-  const { customerId } = useSelector(state => state.Auth);
   const [userData, setUserData] = useState(null);
   const [preferences, setPreferences] = useState({
     callBefore: false,
@@ -62,8 +61,10 @@ const UserProfileScreen = () => {
   };
 
   useEffect(() => {
-    getUserProfile();
-  }, []);
+    if (customerId) {
+      getUserProfile();
+    }
+  }, [customerId]);
 
   const pulseEditButton = () => {
     Animated.sequence([
@@ -156,134 +157,163 @@ const UserProfileScreen = () => {
         <Text style={styles.headerTitle}>Account</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        {/* Profile Info */}
-        <View style={styles.profileHeader}>
-          <TouchableOpacity
-            onPress={pickImage}
-            style={{ borderRadius: 100, overflow: 'hidden' }}>
-            <Image
-              source={{
-                uri:
-                  imageUri ||
-                  userData?.profile_image ||
-                  'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png',
-              }}
-              style={styles.profileImage}
-            />
-          </TouchableOpacity>
-          {!editMode ? (
-            <TouchableOpacity onPress={pulseEditButton}>
-              <Text style={styles.profileName}>{userData?.customer_name}</Text>
-            </TouchableOpacity>
-          ) : (
-            <TextInput
-              style={styles.input}
-              value={editedUsername}
-              onChangeText={setEditedUsername}
-              placeholder="Enter your name"
-            />
-          )}
-
-          <Text style={styles.profileEmail}>
-            {userData?.customer_mobile_number}
-          </Text>
-        </View>
-
-        {/* Account & Preferences Section */}
-        <View style={styles.sectionCard}>
-          <TouchableOpacity
-            style={styles.cardRow}
-            onPress={() => navigation.navigate('SelectServiceFromLocation')}>
-            <View>
-              <Text style={styles.cardTitle}>Address</Text>
-              <Text style={styles.cardSub}>
-                {address || 'Tap to select address'}
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={24} color="#aaa" />
-          </TouchableOpacity>
-
-          {/* <TouchableOpacity
-            style={styles.cardRow}
-            onPress={() => {
-              if (!editMode) setEditMode(true);
-              setSelectedSlot('Morning (5.00 AM – 7.30 AM)'); // You can change this to show a picker
-            }}
-          >
-            <View>
-              <Text style={styles.cardTitle}>Delivery Time Slot</Text>
-              <Text style={styles.cardSub}>{selectedSlot}</Text>
-            </View>
-          </TouchableOpacity> */}
-        </View>
-
-        {/* Banner */}
-        <View style={styles.bannerBox}>
-          <Text style={styles.bannerText}>
-            Help our delivery partner with your customized delivery preferences
-          </Text>
-          <Image source={deliveryBoy} style={styles.bannerImage} />
-        </View>
-
-        {/* Preferences */}
-        <Text style={styles.sectionTitle}>Delivery Preferences</Text>
-        <View style={styles.preferenceRow}>
-          {/* Call before delivery */}
-          <TouchableOpacity
-            style={styles.prefCard}
-            onPress={() => togglePreference('callBefore')}
-            activeOpacity={editMode ? 0.7 : 1}>
-            <Icon name="call-outline" size={26} color="#8655d2" />
-            <Text style={styles.prefText}>Call before delivery</Text>
-            <MaterialIcons
-              name={preferences.callBefore ? 'toggle-on' : 'toggle-off'}
-              size={36}
-              color={preferences.callBefore ? '#8655d2' : '#ccc'}
-            />
-          </TouchableOpacity>
-
-          {/* Ring the bell */}
-          <TouchableOpacity
-            style={styles.prefCard}
-            onPress={() => togglePreference('ringBell')}
-            activeOpacity={editMode ? 0.7 : 1}>
-            <Icon name="notifications-outline" size={26} color="#8655d2" />
-            <Text style={styles.prefText}>Ring the bell</Text>
-            <MaterialIcons
-              name={preferences.ringBell ? 'toggle-on' : 'toggle-off'}
-              size={36}
-              color={preferences.ringBell ? '#8655d2' : '#ccc'}
-            />
-          </TouchableOpacity>
-
-          {/* Leave at doorstep */}
-          <TouchableOpacity
-            style={styles.prefCard}
-            onPress={() => togglePreference('leaveAtDoorstep')}
-            activeOpacity={editMode ? 0.7 : 1}>
-            <Icon name="home-outline" size={26} color="#8655d2" />
-            <Text style={styles.prefText}>Leave at doorstep</Text>
-            <MaterialIcons
-              name={preferences.leaveAtDoorstep ? 'toggle-on' : 'toggle-off'}
-              size={36}
-              color={preferences.leaveAtDoorstep ? '#8655d2' : '#ccc'}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Edit/Save Button */}
-        <Animated.View
-          style={{ transform: [{ scale: editButtonRef }], marginTop: 30 }}>
-          <TouchableOpacity
-            style={[styles.editButton, editMode && styles.editButtonActive]}
-            onPress={editMode ? handleSave : () => setEditMode(true)}>
-            <Text style={styles.editButtonText}>
-              {editMode ? 'Save Changes' : 'Edit Profile'}
+      {/* Login Required Section for Unauthenticated Users */}
+      {!customerId && (
+        <View style={styles.loginRequiredContainer}>
+          <View style={styles.loginRequiredContent}>
+            <Icon name="person-circle-outline" size={60} color="#8655d2" />
+            <Text style={styles.loginRequiredTitle}>Login Required</Text>
+            <Text style={styles.loginRequiredMessage}>
+              Please login to access your profile and manage your account settings.
             </Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </ScrollView>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => {
+                dispatch(actionLogout());
+               
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }}
+            >
+              <Text style={styles.loginButtonText}>Login Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Main Content - Only show when authenticated */}
+      {customerId && (
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {/* Profile Info */}
+          <View style={styles.profileHeader}>
+            <TouchableOpacity
+              onPress={pickImage}
+              style={{ borderRadius: 100, overflow: 'hidden' }}>
+              <Image
+                source={{
+                  uri:
+                    imageUri ||
+                    userData?.profile_image ||
+                    'https://skiblue.co.uk/wp-content/uploads/2015/06/dummy-profile.png',
+                }}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+            {!editMode ? (
+              <TouchableOpacity onPress={pulseEditButton}>
+                <Text style={styles.profileName}>{userData?.customer_name}</Text>
+              </TouchableOpacity>
+            ) : (
+              <TextInput
+                style={styles.input}
+                value={editedUsername}
+                onChangeText={setEditedUsername}
+                placeholder="Enter your name"
+              />
+            )}
+
+            <Text style={styles.profileEmail}>
+              {userData?.customer_mobile_number}
+            </Text>
+          </View>
+
+          {/* Account & Preferences Section */}
+          <View style={styles.sectionCard}>
+            <TouchableOpacity
+              style={styles.cardRow}
+              onPress={() => navigation.navigate('SelectServiceFromLocation')}>
+              <View>
+                <Text style={styles.cardTitle}>Address</Text>
+                <Text style={styles.cardSub}>
+                  {address || 'Tap to select address'}
+                </Text>
+              </View>
+              <Icon name="chevron-forward" size={24} color="#aaa" />
+            </TouchableOpacity>
+
+            {/* <TouchableOpacity
+              style={styles.cardRow}
+              onPress={() => {
+                if (!editMode) setEditMode(true);
+                setSelectedSlot('Morning (5.00 AM – 7.30 AM)'); // You can change this to show a picker
+              }}
+            >
+              <View>
+                <Text style={styles.cardTitle}>Delivery Time Slot</Text>
+                <Text style={styles.cardSub}>{selectedSlot}</Text>
+              </View>
+            </TouchableOpacity> */}
+          </View>
+
+          {/* Banner */}
+          <View style={styles.bannerBox}>
+            <Text style={styles.bannerText}>
+              Help our delivery partner with your customized delivery preferences
+            </Text>
+            <Image source={deliveryBoy} style={styles.bannerImage} />
+          </View>
+
+          {/* Preferences */}
+          <Text style={styles.sectionTitle}>Delivery Preferences</Text>
+          <View style={styles.preferenceRow}>
+            {/* Call before delivery */}
+            <TouchableOpacity
+              style={styles.prefCard}
+              onPress={() => togglePreference('callBefore')}
+              activeOpacity={editMode ? 0.7 : 1}>
+              <Icon name="call-outline" size={26} color="#8655d2" />
+              <Text style={styles.prefText}>Call before delivery</Text>
+              <MaterialIcons
+                name={preferences.callBefore ? 'toggle-on' : 'toggle-off'}
+                size={36}
+                color={preferences.callBefore ? '#8655d2' : '#ccc'}
+              />
+            </TouchableOpacity>
+
+            {/* Ring the bell */}
+            <TouchableOpacity
+              style={styles.prefCard}
+              onPress={() => togglePreference('ringBell')}
+              activeOpacity={editMode ? 0.7 : 1}>
+              <Icon name="notifications-outline" size={26} color="#8655d2" />
+              <Text style={styles.prefText}>Ring the bell</Text>
+              <MaterialIcons
+                name={preferences.ringBell ? 'toggle-on' : 'toggle-off'}
+                size={36}
+                color={preferences.ringBell ? '#8655d2' : '#ccc'}
+              />
+            </TouchableOpacity>
+
+            {/* Leave at doorstep */}
+            <TouchableOpacity
+              style={styles.prefCard}
+              onPress={() => togglePreference('leaveAtDoorstep')}
+              activeOpacity={editMode ? 0.7 : 1}>
+              <Icon name="home-outline" size={26} color="#8655d2" />
+              <Text style={styles.prefText}>Leave at doorstep</Text>
+              <MaterialIcons
+                name={preferences.leaveAtDoorstep ? 'toggle-on' : 'toggle-off'}
+                size={36}
+                color={preferences.leaveAtDoorstep ? '#8655d2' : '#ccc'}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Edit/Save Button */}
+          <Animated.View
+            style={{ transform: [{ scale: editButtonRef }], marginTop: 30 }}>
+            <TouchableOpacity
+              style={[styles.editButton, editMode && styles.editButtonActive]}
+              onPress={editMode ? handleSave : () => setEditMode(true)}>
+              <Text style={styles.editButtonText}>
+                {editMode ? 'Save Changes' : 'Edit Profile'}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -312,6 +342,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     flex: 1,
+  },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loginRequiredContent: {
+    alignItems: 'center',
+    maxWidth: 300,
+  },
+  loginRequiredTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  loginRequiredMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  loginButton: {
+    backgroundColor: '#8655d2',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   profileHeader: {
     alignItems: 'center',

@@ -40,13 +40,13 @@ const Tab = createBottomTabNavigator();
 export default function BottomNavigation() {
   const dispatch = useDispatch();
   const { cartItems } = useSelector((state) => state.Dashboard);
-  const { customerId,userDetails,storeData } = useSelector(state => state.Auth);
- 
+  const { customerId, userDetails, storeData } = useSelector(state => state.Auth);
+
   useEffect(() => {
     const getUserProfile = async () => {
       try {
         const res = await getUserData({ customer_id: customerId });
-        if (res.status === 200 && res.data?.length > 0) {      
+        if (res.status === 200 && res.data?.length > 0) {
           const user = res.data[0];
           dispatch(setUseDetails(user))
         }
@@ -70,7 +70,7 @@ export default function BottomNavigation() {
     };
     loadApplicationCharges();
   }, []);
- 
+
   // Get the current tab name
   const navigationState = useNavigationState(state => state);
   const currentTab = navigationState.routes[navigationState.index]?.name;
@@ -141,7 +141,7 @@ export default function BottomNavigation() {
                 />
               );
             }
-          
+
             return iconName;
           },
 
@@ -201,7 +201,7 @@ export default function BottomNavigation() {
             tabBarLabel: 'Orders', // shorter label
           }}
         />
-         <Tab.Screen
+        <Tab.Screen
           name="Profile"
           component={ProfileScreen}
           key={userDetails}
