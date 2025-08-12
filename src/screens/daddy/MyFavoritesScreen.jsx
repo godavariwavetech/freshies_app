@@ -47,7 +47,7 @@ const MyFavoritesScreen = () => {
           sub_category_id: item.sub_category_id
         }));
         setFavorites(mapped);
-        console.log("favorites", res.data)
+      
       } else {
         setFavorites([]);
       }
@@ -80,11 +80,11 @@ const MyFavoritesScreen = () => {
     setUpdatingFavoriteId(item.id);
     try {
       const isFavorited = !!item.id; // because id = wishlistId
-      console.log("isss", isFavorited)
+   
       if (isFavorited) {
         // Remove from wishlist
         const response = await removeFromWishlist({ wishlistId: item.id });
-        console.log("deleteresponse", response)
+      
         const updated = favorites.filter(fav => fav.id !== item.id);
         setFavorites(updated);
       } else {

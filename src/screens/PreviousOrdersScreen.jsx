@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { getPreviousOrders } from '../services/services';
 import Icon from 'react-native-vector-icons/Ionicons'; // or MaterialIcons, Feather, etc.
-import { useSelector } from 'react-redux'; // ✅ Import useSelector
+import { useDispatch, useSelector } from 'react-redux'; // ✅ Import useSelector
 import FocusAwareStatusBar from '../components/CustomStatusBar';
+import { actionLogout } from '../redux/reducers/auth';
+import { clearCart } from '../redux/reducers/daddy';
 
 
 const PreviousOrdersScreen = () => {
@@ -14,28 +16,35 @@ const PreviousOrdersScreen = () => {
   const customerId = useSelector(state => state.Auth.customerId)
   const [activeTab, setActiveTab] = useState('InProgress'); // 'InProgress' | 'Completed'
 
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!customerId) return; // Avoid API call if customerId is missing
+  const fetchOrders = async () => {
+    if (!customerId) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const payload = {
-          customer_id: customerId,
-          order_id: 0
-        };
-        const result = await getPreviousOrders(payload);
-        console.log("previous orders", result)
-        setOrders(result);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      setLoading(true);
+      const payload = {
+        customer_id: customerId,
+        order_id: 0
+      };
+      const result = await getPreviousOrders(payload);
+      setOrders(result);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
-  }, [customerId]);
+  // Refresh when Screen is Focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();
+    }, [customerId])
+  );
 
 
   const renderOrder = ({ item }) => (
@@ -108,48 +117,76 @@ const PreviousOrdersScreen = () => {
           </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 10 }}>
-          <TouchableOpacity
-            onPress={() => setActiveTab('InProgress')}
-            style={{
-              paddingVertical: 8,
-              paddingHorizontal: 20,
-              borderRadius: 20,
-              backgroundColor: activeTab === 'InProgress' ? '#8655d2' : '#ddd',
-              marginRight: 10,
-            }}
-          >
-            <Text style={{ color: activeTab === 'InProgress' ? '#fff' : '#000' }}>In-Progress</Text>
-          </TouchableOpacity>
+        {/* Login Prompt for users without customer ID */}
+        {!customerId && (
+          <View style={styles.loginPromptContainer}>
+            <Icon name="person-circle-outline" size={60} color="#8655d2" />
+            <Text style={styles.loginPromptTitle}>Login Required</Text>
+            <Text style={styles.loginPromptText}>
+              Please login to view your previous orders and track your deliveries.
+            </Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => {
+                dispatch(actionLogout());
+              
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }}>
 
-          <TouchableOpacity
-            onPress={() => setActiveTab('Completed')}
-            style={{
-              paddingVertical: 8,
-              paddingHorizontal: 20,
-              borderRadius: 20,
-              backgroundColor: activeTab === 'Completed' ? '#8655d2' : '#ddd',
-            }}
-          >
-            <Text style={{ color: activeTab === 'Completed' ? '#fff' : '#000' }}>Completed</Text>
-          </TouchableOpacity>
-        </View>
+              <Text style={styles.loginButtonText}>Login Now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {loading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#8655d2" />
-          </View>
-        ) : (activeTab === 'InProgress' ? getInProgressOrders().length === 0 : getCompletedOrders().length === 0) ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 16, color: '#888' }}>No {activeTab === 'InProgress' ? 'In-Progress' : 'Completed'} orders available</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={activeTab === 'InProgress' ? getInProgressOrders() : getCompletedOrders()}
-            keyExtractor={(item) => item.order_id.toString()}
-            renderItem={renderOrder}
-            contentContainerStyle={{ paddingBottom: 200 }}
-          />
+        {customerId && (
+          <>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginVertical: 10 }}>
+              <TouchableOpacity
+                onPress={() => setActiveTab('InProgress')}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 20,
+                  borderRadius: 20,
+                  backgroundColor: activeTab === 'InProgress' ? '#8655d2' : '#ddd',
+                  marginRight: 10,
+                }}
+              >
+                <Text style={{ color: activeTab === 'InProgress' ? '#fff' : '#000' }}>In-Progress</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setActiveTab('Completed')}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 20,
+                  borderRadius: 20,
+                  backgroundColor: activeTab === 'Completed' ? '#8655d2' : '#ddd',
+                }}
+              >
+                <Text style={{ color: activeTab === 'Completed' ? '#fff' : '#000' }}>Completed</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading ? (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#8655d2" />
+              </View>
+            ) : (activeTab === 'InProgress' ? getInProgressOrders().length === 0 : getCompletedOrders().length === 0) ? (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 16, color: '#888' }}>No {activeTab === 'InProgress' ? 'In-Progress' : 'Completed'} orders available</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={activeTab === 'InProgress' ? getInProgressOrders() : getCompletedOrders()}
+                keyExtractor={(item) => item.order_id.toString()}
+                renderItem={renderOrder}
+                contentContainerStyle={{ paddingBottom: 200 }}
+              />
+            )}
+          </>
         )}
       </View>
     </SafeAreaView>
@@ -216,7 +253,39 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 12,
   },
-
+  loginPromptContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: '#F6F6F6',
+  },
+  loginPromptTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  loginPromptText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  loginButton: {
+    backgroundColor: '#8655d2',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 

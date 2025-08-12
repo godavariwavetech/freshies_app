@@ -142,6 +142,7 @@ export const AuthSlice = createSlice({
       state.customerId = null;
     },
     actionLogin: state => {
+      console.log("actionLogin");
       state.token = 'sample token';
     },
     setMobile: (state, action) => {

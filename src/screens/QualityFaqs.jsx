@@ -25,10 +25,10 @@ const QualityFAQS = ({ navigation }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   const fetchFAQs = async () => {
-    console.log("baboi")
+   
     try {
       const response = await axios.get('https://api.abhi24.in/public_app/getqualityfaqs'); // Replace with your real API
-      console.log("--------------", response.data.data)
+     
       if (response.status === 200) {
         setFaqs(response.data.data);
       }

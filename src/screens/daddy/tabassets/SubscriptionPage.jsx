@@ -38,7 +38,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
     try {
       setRefreshing(true);
       const response = await getSubscriptionOrders({ customer_id: customerId });
-      console.log(response)
+    
       if (response?.status === 200 && Array.isArray(response.data)) {
         // Format data to match your local UI expectations if needed
 
@@ -71,7 +71,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
   const handleDeleteSubscription = async (item) => {
     try {
       const res = await deleteSubscriptionOrder(item.id);
-      console.log("reson", res)
+ 
       if (res.status === 200 && res.data.affectedRows > 0) {
         setSubscriptions(prev => prev.filter(sub => sub.id !== item.id));
         Toast.show({ type: 'success', text1: 'Subscription deleted!' });
@@ -98,7 +98,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
     try {
       const isResume = actionType === 'resume';
       const res = await toggleSubscriptionStatus(selectedSubscription.id, isResume);
-      console.log("res", res)
+
       if (res.status === 200 || res.status === 202) {
         const updatedStatus = isResume ? 'resumed' : 'paused';
         // Update state

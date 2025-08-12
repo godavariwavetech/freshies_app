@@ -51,7 +51,7 @@ export default function BottomNavigation() {
           dispatch(setUseDetails(user))
         }
       } catch (err) {
-        console.log('Error storing userDetails:', err.message);
+        console.error('Error storing userDetails:', err.message);
       }
     };
     getUserProfile();
@@ -62,7 +62,7 @@ export default function BottomNavigation() {
     const loadApplicationCharges = async () => {
       try {
         const data = await applicationCharges();
-        console.log("data -----------------",data);
+
         dispatch(setStoreData(data[0]));
       } catch (error) {
         console.error('Failed to load application charges', error);
@@ -70,7 +70,7 @@ export default function BottomNavigation() {
     };
     loadApplicationCharges();
   }, []);
-  console.log("storeData",storeData);
+ 
   // Get the current tab name
   const navigationState = useNavigationState(state => state);
   const currentTab = navigationState.routes[navigationState.index]?.name;

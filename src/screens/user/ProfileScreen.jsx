@@ -43,7 +43,7 @@ const UserProfileScreen = () => {
   const getUserProfile = async () => {
     try {
       const res = await getUserData({ customer_id: customerId });
-      console.log('response0000', res.data[0]);
+
       if (res.status === 200 && res.data?.length > 0) {
         const user = res.data[0];
         dispatch(setUseDetails(user));
@@ -57,7 +57,7 @@ const UserProfileScreen = () => {
 
       }
     } catch (err) {
-      console.log('Error loading profile:', err.message);
+      console.error('Error loading profile:', err.message);
     }
   };
 
@@ -93,14 +93,14 @@ const UserProfileScreen = () => {
         leave_at_doorstep: preferences.leaveAtDoorstep
       }
     };
-    console.log('pyaloefefdd', payload);
+ 
     try {
       const res = await updateUserProfile(payload);
-      console.log('0000000000000', res);
+    
       setEditMode(false);
       getUserProfile();
     } catch (err) {
-      console.log('Error updating profile:', err.message);
+      console.error('Error updating profile:', err.message);
     }
   };
 

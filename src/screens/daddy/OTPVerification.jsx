@@ -98,7 +98,7 @@ export default function OTPVerification({ navigation, route }) {
     }
     const enteredOtp = otp.join('');
     setLoader(true);
-    console.log(enteredOtp, typeof(enteredOtp), responseOtp, typeof(responseOtp));
+   
     try {
       if (enteredOtp.trim() === String(responseOtp).trim()) {
         if (route.params?.user_ind === 1) {
@@ -113,7 +113,7 @@ export default function OTPVerification({ navigation, route }) {
           });
 
           if (loginResponse.status === 200) {
-            console.log("loginresponse", loginResponse)
+           
             dispatch(setCustormarId(loginResponse.data.customer_id))
             dispatch(setUserName(loginResponse.data.customer_name));
             dispatch(setMobile(route.params?.phoneNumber));
@@ -184,7 +184,7 @@ export default function OTPVerification({ navigation, route }) {
     setTimer(60);
     setOtp(['', '', '', '']);
     const response = await dispatch(verifyCustomerMobile({ customer_mobile_number: route.params?.phoneNumber }));
-    console.log("resend Otp", response, typeof(response.payload.loginotp))
+  
     setResponseOtp(response.payload.loginotp.toString())
   };
 

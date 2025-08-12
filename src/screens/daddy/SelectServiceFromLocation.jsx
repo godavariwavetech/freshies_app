@@ -113,7 +113,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       latitudeDelta: 0.005,
       longitudeDelta: 0.005,
     };
-    console.log("adfds", newRegion)
+   
     setRegion(newRegion)
     // Only update region if coordinates are valid
     if (isMountedRef.current && mapRef.current?.animateToRegion) {

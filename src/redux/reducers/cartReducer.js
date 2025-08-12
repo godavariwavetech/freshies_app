@@ -18,7 +18,7 @@ const cartSlice = createSlice({
         item.id === newItem.id && item.category === newItem.category
       );
       
-      console.log("existingItemIndex",existingItemIndex)
+     
       if (existingItemIndex > -1) {
         // If item exists, update its quantity with limit
         const currentQuantity = state.items[existingItemIndex].quantity;
@@ -41,7 +41,7 @@ const cartSlice = createSlice({
     },
     removeFromCart: (state, action) => {
       const { id, quantityType } = action.payload;
-      console.log("Removing item from cart:", id, quantityType);
+     
       state.items = state.items.filter(
         item => !(item.id === id && item.variant?.quantity_type === quantityType)
       );

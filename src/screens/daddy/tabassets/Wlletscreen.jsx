@@ -24,6 +24,7 @@ import RazorpayCheckout from 'react-native-razorpay';
 import { useDispatch, useSelector } from 'react-redux';
 import { setWalletData } from '../../../redux/reducers/walletSlice';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { actionLogout } from '../../../redux/reducers/auth';
 
 
 const radioProps = [
@@ -54,7 +55,7 @@ const WalletPage = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const dispatch = useDispatch();
   const [rechargeSuccessfull, setRechargeSuccessfull] = useState(false)
-  console.log("customar ID", customerId, referralCode)
+
 
   useEffect(() => {
     const fetchAmounts = async () => {
@@ -65,7 +66,7 @@ const WalletPage = ({ navigation }) => {
         label: `₹${item.wallet_amount}`,
         value: parseInt(item.wallet_amount),
       }));
-      console.log("eloo", formatted)
+    
       setSelectedAmount(formatted[0].value)
       setAmountOptions(formatted);
       setLoading(false);
@@ -78,7 +79,7 @@ const WalletPage = ({ navigation }) => {
     const fetchWallet = async () => {
       setWalletLoading(true);
       const data = await WalletAPI.getWalletAmounts(customerId);
-      console.log("walleter amounts", data)
+   
       dispatch(setWalletData(data));
 
       setWalletDataState(data);
@@ -91,7 +92,7 @@ const WalletPage = ({ navigation }) => {
     const fetchWalletData = async () => {
       setLoading(true);
       const data = await WalletAPI.getAbhi24WalletDetails(customerId);
-      console.log("herlo", data)
+
       const formattedData = data.map((item) => ({
         id: item.id.toString(),
         type:
@@ -233,7 +234,7 @@ const WalletPage = ({ navigation }) => {
 
             // Handle user cancel case explicitly
             if (error?.code === 0 || error?.description === 'The payment was cancelled') {
-              console.log('User exited Razorpay payment screen.');
+            
               return; // Don’t show alert for user cancel
             }
 
@@ -278,31 +279,59 @@ const WalletPage = ({ navigation }) => {
           <Text style={styles.headerTitle}>Wallet</Text>
         </View>
       </View>
-      {/* Balance Section (Card) */}
-      {selectedWallet === 'User Wallet' && walletData && parseFloat(walletData?.user_balance_amount || 0) <= 0 && (
-        <View
-          style={{
-            backgroundColor: '#fff0f0',
-            paddingVertical: 10,
-            paddingHorizontal: 12,
-            borderRadius: 8,
-            borderLeftWidth: 4,
-            borderLeftColor: '#D32F2F',
-          }}
-        >
-          <Text
-            style={{
-              color: '#D32F2F',
-              fontSize: 14,
-              fontWeight: '500',
-            }}
-          >
-            You have no User Cash. If you want to subscribe to any product, please recharge your wallet.
-          </Text>
+
+      {/* Login Required Section for Unauthenticated Users */}
+      {!customerId && (
+        <View style={styles.loginRequiredContainer}>
+          <View style={styles.loginRequiredContent}>
+            <Icon name="account-circle" size={60} color="#8655d2" />
+            <Text style={styles.loginRequiredTitle}>Login Required</Text>
+            <Text style={styles.loginRequiredMessage}>
+              Please login to access your wallet and manage your transactions.
+            </Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => {
+                dispatch(actionLogout());
+               
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }}
+            >
+              <Text style={styles.loginButtonText}>Login Now</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
+      {/* Balance Section (Card) - Only show when authenticated */}
+      {customerId && (
+        <>
+          {selectedWallet === 'User Wallet' && walletData && parseFloat(walletData?.user_balance_amount || 0) <= 0 && (
+            <View
+              style={{
+                backgroundColor: '#fff0f0',
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                borderRadius: 8,
+                borderLeftWidth: 4,
+                borderLeftColor: '#D32F2F',
+              }}
+            >
+              <Text
+                style={{
+                  color: '#D32F2F',
+                  fontSize: 14,
+                  fontWeight: '500',
+                }}
+              >
+                You have no User Cash. If you want to subscribe to any product, please recharge your wallet.
+              </Text>
+            </View>
+          )}
 
-      <View style={styles.balanceContainer}>
+          <View style={styles.balanceContainer}>
         {/* Tabs */}
 
         <View style={styles.walletHeader}>
@@ -538,7 +567,9 @@ const WalletPage = ({ navigation }) => {
             )}
           </>
         )}
-      </View>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 };
@@ -839,6 +870,52 @@ const styles = StyleSheet.create({
     marginTop: hp('0.5%'),
   },
   transactionAmount: {
+    fontSize: wp('4%'),
+    fontWeight: 'bold',
+  },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: wp('5%'),
+    backgroundColor: '#fff',
+  },
+  loginRequiredContent: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: wp('8%'),
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  loginRequiredTitle: {
+    fontSize: wp('5%'),
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: hp('2%'),
+    marginBottom: hp('1%'),
+  },
+  loginRequiredMessage: {
+    fontSize: wp('4%'),
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: hp('4%'),
+    lineHeight: 22,
+  },
+  loginButton: {
+    backgroundColor: '#8655d2',
+    paddingVertical: hp('2%'),
+    paddingHorizontal: wp('8%'),
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  loginButtonText: {
+    color: '#fff',
     fontSize: wp('4%'),
     fontWeight: 'bold',
   },

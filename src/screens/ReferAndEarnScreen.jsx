@@ -12,12 +12,14 @@ import LinearGradient from 'react-native-linear-gradient';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { applicationCharges } from '../services/services';
+import { actionLogout } from '../redux/reducers/auth';
 
 
 const ReferAndEarnScreen = ({ navigation }) => {
-  const { referralCode } = useSelector(state => state.Auth);
+  const { referralCode, customerId } = useSelector(state => state.Auth);
+  const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
   const [refferalData, setRefferalData] = useState()
 
@@ -29,7 +31,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
           ...data[0],
           refer_content: JSON.parse(data[0].refer_content),
         };
-        console.log("parsedData", parsedData);
+       
         setRefferalData(parsedData);
       } catch (error) {
         console.error('Failed to load application charges', error);
@@ -74,35 +76,64 @@ const ReferAndEarnScreen = ({ navigation }) => {
         </View>
       </LinearGradient>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Invite your friends & earn rewards!</Text>
-        <Text style={styles.description}>
-          Share your referral code and both of you earn rewards when your friend places their first order.
-        </Text>
+      {/* Login Required Section for Unauthenticated Users */}
+      {!customerId && (
+        <View style={styles.loginRequiredContainer}>
+          <View style={styles.loginRequiredContent}>
+            <Ionicons name="person-circle-outline" size={60} color="#8655d2" />
+            <Text style={styles.loginRequiredTitle}>Login Required</Text>
+            <Text style={styles.loginRequiredMessage}>
+              Please login to access your referral code and start earning rewards.
+            </Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => {
+                dispatch(actionLogout());
+               
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }}
+            >
+              <Text style={styles.loginButtonText}>Login Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
-        <View style={styles.codeContainer}>
-          <Text style={styles.code}>{referralCode}</Text>
-          <TouchableOpacity onPress={handleCopy}>
-            <Ionicons name="copy-outline" size={24} color="#8655d2" />
+      {/* Main Content - Only show when authenticated */}
+      {customerId && (
+        <View style={styles.content}>
+          <Text style={styles.title}>Invite your friends & earn rewards!</Text>
+          <Text style={styles.description}>
+            Share your referral code and both of you earn rewards when your friend places their first order.
+          </Text>
+
+          <View style={styles.codeContainer}>
+            <Text style={styles.code}>{referralCode}</Text>
+            <TouchableOpacity onPress={handleCopy}>
+              <Ionicons name="copy-outline" size={24} color="#8655d2" />
+            </TouchableOpacity>
+          </View>
+          {copied && <Text style={styles.copiedText}>Code copied to clipboard!</Text>}
+
+          <View style={{ marginTop: 30, alignSelf: 'stretch' }}>
+            <Text style={styles.offerTitle}>Here's what to do</Text>
+            {Array.isArray(refferalData?.refer_content)
+              ? refferalData.refer_content.map((item, index) => (
+                <View key={index} style={styles.bulletItem}>
+                  <Text style={styles.bulletPoint}>{'\u2022'}</Text>
+                  <Text style={styles.bulletText}>{item}</Text>
+                </View>
+              ))
+              : null}
+          </View>
+          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+            <Text style={styles.shareButtonText}>Share Referral Code</Text>
           </TouchableOpacity>
         </View>
-        {copied && <Text style={styles.copiedText}>Code copied to clipboard!</Text>}
-
-        <View style={{ marginTop: 30, alignSelf: 'stretch' }}>
-          <Text style={styles.offerTitle}>Here's what to do</Text>
-          {Array.isArray(refferalData?.refer_content)
-            ? refferalData.refer_content.map((item, index) => (
-              <View key={index} style={styles.bulletItem}>
-                <Text style={styles.bulletPoint}>{'\u2022'}</Text>
-                <Text style={styles.bulletText}>{item}</Text>
-              </View>
-            ))
-            : null}
-        </View>
-        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Text style={styles.shareButtonText}>Share Referral Code</Text>
-        </TouchableOpacity>
-      </View>
+      )}
     </View>
   );
 };
@@ -130,6 +161,42 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
+  },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: responsiveWidth(5),
+  },
+  loginRequiredContent: {
+    alignItems: 'center',
+    maxWidth: responsiveWidth(80),
+  },
+  loginRequiredTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  loginRequiredMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  loginButton: {
+    backgroundColor: '#8655d2',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   content: {
     flex: 1,

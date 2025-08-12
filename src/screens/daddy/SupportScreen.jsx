@@ -29,7 +29,6 @@ const SupportScreen = ({ navigation }) => {
   };
 
   const handleWhatsApp = () => {
-    console.log("storeData?.contact_number",storeData?.contact_number);
     Linking.openURL(`https://wa.me/${storeData?.contact_number}`);
     
   };

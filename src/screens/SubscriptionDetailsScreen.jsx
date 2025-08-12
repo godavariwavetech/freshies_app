@@ -6,7 +6,7 @@ import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
 
 export default function SubscriptionDetailsScreen({ navigation, route }) {
     const { item } = route.params;
-    console.log("item-details", item)
+   
     const today = dayjs();  // mock current date
     const startDate = dayjs(item.startDate);
     const upcoming = startDate.isAfter(today) ? startDate : today.add(1, 'day');

@@ -58,7 +58,7 @@ export const getBanners = async () => {
 // API call to fetch items by subcategory and category
 export const getItems = async (subcategory_id, customerId,filter_one,item_id) => {
   try {
-    console.log(">>>>>>>>>>>>>>>>>>", item_id)
+   
     let payload = {
       customer_id: customerId,
       item_id: item_id
@@ -71,7 +71,7 @@ export const getItems = async (subcategory_id, customerId,filter_one,item_id) =>
       // Brand filter present, use only brand
       payload.filter_one = filter_one;
     }
-    console.log("payload 88888888", payload)
+  
     const response = await api.post('/public_app/getitems', payload);
     if (response.data.status === 200) {
       return response.data; // Return the full response
@@ -107,7 +107,7 @@ export const getUserLoginOTP = async (mobileNumber) => {
 
 // Customer Login API call
 export const customerLogin = async (payload) => {
-  console.log("payloard", payload)
+ 
   try {
     const response = await api.post('/public_app/customerlogin', payload);
     return response.data;
@@ -119,10 +119,7 @@ export const customerLogin = async (payload) => {
 
 // Get Item Details by unique_id
 export const getItemDetails = async (customerId, uniqueId) => {
-  console.log({
-    customer_id: customerId,
-    unique_id: uniqueId
-  })
+
   try {
     const response = await api.post('/public_app/getitemdetails', {
       customer_id: customerId,
@@ -197,19 +194,26 @@ export const placeOrder = createAsyncThunk(
     { orderDetails },
     { getState, rejectWithValue, fulfillWithValue }
   ) => {
-    console.log("response123456")
-    const response = await api.post("/public_app/orderplaced", orderDetails)
-   
-    if (response) {
-      if (response.data) {
+    try {
+    
+
+      const response = await api.post("/public_app/orderplaced", orderDetails);
+     
+
+      if (response?.data) {
         return fulfillWithValue(response.data);
       } else {
-        return rejectWithValue('Something went wrong!');
+        console.error("❌ API responded but no data");
+        return rejectWithValue("Something went wrong!");
       }
+    } catch (error) {
+      console.error("❌ API error:", error);
+      return rejectWithValue(
+        error?.response?.data?.message || "Unexpected error occurred"
+      );
     }
   }
-)
-
+);
 
 
 export const applicationCharges = async () => {
@@ -234,7 +238,7 @@ export const updateOrderStatus = createAsyncThunk(
     { paymentId, rzpId, orderId, orderStatus, customerId  },
     { getState, rejectWithValue, fulfillWithValue }
   ) => {
-    console.log("customerId >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", customerId)
+   
     const response = await api.post("/public_app/updatepaymentdetails", {
       "payment_id": paymentId,
       "razorpay_order_id": rzpId,
@@ -326,7 +330,7 @@ export const addToWishlist = async (payload) => {
 };
 
 export const removeFromWishlist = async (payload) => {
-  console.log("removal payload", payload)
+ 
   return await api.post('/public_app/deletewishlist', payload);
 };
 
@@ -376,10 +380,10 @@ export const WalletAPI = {
     return response.data;
   },
   getWalletAmounts: async (user_id) => {
-    console.log(user_id)
+   
     try {
       const response = await api.post('/public_app/getwalletamounts', { user_id });
-      console.log("--", response)
+    
       return response?.data?.data?.[0]; // return the first object directly
     } catch (error) {
 
@@ -489,7 +493,7 @@ export const updateUserProfile = async (payload) => {
     const response = await api.post('/public_app/updateprofiledata', payload);
     return response.data;
   } catch (error) {
-    console.log("rees", error.message)
+   
     console.error('❌ Update profile error:', error);
     throw error;
   }

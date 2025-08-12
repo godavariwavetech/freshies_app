@@ -31,7 +31,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   // Get order details from route params
   const dispatch = useDispatch();
   const { orderDetails, status } = route.params || {};
-  console.log(orderDetails)
+
   const backgroundColor = '#8655d2';
   const [storedOrders, setStoredOrders] = useState([]);
   const [viewSavedOrders, setViewSavedOrders] = useState(false);
@@ -46,7 +46,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
       setLoadingItems(true);
       try {
         const items = await getOrderItemsByOrderId(orderDetails.orderId);
-        console.log("itemssssss", items)
+     
         setStoredOrders(items);
         orderDetails.items = items;
       } catch (error) {

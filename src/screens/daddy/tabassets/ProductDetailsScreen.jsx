@@ -50,7 +50,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
   const backgroundColor = '#8655d2';
 
-  console.log("Route Params", route.params)
+
 
   useEffect(() => {
     const subcategoryItems = async () => {
@@ -70,7 +70,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
       const response = await getItemDetails(customerId, route.params.unique_id);
       if (response.data && response.data.length > 0) {
         const fetchedDetails = response.data;
-        console.log("product details:", fetchedDetails)
+      
         const processedDetails = fetchedDetails.map(detail => ({
           ...detail,
           id: detail.id,
@@ -90,7 +90,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
           wishlistId: detail.wishlistId
         }));
         setProductDetails(processedDetails);
-        console.log(processedDetails[0].wishlistId)
+      
         setIsFavorite(processedDetails[0].wishlistId);
         setSelectedWeight(processedDetails[0].quantity_type);
       }
@@ -195,7 +195,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
         category: product.category || '',
         status,
       };
-      console.log("secondproduct:", cartItem)
+   
       dispatch(addToCart(cartItem));
       navigation.navigate('ByOncescreen', {
         productDetails: product,

@@ -13,7 +13,7 @@ const GlobalSearchScreen = ({ navigation }) => {
     const fetchResults = async (searchTerm) => {
         setLoading(true);
         const results = await fetchSearchResults(searchTerm);
-        console.log("coming........", results)
+
         setResults(results);
         setLoading(false);
     };

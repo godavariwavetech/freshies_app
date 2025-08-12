@@ -96,7 +96,7 @@ export default function Register({ navigation, route }) {
       await savePhoneNumber(phoneNumber);
       try {
         const response = await getUserLoginOTP(parseInt(phoneNumber, 10));
-        console.log(response)
+       
         if (response.status === 200) {
           navigation.navigate("OTPVerification", {
             phoneNumber: phoneNumber,
@@ -224,6 +224,20 @@ export default function Register({ navigation, route }) {
             <Text style={styles.loginText}>
               {sendingOTP ? <ActivityIndicator size="small" color="#fff" /> : 'Get OTP'}
             </Text>
+          </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            onPress={() => dispatch(actionLogin())}
+            style={styles.skipButton}
+          >
+            <Text style={styles.skipText}>Skip Login</Text>
+            <Icon name="arrow-right" size={20} color="#8655d2" />
           </TouchableOpacity>
         </View>
       </View>
@@ -362,5 +376,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: responsiveHeight(3),
+    marginHorizontal: responsiveWidth(5),
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E5E5',
+  },
+  dividerText: {
+    marginHorizontal: responsiveWidth(3),
+    fontSize: 14,
+    color: '#646982',
+    fontWeight: '500',
   },
 });

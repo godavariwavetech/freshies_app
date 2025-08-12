@@ -78,7 +78,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    console.log("hello", OneSignal);
+   
     OneSignal.Debug.setLogLevel(LogLevel.Verbose);
 
     // OneSignal Initialization
@@ -91,12 +91,12 @@ const App = () => {
 
 
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-      console.log('OneSignal: notification will display in foreground:', event);
+
       event.complete(event.notification);
     });
 
     OneSignal.Notifications.addEventListener('opened', (event) => {
-      console.log('OneSignal: notification opened:', event);
+     
     });
 
     OneSignal.User.addEmail('your_user_email@example.com');

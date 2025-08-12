@@ -45,7 +45,6 @@ const weightOptions = [
 export default function GroceriesScreen({ navigation, route }) {
   const dispatch = useDispatch();
   const { status = 0, subcategory_id, category_id, subcategory_name, filter_one, item_id, subtotal_category_id } = route.params || {};
-  console.log("homepageParams",route.params)
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(subcategory_id || "");
   const [subtotalcategories, setSubtotalcategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -93,7 +92,7 @@ export default function GroceriesScreen({ navigation, route }) {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
       setSideBarSubCategories(fetchedSubCategories);
-      console.log('fetchedSubCategories22222222222222222222222', fetchedSubCategories);
+    
       const uniqueCategories = [
         ...new Map(
           fetchedSubCategories.map((sub) => [
@@ -119,7 +118,7 @@ export default function GroceriesScreen({ navigation, route }) {
           sub_category_id: route.params?.subcategory_id,
         });
         setSelectedSubcategoryId(subCats[0]?.id);
-        console.log("subcategories11111111111", subCats)
+       
         setSubtotalcategories(subCats);
       } catch (error) {
         Toast.show({
@@ -205,7 +204,7 @@ export default function GroceriesScreen({ navigation, route }) {
         wishlistId: item.wishlistId,
         value: item.value
       }));
-      console.log("groupedItems", mappedProducts)
+    
       setProducts(mappedProducts);
     } catch (error) {
       setError('Failed to load items');
@@ -242,7 +241,7 @@ export default function GroceriesScreen({ navigation, route }) {
     try {
       if (isFavorited) {
         const response = await removeFromWishlist({ wishlistId: item.wishlistId });
-        console.log("removal resposne", response)
+       
         const updatedProducts = products.map((product) =>
           product.id === item.id
             ? { ...product, wishlist_flag: 0, wishlistId: null }
@@ -280,7 +279,7 @@ export default function GroceriesScreen({ navigation, route }) {
   const isFavorite = (item) => item?.wishlist_flag === 1;
 
   const handleBuyOnce = async (product) => {
-    // console.log("firstproduct:", product)
+   
     try {
       // Get selected quantity type from productWeights or fallback to first
       const selectedQuantityType = productWeights[product.id] || product.variants[0].quantity_type;
@@ -302,7 +301,7 @@ export default function GroceriesScreen({ navigation, route }) {
         category: product.category || '',
         status,
       };
-      // console.log("thirdproduct:", cartItem)
+    
       dispatch(addToCart(cartItem));
     } catch (error) {
       Toast.show({
@@ -659,7 +658,7 @@ export default function GroceriesScreen({ navigation, route }) {
 const selectedIndex = sidebarSubcategories.findIndex(
   cat => cat.id === subcategory_id
 );
-console.log("selectedIndex", selectedIndex)
+
 // Step 2: Rotate array after selected index (excluding selected item)
 let reorderedSidebarSubcategories = [];
 

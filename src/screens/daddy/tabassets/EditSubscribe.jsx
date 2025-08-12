@@ -23,7 +23,7 @@ import Toast from 'react-native-toast-message';
 
 const EditSubscriptionScreen = ({ navigation, route }) => {
   const { productDetails } = route.params;
-  console.log("productDetails--------------------------------------------", productDetails)
+
   const today = dayjs().format('YYYY-MM-DD');
   const [scheduleType, setScheduleType] = useState('Custom');
   const [startDate, setStartDate] = useState(dayjs().add(1, 'day').toDate());
@@ -175,7 +175,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
       };
 
       const res = await placeSubscriptionOrder(payload);
-      // console.log("payload", payload)
+    
       if (res.status === 200) {
         setShowSuccessModal(true); // Show success modal
         setTimeout(() => {

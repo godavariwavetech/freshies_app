@@ -40,6 +40,7 @@ import {
 } from '../../../redux/reducers/cartReducer';
 import { haversineDistance } from '../distanceCalculator';
 import {
+  actionLogout,
   setLocation,
   setLocationId,
   setLocationName,
@@ -77,9 +78,10 @@ const BasketScreen = ({ navigation, route }) => {
     customerId,
     mobileNumber,
     shopAddress,
+    username
   } = useSelector(state => state.Auth); 
 
-  console.log("hellow", customerId )
+
   const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
@@ -110,7 +112,7 @@ const BasketScreen = ({ navigation, route }) => {
       0,
     );
     const gstAmmount = subtotal * (Number(applicationCharges?.gst_percentage) / 100);
-    console.log("gstcalculated amount", gstAmmount)
+
     return gstAmmount;
   };
 
@@ -121,7 +123,7 @@ const BasketScreen = ({ navigation, route }) => {
         Number(item.variant?.selling_price || item.offer || 0) * item.quantity,
       0,
     );
-    console.log("subtotalamount:::::::", subtotal)
+
     return subtotal;
   };
 
@@ -138,8 +140,7 @@ const BasketScreen = ({ navigation, route }) => {
         otherSubtotal += itemTotal;
       }
     });
-    console.log('muttonSubtotal', muttonSubtotal);
-    console.log('otherSubtotal', otherSubtotal);
+
     return { muttonSubtotal, otherSubtotal };
   };
 
@@ -154,7 +155,7 @@ const BasketScreen = ({ navigation, route }) => {
   let subtotal = muttonSubtotal + otherSubtotal;
   // Apply coupon
   if (coupon) {
-    console.log("aws", coupon)
+  
     if (coupon.type === 'percentage') {
       subtotal -= subtotal * (coupon.coupon_percentage / 100);
     } else {
@@ -163,7 +164,7 @@ const BasketScreen = ({ navigation, route }) => {
   }
   const gst = gstCalculation(subtotal);
   const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
-  console.log("totalBeforeWallets", totalBeforeWallets)
+ 
   const abhiWalletUsed = useAbhiWallet ? Math.min(muttonSubtotal, abhiWalletAmount) : 0;
   const userWalletUsed = useUserWallet ? Math.min(totalBeforeWallets - abhiWalletUsed, userWalletAmount) : 0;
   const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
@@ -172,7 +173,7 @@ const BasketScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
-      console.log("vachindhi")
+     
       checkAddressExistenceInList();
     } else {
       setShowServiceModal(true);
@@ -207,8 +208,7 @@ const BasketScreen = ({ navigation, route }) => {
           longitude: parseFloat(storedLocation.longitude),
         }),
       );
-      console.log("helooooooooo", storedLocation)
-      console.log("heloooooooooooooooooo", response)
+     
       if (response.payload.data.length > 0) {
         dispatch(
           setLocation({
@@ -298,7 +298,7 @@ const BasketScreen = ({ navigation, route }) => {
   };
 
   const handleDelete = async (id, quantityType) => {
-    console.log('handleDelete called with:', id, quantityType);
+   
     const updatedCartItems = cartItems.filter(item => item.id !== id);
     dispatch(removeFromCart({ id, quantityType }));
     setCartItems(updatedCartItems);
@@ -480,11 +480,13 @@ const BasketScreen = ({ navigation, route }) => {
 
       const grandTotal = (
         totalPrice + delivery + handling + gst - Number(couponAmount || 0)
-      ).toFixed(2);
+      ).toFixed(2); 
+
+      const isCodOrFree = totalAfterWallets === 0  ||  selectedPaymentMethod === 'COD';
 
       const payload = {
         customer_id: customerId,
-        customer_name: '',
+        customer_name: username || '',
         customer_mobile_number: mobileNumber,
         category_id: '',
         item_count: cartItems.length,
@@ -495,10 +497,12 @@ const BasketScreen = ({ navigation, route }) => {
         grand_total: grandTotal,
         location_id: locationId,
         location_name: locationName,
-        payment_type: selectedPaymentMethod,
+        // payment_type: selectedPaymentMethod,
+        payment_type: totalAfterWallets === 0 ? "COD" : selectedPaymentMethod,
         payment_id: '',
         razorpay_order_id: '',
-        order_status: selectedPaymentMethod === 'COD' || totalAfterWallets === 0 ? 0 : 7,
+        // order_status: selectedPaymentMethod === 'COD' || totalAfterWallets === 0 ? 0 : 7,
+        order_status: isCodOrFree ? 0 : 7,
         order_instructions: '',
         coupon_type: coupon?.coupon_type || '',
         coupon_id: coupon?.id || '',
@@ -516,14 +520,14 @@ const BasketScreen = ({ navigation, route }) => {
         packing_charges_gst: '',
         donation_charges: '',
         delivery_instruction: deliveryInstructions,
-        abhicash_amount: abhiWalletUsed,
-        userwallet_amount: userWalletUsed,
-        payment_amount: totalAfterWallets.toFixed(2),
+        abhicash_amount: Number(abhiWalletUsed),
+        userwallet_amount: Number(userWalletUsed),
+        payment_amount: Number(totalAfterWallets.toFixed(2)),
         sub_order_array: mappedItems,
       };
-
-      const isCodOrFree = selectedPaymentMethod === 'COD' || totalAfterWallets === 0;
+  
       const orderResponse = await dispatch(placeOrder({ orderDetails: payload }));
+      
       if (!orderResponse.payload) return;
 
       const orderDetails = {
@@ -546,7 +550,7 @@ const BasketScreen = ({ navigation, route }) => {
         abhicash_amount: abhiWalletUsed,
         userwallet_amount: userWalletUsed,
       };
-
+     
       if (isCodOrFree && address) {
         if (orderResponse.payload.status === 200) {
           fetchWallet();
@@ -561,7 +565,7 @@ const BasketScreen = ({ navigation, route }) => {
         currency: 'INR',
         key: orderResponse.payload.key_id,
         order_id: orderResponse.payload.razorpay_order_id,
-        amount: 1000, // You may want to update this to the actual amount * 100
+        amount: totalAfterWallets * 100, // You may want to update this to the actual amount * 100
         name: 'Abhi 24',
         prefill: {
           contact: mobileNumber,
@@ -580,7 +584,7 @@ const BasketScreen = ({ navigation, route }) => {
           };
 
           try {
-            console.log("customerId >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", customerId)
+           
             const updateResult = await dispatch(updateOrderStatus({
               paymentId: data.razorpay_payment_id,
               rzpId: data.razorpay_order_id,
@@ -588,7 +592,7 @@ const BasketScreen = ({ navigation, route }) => {
               orderStatus: 0,
               customerId: customerId,
             })).unwrap();  // unwrap() will throw error if rejected
-            console.log("updateResult >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", updateResult)
+          
             await fetchWallet();  // Ensure wallet is updated before proceeding
           
             navigation.navigate('OrderSuccess', { orderDetails, status: 0 });
@@ -971,25 +975,47 @@ const BasketScreen = ({ navigation, route }) => {
             )}
           </View> */}
 
-          {/* Place Order Button */}
+          {/* Place Order Button or Login Button */}
           <View style={{ paddingBottom: 60 }}>
-            <TouchableOpacity
-              style={[
-                styles.placeOrderButton,
-                {
-                  backgroundColor: isProcessingPayment
-                    ? '#ccc'
-                    : backgroundColor,
-                },
-              ]}
-              onPress={handlePlaceOrder}
-              disabled={isProcessingPayment}>
-              {isProcessingPayment ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.placeOrderText}>Place Order</Text>
-              )}
-            </TouchableOpacity>
+            {!customerId ? (
+              // Login Button for users without customer ID
+              <TouchableOpacity
+                style={[
+                  styles.placeOrderButton,
+                  {
+                    backgroundColor: backgroundColor,
+                  },
+                ]}
+                onPress={() => {
+                  dispatch(actionLogout());
+                 
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                  });
+                }}>
+                <Text style={styles.placeOrderText}>Login to Place Order</Text>
+              </TouchableOpacity>
+            ) : (
+              // Place Order Button for logged-in users
+              <TouchableOpacity
+                style={[
+                  styles.placeOrderButton,
+                  {
+                    backgroundColor: isProcessingPayment
+                      ? '#ccc'
+                      : backgroundColor,
+                  },
+                ]}
+                onPress={handlePlaceOrder}
+                disabled={isProcessingPayment}>
+                {isProcessingPayment ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.placeOrderText}>Place Order</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       )}
@@ -1654,9 +1680,7 @@ export default BasketScreen;
   //       ? (calculateTotalPrice() * (coupon.coupon_percentage / 100)).toFixed(2)
   //       : '0.00';
 
-  //     console.log(" calculateTotalPrice()", calculateTotalPrice())
-  //     console.log("gstCalculation()", gstCalculation())
-  //     console.log("counpun amount", calculateTotalPrice(), (coupon?.coupon_percentage / 100))
+  //    
   //     let payload = {
   //       customer_id: customerId,
   //       customer_name: '',
@@ -1708,10 +1732,9 @@ export default BasketScreen;
   //       sub_order_array: mappedItems,
   //     };
 
-  //     console.log('mappeditems', mappedItems);
-  //     console.log('payload', payload);
+  //    
   //     const finalPrice = parseFloat(totalAfterWallets);
-  //     console.log("final price", finalPrice)
+  //   
   //     if ((finalPrice === 0) || selectedPaymentMethod === 'COD' && address) {
   //       const responseCod = await dispatch(placeOrder({ orderDetails: payload }));
   //       if (!responseCod.payload) return;
@@ -1819,7 +1842,7 @@ export default BasketScreen;
   //           error?.code === 0 ||
   //           error?.description === 'The payment was cancelled'
   //         ) {
-  //           console.log('User exited Razorpay payment screen.');
+ 
   //           return; // Don’t show alert for user cancel
   //         }
 
@@ -1850,7 +1873,7 @@ export default BasketScreen;
   //   const gst = gstCalculation();
 
   //   let subtotal = muttonSubtotal + otherSubtotal;
-  //   console.log("before coupon+++++++++++++++", subtotal)
+ 
   //   // Apply coupon on subtotal
   //   if (coupon) {
   //     if (coupon.type === 'percentage') {
@@ -1859,8 +1882,7 @@ export default BasketScreen;
   //       subtotal -= coupon.discount;
   //     }
   //   }
-  //   console.log("coupon", coupon)
-  //   console.log("after coupon+++++++++++++++", subtotal)
+
   //   // Full total (after coupon)
   //   const totalBeforeWallets = subtotal + deliveryCharge + handlingCharge + gst;
 
@@ -1870,7 +1892,7 @@ export default BasketScreen;
   //   // User Wallet can apply to full remaining amount
   //   const remainingAfterAbhi = totalBeforeWallets - abhiWalletUsed;
   //   const userWalletUsed = useUserWallet ? Math.min(remainingAfterAbhi, userWalletAmount) : 0;
-  //   console.log(totalBeforeWallets, abhiWalletUsed, userWalletUsed)
+  
   //   const totalAfterWallets = totalBeforeWallets - abhiWalletUsed - userWalletUsed;
 
   //   return Math.max(0, totalAfterWallets);
