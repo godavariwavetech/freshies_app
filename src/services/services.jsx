@@ -56,9 +56,9 @@ export const getBanners = async () => {
 };
 
 // API call to fetch items by subcategory and category
-export const getItems = async (subcategory_id, customerId,filter_one,item_id) => {
+export const getItems = async (subcategory_id, customerId, filter_one, item_id) => {
   try {
-   
+
     let payload = {
       customer_id: customerId,
       item_id: item_id
@@ -71,7 +71,7 @@ export const getItems = async (subcategory_id, customerId,filter_one,item_id) =>
       // Brand filter present, use only brand
       payload.filter_one = filter_one;
     }
-  
+
     const response = await api.post('/public_app/getitems', payload);
     if (response.data.status === 200) {
       return response.data; // Return the full response
@@ -81,7 +81,7 @@ export const getItems = async (subcategory_id, customerId,filter_one,item_id) =>
   } catch (error) {
     console.error('Error fetching items:', {
       message: error.message,
-      subcategory_id, 
+      subcategory_id,
       errorDetails: error
     });
     throw error;
@@ -107,7 +107,7 @@ export const getUserLoginOTP = async (mobileNumber) => {
 
 // Customer Login API call
 export const customerLogin = async (payload) => {
- 
+
   try {
     const response = await api.post('/public_app/customerlogin', payload);
     return response.data;
@@ -125,7 +125,7 @@ export const getItemDetails = async (customerId, uniqueId) => {
       customer_id: customerId,
       unique_id: uniqueId
     });
-   
+
     return response.data;
   } catch (error) {
     console.error('Error fetching item details:', error);
@@ -174,7 +174,7 @@ export const checkAddressExistence = createAsyncThunk(
       "latitude": latitude,
       "longitude": longitude
     }
-   
+
     const response = await api.post('/public_app/getserviceavailability', data);
     if (response) {
       if (response.data) {
@@ -195,10 +195,10 @@ export const placeOrder = createAsyncThunk(
     { getState, rejectWithValue, fulfillWithValue }
   ) => {
     try {
-    
+
 
       const response = await api.post("/public_app/orderplaced", orderDetails);
-     
+
 
       if (response?.data) {
         return fulfillWithValue(response.data);
@@ -232,13 +232,14 @@ export const applicationCharges = async () => {
 
 
 
+
 export const updateOrderStatus = createAsyncThunk(
   "updateOrderStatus",
   async (
-    { paymentId, rzpId, orderId, orderStatus, customerId  },
+    { paymentId, rzpId, orderId, orderStatus, customerId },
     { getState, rejectWithValue, fulfillWithValue }
   ) => {
-   
+
     const response = await api.post("/public_app/updatepaymentdetails", {
       "payment_id": paymentId,
       "razorpay_order_id": rzpId,
@@ -330,7 +331,7 @@ export const addToWishlist = async (payload) => {
 };
 
 export const removeFromWishlist = async (payload) => {
- 
+
   return await api.post('/public_app/deletewishlist', payload);
 };
 
@@ -380,10 +381,10 @@ export const WalletAPI = {
     return response.data;
   },
   getWalletAmounts: async (user_id) => {
-   
+
     try {
       const response = await api.post('/public_app/getwalletamounts', { user_id });
-    
+
       return response?.data?.data?.[0]; // return the first object directly
     } catch (error) {
 
@@ -493,7 +494,6 @@ export const updateUserProfile = async (payload) => {
     const response = await api.post('/public_app/updateprofiledata', payload);
     return response.data;
   } catch (error) {
-   
     console.error('❌ Update profile error:', error);
     throw error;
   }
@@ -517,6 +517,18 @@ export const fetchSearchResults = async (searchTerm) => {
     return [];
   }
 };
+
+
+export const deleteAccount = async (payload) => {
+  try {
+    const response = await api.post('/public_app/deleteaccount', payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Update profile error:', error);
+    throw error.response?.data || error;
+  }
+};
+
 
 
 

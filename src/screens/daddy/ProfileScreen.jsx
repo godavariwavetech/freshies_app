@@ -50,6 +50,8 @@ const ProfileScreen = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [appVersion, setAppVersion] = useState('');
   const [isPoliciesExpanded, setIsPoliciesExpanded] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
 
   useEffect(() => {
     if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -104,6 +106,29 @@ const ProfileScreen = () => {
   const handleLogout = () => {
     setLogoutModalVisible(true);
   };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setDeleteModalVisible(false);
+
+      // ✅ Call your API for account deletion
+      response = await api.deleteAccount({ user_id: customerId });
+      console.log("delete acoount response", response)
+      // ✅ Clear redux store
+      dispatch(actionLogout());
+      dispatch(clearCart());
+
+      // ✅ Navigate to login
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      console.error("Delete Account Error:", error);
+      Alert.alert("Error", error?.message || "Something went wrong while deleting account.");
+    }
+  };
+
 
   const handleConfirmLogout = () => {
     setLogoutModalVisible(false);
@@ -308,13 +333,51 @@ const ProfileScreen = () => {
           </TouchableOpacity>
 
           {/* 🔓 Logout */}
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => setLogoutModalVisible(true)}>
-            <View style={styles.menuItemLeft}>
-              <Feather name="log-out" size={24} color="#8655d2" />
-              <Text style={styles.menuText}>Logout</Text>
-            </View>
-            <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity>
+          {customerId ? (
+            // ✅ Show Logout
+            <TouchableOpacity
+              style={styles.menuItemMain}
+              onPress={() => setLogoutModalVisible(true)}
+            >
+              <View style={styles.menuItemLeft}>
+                <Feather name="log-out" size={24} color="#8655d2" />
+                <Text style={styles.menuText}>Logout</Text>
+              </View>
+              <Icon name="chevron-right" size={24} color="#666" />
+            </TouchableOpacity>
+          ) : (
+            // ✅ Show Login
+            <TouchableOpacity
+              style={styles.menuItemMain}
+              onPress={() => {
+                dispatch(actionLogout());
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }}
+            >
+              <View style={styles.menuItemLeft}>
+                <Feather name="log-in" size={24} color="#8655d2" />
+                <Text style={styles.menuText}>Login</Text>
+              </View>
+              <Icon name="chevron-right" size={24} color="#666" />
+            </TouchableOpacity>
+          )}
+
+
+          {/* ❌ Delete Account */}
+
+          {customerId && (
+            <TouchableOpacity style={styles.menuItemMain} onPress={() => setDeleteModalVisible(true)}>
+              <View style={styles.menuItemLeft}>
+                <MaterialCommunityIcons name="delete-outline" size={24} color="red" />
+                <Text style={[styles.menuText, { color: "red" }]}>Delete Account</Text>
+              </View>
+              <Icon name="chevron-right" size={24} color="#666" />
+            </TouchableOpacity>
+          )}
+
 
           {/* 🔢 App Version */}
           <View style={styles.versionContainer}>
@@ -359,6 +422,17 @@ const ProfileScreen = () => {
         onCancel={() => setShowUpdateModal(false)}
         cancelText="Later"
       />
+
+      <CustomModal
+        visible={deleteModalVisible}
+        title="Delete Account"
+        message="Are you sure you want to permanently delete your account? This action cannot be undone."
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setDeleteModalVisible(false)}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+
     </ScrollView>
   );
 };
