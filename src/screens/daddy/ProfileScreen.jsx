@@ -35,7 +35,7 @@ import { clearCart, getOrders } from '../../redux/reducers/daddy';
 import VersionCheck from 'react-native-version-check';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import UserProfileScreen from '../user/ProfileScreen';
-
+import { deleteAccount } from '../../services/services';
 
 
 
@@ -112,7 +112,7 @@ const ProfileScreen = () => {
       setDeleteModalVisible(false);
 
       // ✅ Call your API for account deletion
-      response = await api.deleteAccount({ user_id: customerId });
+      const response = await deleteAccount({ user_id: customerId });
       console.log("delete acoount response", response)
       // ✅ Clear redux store
       dispatch(actionLogout());
