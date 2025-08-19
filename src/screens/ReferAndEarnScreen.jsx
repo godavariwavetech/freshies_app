@@ -31,7 +31,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
           ...data[0],
           refer_content: JSON.parse(data[0].refer_content),
         };
-       
+
         setRefferalData(parsedData);
       } catch (error) {
         console.error('Failed to load application charges', error);
@@ -52,17 +52,17 @@ const ReferAndEarnScreen = ({ navigation }) => {
       const bulletPoints = Array.isArray(refferalData?.refer_content)
         ? refferalData.refer_content.slice(0, 2).map((item) => `• ${item}`).join('\n')
         : '';
-  
+
       const message = `Hey! Use my referral code *${referralCode}* to sign up on Abhi24.\n\n📲 Download the app: https://play.google.com/store/apps/details?id=com.Abhi24&hl=en\n\n${bulletPoints}`;
-  
+
       await Share.share({ message });
     } catch (error) {
       console.error('Error sharing referral:', error);
     }
   };
-  
-  
-  
+
+
+
 
   return (
     <View style={styles.container}>
@@ -88,12 +88,8 @@ const ReferAndEarnScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.loginButton}
               onPress={() => {
-                dispatch(actionLogout());
-               
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                });
+                // dispatch(actionLogout());
+                navigation.navigate('Register1', { withoutLogin: true });
               }}
             >
               <Text style={styles.loginButtonText}>Login Now</Text>

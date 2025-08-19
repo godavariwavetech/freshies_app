@@ -94,10 +94,10 @@ const UserProfileScreen = () => {
         leave_at_doorstep: preferences.leaveAtDoorstep
       }
     };
- 
+
     try {
       const res = await updateUserProfile(payload);
-    
+
       setEditMode(false);
       getUserProfile();
     } catch (err) {
@@ -169,12 +169,8 @@ const UserProfileScreen = () => {
             <TouchableOpacity
               style={styles.loginButton}
               onPress={() => {
-                dispatch(actionLogout());
-               
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                });
+                // dispatch(actionLogout());
+                navigation.navigate('Register1', { withoutLogin: true });
               }}
             >
               <Text style={styles.loginButtonText}>Login Now</Text>

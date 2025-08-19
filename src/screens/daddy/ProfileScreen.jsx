@@ -36,6 +36,7 @@ import VersionCheck from 'react-native-version-check';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import UserProfileScreen from '../user/ProfileScreen';
 import { deleteAccount } from '../../services/services';
+import { resetWallet } from '../../redux/reducers/walletSlice';
 
 
 
@@ -117,6 +118,7 @@ const ProfileScreen = () => {
       // ✅ Clear redux store
       dispatch(actionLogout());
       dispatch(clearCart());
+      dispatch(resetWallet())
 
       // ✅ Navigate to login
       navigation.reset({
@@ -350,11 +352,7 @@ const ProfileScreen = () => {
             <TouchableOpacity
               style={styles.menuItemMain}
               onPress={() => {
-                dispatch(actionLogout());
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                });
+                navigation.navigate('Register1', { withoutLogin: true });
               }}
             >
               <View style={styles.menuItemLeft}>
@@ -378,18 +376,12 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           )}
 
-
           {/* 🔢 App Version */}
           <View style={styles.versionContainer}>
             <Text style={styles.versionText}>App Version: {appVersion || '1.0.0'}</Text>
           </View>
         </View>
-
-
-
-
       </ScrollView>
-
 
       <CustomModal
         visible={updateModalVisible}

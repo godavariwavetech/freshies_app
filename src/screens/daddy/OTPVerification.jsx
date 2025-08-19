@@ -113,14 +113,14 @@ export default function OTPVerification({ navigation, route }) {
           });
 
           if (loginResponse.status === 200) {
-           
             dispatch(setCustormarId(loginResponse.data.customer_id))
             dispatch(setUserName(loginResponse.data.customer_name));
             dispatch(setMobile(route.params?.phoneNumber));
             dispatch(setReferalCode(loginResponse.data.referral_code))
             setShowNewUserModal(false);
-            route.params?.isFromCart
-              ? navigation.replace("CartScreen")
+            console.log("helow", route.params)
+            route.params?.withoutLogin
+              ? navigation.replace("BottomNavigation")
               : dispatch(actionLogin());
           } else {
             setFormError(loginResponse.msg || 'Login failed. Please try again.');
@@ -211,9 +211,9 @@ export default function OTPVerification({ navigation, route }) {
         dispatch(setMobile(route.params?.phoneNumber));
         dispatch(setReferalCode(loginResponse.data.referral_code))
         setShowNewUserModal(false);
-        route.params?.isFromCart
-          ? navigation.replace("CartScreen")
-          : dispatch(actionLogin());
+         route.params?.withoutLogin
+              ? navigation.replace("BottomNavigation")
+              : dispatch(actionLogin());
       } else if (loginResponse.status === 202 && loginResponse.msg === "Invalid referral code") {
         // 🛑 Handle referral code error
         setFormError("Referral code is invalid. Please check and try again.");

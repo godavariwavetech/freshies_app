@@ -128,12 +128,8 @@ const PreviousOrdersScreen = () => {
             <TouchableOpacity
               style={styles.loginButton}
               onPress={() => {
-                dispatch(actionLogout());
-              
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                });
+                // dispatch(actionLogout());
+                navigation.navigate('Register1', { withoutLogin: true });
               }}>
 
               <Text style={styles.loginButtonText}>Login Now</Text>

@@ -100,6 +100,7 @@ const BasketScreen = ({ navigation, route }) => {
       )
       : null;
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
+    const [serviceAvailble, setServiceAvailble] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const walletData = useSelector(state => state.wallet);
 
@@ -172,8 +173,7 @@ const BasketScreen = ({ navigation, route }) => {
 
 
   useEffect(() => {
-    if (storedLocation && storedLocation.latitude && storedLocation.longitude) {
-     
+    if (storedLocation && storedLocation.latitude && storedLocation.longitude) {   
       checkAddressExistenceInList();
     } else {
       setShowServiceModal(true);
@@ -182,16 +182,7 @@ const BasketScreen = ({ navigation, route }) => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchWallet();
-  }, []);
-
-  const fetchWallet = async () => {
-    const data = await WalletAPI.getWalletAmounts(customerId);
-    dispatch(setWalletData(data));
-  };
-
-  const checkAddressExistenceInList = async () => {
+    const checkAddressExistenceInList = async () => {
     if (
       !storedLocation ||
       !storedLocation.latitude ||
@@ -221,6 +212,7 @@ const BasketScreen = ({ navigation, route }) => {
         dispatch(setLocationName(response.payload.data[0].location_name));
         dispatch(setLocationId(response.payload.data[0].id));
         dispatch(setShopAddress(response.payload.data[0]));
+       
         // navigation.goBack();
       } else {
         setShowServiceModal(true);
@@ -229,8 +221,20 @@ const BasketScreen = ({ navigation, route }) => {
       console.error('Location confirmation error:', error);
     } finally {
       setIsCheckingAddress(false);
+      setServiceAvailble(true)
     }
   };
+
+  useEffect(() => {
+    fetchWallet();
+  }, []);
+
+  const fetchWallet = async () => {
+    const data = await WalletAPI.getWalletAmounts(customerId);
+    dispatch(setWalletData(data));
+  };
+
+
 
   useEffect(() => {
     const loadApplicationCharges = async () => {
@@ -639,7 +643,8 @@ const BasketScreen = ({ navigation, route }) => {
     );
   }
 
-  const couponAmount = coupon?.discount ? ((muttonSubtotal + otherSubtotal) * (coupon.discount / 100)).toFixed(2) : '0.00';
+  console.log("addreess", address)
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -975,36 +980,38 @@ const BasketScreen = ({ navigation, route }) => {
             )}
           </View> */}
 
-          {/* Place Order Button or Login Button */}
-          <View style={{ paddingBottom: 60 }}>
+         {/* Place Order Button or Login/Address Button */}
+         {serviceAvailble && <View style={{ paddingBottom: 60 }}>
             {!customerId ? (
-              // Login Button for users without customer ID
+              // 🔑 Login Button
               <TouchableOpacity
                 style={[
                   styles.placeOrderButton,
-                  {
-                    backgroundColor: backgroundColor,
-                  },
+                  { backgroundColor: backgroundColor },
                 ]}
-                onPress={() => {
-                  dispatch(actionLogout());
-                 
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Login' }],
-                  });
-                }}>
+               onPress={() => {
+                // dispatch(actionLogout());
+                navigation.navigate('Register1', { withoutLogin: true });
+              }}>
                 <Text style={styles.placeOrderText}>Login to Place Order</Text>
               </TouchableOpacity>
+            ) : !address? (
+              // 🏠 Add Address Button
+              <TouchableOpacity
+                style={[
+                  styles.placeOrderButton,
+                  { backgroundColor: backgroundColor },
+                ]}
+                onPress={() => navigation.navigate('Address')}>
+                <Text style={styles.placeOrderText}>Add Address to Place Order</Text>
+              </TouchableOpacity>
             ) : (
-              // Place Order Button for logged-in users
+              // ✅ Place Order Button
               <TouchableOpacity
                 style={[
                   styles.placeOrderButton,
                   {
-                    backgroundColor: isProcessingPayment
-                      ? '#ccc'
-                      : backgroundColor,
+                    backgroundColor: isProcessingPayment ? '#ccc' : backgroundColor,
                   },
                 ]}
                 onPress={handlePlaceOrder}
@@ -1016,7 +1023,9 @@ const BasketScreen = ({ navigation, route }) => {
                 )}
               </TouchableOpacity>
             )}
-          </View>
+          </View>}
+          
+
         </ScrollView>
       )}
 

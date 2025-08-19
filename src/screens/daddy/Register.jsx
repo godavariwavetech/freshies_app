@@ -32,6 +32,8 @@ import { useColorScheme } from 'react-native';
 
 
 export default function Register({ navigation, route }) {
+  const { withoutLogin } = route.params || {};   // safe check
+  console.log("withoutLogin:", withoutLogin);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -96,14 +98,15 @@ export default function Register({ navigation, route }) {
       await savePhoneNumber(phoneNumber);
       try {
         const response = await getUserLoginOTP(parseInt(phoneNumber, 10));
-       
+
         if (response.status === 200) {
-          navigation.navigate("OTPVerification", {
+          navigation.navigate(  withoutLogin ? "OTPVerification1" : "OTPVerification", {
             phoneNumber: phoneNumber,
             otp: response.loginotp,
             isFromCart: route.params?.isFromCart || null,
             user_ind: response.user_ind,
-            message: response.message
+            message: response.message,
+            withoutLogin: withoutLogin
             // username: username.trim()
           });
         } else {
@@ -226,19 +229,21 @@ export default function Register({ navigation, route }) {
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
+          {!withoutLogin && <>
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
-          <TouchableOpacity
-            onPress={() => dispatch(actionLogin())}
-            style={styles.skipButton}
-          >
-            <Text style={styles.skipText}>Skip Login</Text>
-            <Icon name="arrow-right" size={20} color="#8655d2" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => dispatch(actionLogin())}
+              style={styles.skipButton}
+            >
+              <Text style={styles.skipText}>Skip Login</Text>
+              <Icon name="arrow-right" size={20} color="#8655d2" />
+            </TouchableOpacity>
+          </>}
         </View>
       </View>
     </Pressable>

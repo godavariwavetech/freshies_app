@@ -137,10 +137,7 @@ export const AuthSlice = createSlice({
   name: 'authlice',
   initialState,
   reducers: {
-    actionLogout: state => {
-      state.token = null;
-      state.customerId = null;
-    },
+    actionLogout: () => initialState,
     actionLogin: state => {
       console.log("actionLogin");
       state.token = 'sample token';
@@ -156,11 +153,11 @@ export const AuthSlice = createSlice({
       state.location = action.payload;
     },
     setLocationName: (state, action) => {
-      
+
       state.locationName = action.payload;
     },
     setLocationId: (state, action) => {
-      
+
       state.locationId = action.payload;
     },
     clearNavigationFlag: (state) => {
@@ -175,22 +172,22 @@ export const AuthSlice = createSlice({
     setAddress: (state, action) => {
       state.address = action.payload
     },
-    setShopAddress: (state,action) => {
+    setShopAddress: (state, action) => {
       state.shopAddress = action.payload
     },
-    setUserName: (state,action) => {
+    setUserName: (state, action) => {
       state.username = action.payload
     },
-    setCustormarId: (state,action) => {
+    setCustormarId: (state, action) => {
       state.customerId = action.payload
     },
-    setReferalCode: (state,action) => {
+    setReferalCode: (state, action) => {
       state.referralCode = action.payload
     },
-    setUseDetails: (state,action) => {
+    setUseDetails: (state, action) => {
       state.userDetails = action.payload
     },
-    setStoreData: (state,action) => {
+    setStoreData: (state, action) => {
       state.storeData = action.payload
     }
   },
@@ -220,7 +217,7 @@ export const AuthSlice = createSlice({
     builder.addCase(verifyMobile.fulfilled, (state, action) => {
       state.loading = false;
       state.message = null;
-      
+
       if (action.payload?.data[0]?.mobile) {
         state.mobileNumber = action.payload?.data[0]?.mobile;
       }
@@ -280,6 +277,6 @@ export const AuthSlice = createSlice({
   },
 });
 
-export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag,setUseDetails, setRestaurnatDetails, setOrderOfferAmount,setReferalCode, setAddress,setShopAddress,setUserName,setCustormarId,setStoreData } = AuthSlice.actions;
+export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setUseDetails, setRestaurnatDetails, setOrderOfferAmount, setReferalCode, setAddress, setShopAddress, setUserName, setCustormarId, setStoreData } = AuthSlice.actions;
 
 export default AuthSlice.reducer;
