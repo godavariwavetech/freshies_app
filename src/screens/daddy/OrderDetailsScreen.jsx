@@ -16,6 +16,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Toast from 'react-native-toast-message'; // Ensure toast is configured globally
 import { getCoupons } from '../../services/services';
 import LinearGradient from 'react-native-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
@@ -26,6 +27,7 @@ const OffersScreen = ({ navigation }) => {
   const [coupons, setCoupons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchCouponsApi = async () => {
@@ -78,7 +80,7 @@ const OffersScreen = ({ navigation }) => {
         <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
 
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header,{paddingTop: insets.top}]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>

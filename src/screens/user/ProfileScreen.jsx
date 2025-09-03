@@ -20,6 +20,7 @@ import { getUserData, updateUserProfile } from '../../services/services';
 import { launchImageLibrary } from 'react-native-image-picker';
 import deliveryBoy from '../../screens/daddy/tabassets/deliveryBoy.png';
 import { setUseDetails, actionLogout } from '../../redux/reducers/auth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UserProfileScreen = () => {
   const navigation = useNavigation();
@@ -28,6 +29,7 @@ const UserProfileScreen = () => {
   const { mobileNumber, referralCode, username, address, customerId } = useSelector(
     state => state.Auth,
   );
+  const insets = useSafeAreaInsets();
   const [base64Image, setBase64Image] = useState('');
   const [imageUri, setImageUri] = useState(userData?.profile_image || '');
   const [editMode, setEditMode] = useState(false);
@@ -142,8 +144,7 @@ const UserProfileScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
-
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity
           onPress={() =>
             navigation.navigate('BottomNavigation', {

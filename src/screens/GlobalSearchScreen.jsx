@@ -4,11 +4,13 @@ import debounce from 'lodash.debounce';
 import { fetchSearchResults } from '../services/services';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FocusAwareStatusBar from '../components/CustomStatusBar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const GlobalSearchScreen = ({ navigation }) => {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const fetchResults = async (searchTerm) => {
         setLoading(true);
@@ -70,7 +72,7 @@ const GlobalSearchScreen = ({ navigation }) => {
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
             <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
             {/* Header with Back Button */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderColor: '#ddd', backgroundColor: '#8655d2', }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderColor: '#ddd',paddingTop: insets.top, backgroundColor: '#8655d2', }}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>

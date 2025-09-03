@@ -20,6 +20,7 @@ const productCardWidth = (width - 32) / 2;
 import { useDispatch, useSelector } from 'react-redux';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MyFavoritesScreen = () => {
   const { customerId } = useSelector(state => state.Auth);
@@ -28,6 +29,7 @@ const MyFavoritesScreen = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true)
   const [updatingFavoriteId, setUpdatingFavoriteId] = useState(null);
+  const insets = useSafeAreaInsets();
 
   const loadFavorites = useCallback(async () => {
     try {
@@ -165,7 +167,7 @@ const MyFavoritesScreen = () => {
     <View style={styles.container}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
 
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer,{paddingTop: insets.top}]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()} // Navigates back to the previous screen
           style={styles.backButton}

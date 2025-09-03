@@ -37,6 +37,7 @@ import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import UserProfileScreen from '../user/ProfileScreen';
 import { deleteAccount } from '../../services/services';
 import { resetWallet } from '../../redux/reducers/walletSlice';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
@@ -52,6 +53,7 @@ const ProfileScreen = () => {
   const [appVersion, setAppVersion] = useState('');
   const [isPoliciesExpanded, setIsPoliciesExpanded] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
 
   useEffect(() => {
@@ -114,7 +116,7 @@ const ProfileScreen = () => {
 
       // ✅ Call your API for account deletion
       const response = await deleteAccount({ user_id: customerId });
-      console.log("delete acoount response", response)
+
       // ✅ Clear redux store
       dispatch(actionLogout());
       dispatch(clearCart());
@@ -181,7 +183,7 @@ const ProfileScreen = () => {
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <LinearGradient
         colors={['#8655d2', '#8655d2']}
-        style={styles.gradientContainer}>
+        style={[styles.gradientContainer,{paddingTop: insets.top}]}>
         <View
           style={{
             flexDirection: 'row',
@@ -218,6 +220,14 @@ const ProfileScreen = () => {
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
               <Text style={styles.menuText}>Account</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('AddressList')}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
+              <Text style={styles.menuText}>addresss</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>

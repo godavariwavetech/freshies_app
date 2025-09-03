@@ -31,7 +31,7 @@ xmlns:tools="http://schemas.android.com/tools"
 
     <meta-data
       android:name="com.google.android.geo.API_KEY"
-      android:value="AIzaSyDaojSAqWjt4t_nxBX_PfQFVRfoi1kqu-Y"/>
+      android:value="AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM"/>
     <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

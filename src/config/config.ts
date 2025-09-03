@@ -1,5 +1,7 @@
 export const baseURL = 'https://api.abhi24.in/'; 
 
+export const API_KEY = 'AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM'; 
+
 export const endpoints = {
   VERIFY_MOBILE:'customers/v1/loginCheck',
   LOGIN:'customers/v1/otpAuth',

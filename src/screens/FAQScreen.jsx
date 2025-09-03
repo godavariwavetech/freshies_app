@@ -13,6 +13,8 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import FocusAwareStatusBar from '../components/CustomStatusBar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getFAQs } from '../services/services';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -23,19 +25,21 @@ const FAQScreen = ({ navigation }) => {
   const [faqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const insets = useSafeAreaInsets();
 
   const fetchFAQs = async () => {
     try {
-      const response = await axios.get('https://api.abhi24.in/public_app/get_faq'); // Replace with your real API
-      if (response.status === 200) {
-        setFaqs(response.data.data);
-      }
+      const faqsData = await getFAQs();  // this is already the data array
+      console.log("FAQs ===", faqsData);
+
+      setFaqs(faqsData);  // set state directly
     } catch (error) {
       console.error('Error fetching FAQs:', error.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchFAQs();
@@ -48,9 +52,9 @@ const FAQScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-         <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>

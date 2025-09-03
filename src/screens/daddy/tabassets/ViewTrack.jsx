@@ -14,6 +14,7 @@ import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimen
 import { fetchOrderStatus } from '../../../services/services';
 import { useFocusEffect } from '@react-navigation/native';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
@@ -22,6 +23,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
   const backgroundColor = "#8655d2";
   const [refreshing, setRefreshing] = useState(false);
   const [currentOrderDetails, setCurrentOrderDetails] = useState(orderDetails);
+  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
@@ -107,7 +109,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor={backgroundColor} />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor }]}>
+      <View style={[styles.header, { backgroundColor, paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>

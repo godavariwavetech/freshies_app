@@ -23,6 +23,7 @@ import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import { useDispatch, useSelector } from 'react-redux';
 import { useColorScheme } from 'react-native';
 import SearchBarWithScrollPlaceholder from '../../components/Searchbar';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 
@@ -48,6 +49,8 @@ function UserHome() {
   const placeholderOptions = ['meat', 'groceries', 'pickles'];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const {address} = useSelector(state => state.Auth);
+    const insets = useSafeAreaInsets();
+    console.log("home insets", insets)
     
   // Fetch subcategories and derive categories
   useEffect(() => {
@@ -123,7 +126,7 @@ function UserHome() {
   return (
     <View style={styles.mainContainer}>
       <FocusAwareStatusBar barStyle="dark-content" backgroundColor="white" />
-      <View style={styles.gradientContainer}>
+      <View style={[styles.gradientContainer, {paddingTop: insets.top}]}>
         <View style={styles.headerContainer}>
           <TouchableOpacity
             onPress={() => navigation.navigate('SelectServiceFromLocation')}

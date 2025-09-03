@@ -8,6 +8,7 @@ import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import { WalletAPI } from '../../../services/services';
 import { useSelector } from 'react-redux';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
@@ -20,7 +21,7 @@ const RechargeHistoryScreen = ({ navigation }) => {
   const [toDate, setToDate] = useState(null);
   const [isFromPickerVisible, setFromPickerVisible] = useState(false);
   const [isToPickerVisible, setToPickerVisible] = useState(false);
-
+  const insets = useSafeAreaInsets();
 
 
   useEffect(() => {
@@ -102,7 +103,7 @@ const RechargeHistoryScreen = ({ navigation }) => {
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header,{paddingTop: insets.top}]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={wp('6%')} color="#FFF" />
         </TouchableOpacity>

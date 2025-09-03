@@ -44,9 +44,11 @@ import {
   setLocation,
   setLocationId,
   setLocationName,
+  setServiceAvailable,
   setShopAddress,
 } from '../../../redux/reducers/auth';
 import { setWalletData } from '../../../redux/reducers/walletSlice';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import {addToCart} from "../../../redux/reducers/cartReducer"
 
 const paymentMethods = ['Pay Online', 'COD'];
@@ -78,8 +80,10 @@ const BasketScreen = ({ navigation, route }) => {
     customerId,
     mobileNumber,
     shopAddress,
-    username
+    username,
+    serviceAvailable 
   } = useSelector(state => state.Auth); 
+  const insets = useSafeAreaInsets();
 
 
   const { chargesList, selectedAddress } = useSelector(state => state.address);
@@ -100,7 +104,7 @@ const BasketScreen = ({ navigation, route }) => {
       )
       : null;
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
-    const [serviceAvailble, setServiceAvailble] = useState(false);
+   
   const [showServiceModal, setShowServiceModal] = useState(false);
   const walletData = useSelector(state => state.wallet);
 
@@ -212,7 +216,7 @@ const BasketScreen = ({ navigation, route }) => {
         dispatch(setLocationName(response.payload.data[0].location_name));
         dispatch(setLocationId(response.payload.data[0].id));
         dispatch(setShopAddress(response.payload.data[0]));
-       
+        dispatch(setServiceAvailable(true));   
         // navigation.goBack();
       } else {
         setShowServiceModal(true);
@@ -221,7 +225,7 @@ const BasketScreen = ({ navigation, route }) => {
       console.error('Location confirmation error:', error);
     } finally {
       setIsCheckingAddress(false);
-      setServiceAvailble(true)
+      
     }
   };
 
@@ -233,8 +237,6 @@ const BasketScreen = ({ navigation, route }) => {
     const data = await WalletAPI.getWalletAmounts(customerId);
     dispatch(setWalletData(data));
   };
-
-
 
   useEffect(() => {
     const loadApplicationCharges = async () => {
@@ -302,7 +304,7 @@ const BasketScreen = ({ navigation, route }) => {
   };
 
   const handleDelete = async (id, quantityType) => {
-   
+
     const updatedCartItems = cartItems.filter(item => item.id !== id);
     dispatch(removeFromCart({ id, quantityType }));
     setCartItems(updatedCartItems);
@@ -529,7 +531,7 @@ const BasketScreen = ({ navigation, route }) => {
         payment_amount: Number(totalAfterWallets.toFixed(2)),
         sub_order_array: mappedItems,
       };
-  
+      console.log(payload)
       const orderResponse = await dispatch(placeOrder({ orderDetails: payload }));
       
       if (!orderResponse.payload) return;
@@ -629,7 +631,6 @@ const BasketScreen = ({ navigation, route }) => {
   };
 
 
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -643,14 +644,14 @@ const BasketScreen = ({ navigation, route }) => {
     );
   }
 
-  console.log("addreess", address)
+
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container]}>
       {/* Status Bar */}
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
-      <View style={[styles.header, { backgroundColor }]}>
+      <View style={[styles.header, { backgroundColor },{paddingTop: insets.top}]}>
         <TouchableOpacity onPress={() => navigation.navigate("BottomNavigation")}>
           <Icon name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -981,7 +982,7 @@ const BasketScreen = ({ navigation, route }) => {
           </View> */}
 
          {/* Place Order Button or Login/Address Button */}
-         {serviceAvailble && <View style={{ paddingBottom: 60 }}>
+         {serviceAvailable && <View style={{ paddingBottom: 60 }}>
             {!customerId ? (
               // 🔑 Login Button
               <TouchableOpacity
@@ -995,17 +996,7 @@ const BasketScreen = ({ navigation, route }) => {
               }}>
                 <Text style={styles.placeOrderText}>Login to Place Order</Text>
               </TouchableOpacity>
-            ) : !address? (
-              // 🏠 Add Address Button
-              <TouchableOpacity
-                style={[
-                  styles.placeOrderButton,
-                  { backgroundColor: backgroundColor },
-                ]}
-                onPress={() => navigation.navigate('Address')}>
-                <Text style={styles.placeOrderText}>Add Address to Place Order</Text>
-              </TouchableOpacity>
-            ) : (
+            ) :  (
               // ✅ Place Order Button
               <TouchableOpacity
                 style={[
@@ -1014,7 +1005,8 @@ const BasketScreen = ({ navigation, route }) => {
                     backgroundColor: isProcessingPayment ? '#ccc' : backgroundColor,
                   },
                 ]}
-                onPress={handlePlaceOrder}
+                // onPress={handlePlaceOrder}
+                onPress={() => navigation.navigate('AddressList')}
                 disabled={isProcessingPayment}>
                 {isProcessingPayment ? (
                   <ActivityIndicator color="#fff" />
@@ -1024,6 +1016,18 @@ const BasketScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             )}
           </View>}
+
+        {!serviceAvailable && (
+              // 🏠 Add Address Button
+              <TouchableOpacity
+                style={[
+                  styles.placeOrderButton,
+                  { backgroundColor: backgroundColor },
+                ]}
+                onPress={() =>  setShowServiceModal(true)}>
+                <Text style={styles.placeOrderText}>Add Address to Place Order</Text>
+              </TouchableOpacity>
+            ) }   
           
 
         </ScrollView>

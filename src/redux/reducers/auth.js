@@ -22,7 +22,8 @@ const initialState = {
   username: "",
   referralCode: "",
   userDetails: {},
-  storeData: {}
+  storeData: {},
+  serviceAvailable: false,   // 👈 new field
 };
 
 export const verifyMobile = createAsyncThunk(
@@ -49,7 +50,6 @@ export const verifyMobile = createAsyncThunk(
   },
 );
 
-
 export const addCustomer = createAsyncThunk(
   "addCustomer",
   async (
@@ -70,7 +70,6 @@ export const addCustomer = createAsyncThunk(
     }
   }
 )
-
 
 export const loginAction = createAsyncThunk(
   'loginAction',
@@ -189,7 +188,10 @@ export const AuthSlice = createSlice({
     },
     setStoreData: (state, action) => {
       state.storeData = action.payload
-    }
+    },
+    setServiceAvailable: (state, action) => {
+      state.serviceAvailable = action.payload;
+    },
   },
   extraReducers: builder => {
     builder.addCase(loginAction.pending, (state, action) => {
@@ -277,6 +279,6 @@ export const AuthSlice = createSlice({
   },
 });
 
-export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setUseDetails, setRestaurnatDetails, setOrderOfferAmount, setReferalCode, setAddress, setShopAddress, setUserName, setCustormarId, setStoreData } = AuthSlice.actions;
+export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setUseDetails, setRestaurnatDetails, setOrderOfferAmount, setReferalCode, setAddress, setShopAddress, setUserName, setCustormarId, setStoreData,setServiceAvailable  } = AuthSlice.actions;
 
 export default AuthSlice.reducer;

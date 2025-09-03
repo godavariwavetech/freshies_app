@@ -25,6 +25,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import CustomModal from '../../components/CustomModal';
 import { setSelectedAddress as setSelectedAddressAction, setUserDetails } from '../../redux/reducers/addressSlice';
 import { haversineDistance } from './distanceCalculator';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const AddressListScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -42,6 +43,7 @@ const AddressListScreen = ({ navigation, route }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const isFromCart = route.params?.isFromCart;
 
@@ -76,7 +78,7 @@ const AddressListScreen = ({ navigation, route }) => {
         setShowAddressModal(true);
       }
     } catch (error) {
-      
+
       setShowAddressModal(true);
     } finally {
       setIsCheckingAddress(false);
@@ -166,55 +168,55 @@ const AddressListScreen = ({ navigation, route }) => {
     await loadAddresses();
     setRefreshing(false);
   };
-
+  console.log("insets", insets)
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#8655d2"/>
-      <View style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Address List</Text>
-        </View>
+      <StatusBar style="light" backgroundColor="#8655d2" />
 
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#8655d2" />
-            <Text style={styles.loadingText}>Loading addresses...</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={addressList}
-            renderItem={renderAddress}
-            keyExtractor={item => item?.id?.toString()}
-            contentContainerStyle={[
-              styles.listContainer,
-              addressList.length === 0 && styles.emptyListContainer,
-            ]}
-            key={toggleValue}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            ListEmptyComponent={renderEmptyList}
-          />
-        )}
-
-        <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
-          <Icon name="add" size={30} color="#fff" />
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
         </TouchableOpacity>
-
-        <CustomModal
-          visible={deleteModalVisible}
-          title="Delete Address"
-          message="Are you sure you want to delete this address? This action cannot be undone."
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-          confirmText="Delete"
-          cancelText="Cancel"
-          confirmButtonColor="#8655d2"
-        />
+        <Text style={styles?.title}>Address List</Text>
       </View>
+
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#8655d2" />
+          <Text style={styles.loadingText}>Loading addresses...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={addressList}
+          renderItem={renderAddress}
+          keyExtractor={item => item?.id?.toString()}
+          contentContainerStyle={[
+            styles.listContainer,
+            addressList?.length === 0 && styles.emptyListContainer,
+          ]}
+          key={toggleValue}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={renderEmptyList}
+        />
+      )}
+
+      <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+        <Icon name="add" size={30} color="#fff" />
+      </TouchableOpacity>
+
+      <CustomModal
+        visible={deleteModalVisible}
+        title="Delete Address"
+        message="Are you sure you want to delete this address? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmButtonColor="#8655d2"
+      />
+
 
       {showLoginModal && (
         <View style={styles.modalOverlay}>
@@ -312,11 +314,11 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#8655d2',
-    height: responsiveHeight(15),
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingBottom: responsiveHeight(3),
-    paddingLeft: responsiveWidth(5),
+    alignItems: "flex-end",
+    justifyContent: "flex-start",
+    paddingVertical: 20,
+    paddingHorizontal: responsiveWidth(10),
   },
   backButton: {
     width: responsiveWidth(7),

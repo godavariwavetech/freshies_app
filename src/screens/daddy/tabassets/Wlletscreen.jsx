@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setWalletData } from '../../../redux/reducers/walletSlice';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { actionLogout } from '../../../redux/reducers/auth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const radioProps = [
@@ -55,7 +56,7 @@ const WalletPage = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const dispatch = useDispatch();
   const [rechargeSuccessfull, setRechargeSuccessfull] = useState(false)
-
+    const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchAmounts = async () => {
@@ -271,7 +272,7 @@ const WalletPage = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       {/* Header Section */}
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <View style={styles.headerContent}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={wp('6%')} color="#fff" />

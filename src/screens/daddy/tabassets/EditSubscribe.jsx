@@ -19,11 +19,12 @@ import { useSelector, dispatch, useDispatch } from 'react-redux';
 import { setLocation, setLocationId, setLocationName, setShopAddress } from '../../../redux/reducers/auth';
 import { checkAddressExistence, placeSubscriptionOrder } from '../../../services/services';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const EditSubscriptionScreen = ({ navigation, route }) => {
   const { productDetails } = route.params;
-
+  const insets = useSafeAreaInsets();
   const today = dayjs().format('YYYY-MM-DD');
   const [scheduleType, setScheduleType] = useState('Custom');
   const [startDate, setStartDate] = useState(dayjs().add(1, 'day').toDate());
@@ -204,7 +205,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
-      <View style={[styles.header, { backgroundColor }]}>
+      <View style={[styles.header, { backgroundColor, paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>

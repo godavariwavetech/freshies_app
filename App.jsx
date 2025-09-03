@@ -14,6 +14,7 @@ import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import RootNavigation from './src/navigation/AppNavigation';
 import { OneSignal, LogLevel } from 'react-native-onesignal'; // Import OneSignal
+import { SafeAreaProvider } from 'react-native-safe-area-context'; // 👈 add this
 
 // OneSignal App ID
 const ONESIGNAL_APP_ID = '2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14'; // 🔁 Replace this with your real App ID
@@ -78,7 +79,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-   
+
     OneSignal.Debug.setLogLevel(LogLevel.Verbose);
 
     // OneSignal Initialization
@@ -96,7 +97,7 @@ const App = () => {
     });
 
     OneSignal.Notifications.addEventListener('opened', (event) => {
-     
+
     });
 
     OneSignal.User.addEmail('your_user_email@example.com');
@@ -160,21 +161,23 @@ const App = () => {
 
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <View style={{ flex: 1 }}>
-          <NetworkStatusBanner />
-          <RootNavigation />
-          <CustomModal
-            visible={showUpdateModal}
-            title="Update Available"
-            message="A new version of the app is available. Please update to continue using all features."
-            confirmText="Update Now"
-            onConfirm={handleUpdate}
-            cancelText=""
-          />
-          <Toast />
-        </View>
-      </NavigationContainer>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <View style={{ flex: 1 }}>
+            <NetworkStatusBanner />
+            <RootNavigation />
+            <CustomModal
+              visible={showUpdateModal}
+              title="Update Available"
+              message="A new version of the app is available. Please update to continue using all features."
+              confirmText="Update Now"
+              onConfirm={handleUpdate}
+              cancelText=""
+            />
+            <Toast />
+          </View>
+        </NavigationContainer>
+      </SafeAreaProvider>
     </Provider>
   );
 };

@@ -85,8 +85,8 @@ android {
         applicationId "com.Abhi24"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
-        versionName "1.0.70"      // optional, can be "1.1", "2.0", or anything you prefer     
+        versionCode 11
+        versionName "1.0.80"      // optional, can be "1.1", "2.0", or anything you prefer     
         manifestPlaceholders = [
         onesignal_app_id: "2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14", // 🔁 Replace this
         onesignal_google_project_number: "REMOTE"

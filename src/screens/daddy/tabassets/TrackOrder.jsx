@@ -22,6 +22,7 @@ import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import Clipboard from '@react-native-clipboard/clipboard';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 dayjs.extend(customParseFormat);
 
@@ -38,6 +39,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
   const [loadingItems, setLoadingItems] = useState(true);
   const [isCancelAlertVisible, setCancelAlertVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchOrderItems = async () => {
@@ -265,7 +267,7 @@ const formatIndianDateTime = (dateString) => {
   return (
     <View style={styles.container}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <Ionicons
           name="arrow-back"
           size={24}

@@ -1,13 +1,12 @@
 import axios from 'axios';
 import { panGestureHandlerCustomNativeProps } from 'react-native-gesture-handler/lib/typescript/handlers/PanGestureHandler';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { baseURL } from '../config/config';
 
-// Base URL
-const API_BASE_URL = 'https://api.abhi24.in';
 
 // Create Axios instance
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: baseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -526,6 +525,20 @@ export const deleteAccount = async (payload) => {
   } catch (error) {
     console.error('❌ Update profile error:', error);
     throw error.response?.data || error;
+  }
+};
+
+export const getFAQs = async () => {
+  try {
+    const response = await api.get('/public_app/get_faq');
+    if (response.data.status === 200) {
+      return response.data.data; // Return the array of coupons
+    } else {
+      throw new Error('Unexpected response status: ' + response.data.status);
+    }
+  } catch (error) {
+    console.error('Error fetching faqs:', error);
+    throw error;
   }
 };
 

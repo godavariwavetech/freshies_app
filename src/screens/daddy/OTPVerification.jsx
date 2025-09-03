@@ -30,6 +30,7 @@ import { checkAddressExistence } from '../../redux/reducers/daddy';
 import { customerLogin } from '../../services/services';
 import { useColorScheme } from 'react-native';
 import { type } from 'metro/private/integration_tests/basic_bundle/TypeScript';
+import { CommonActions } from '@react-navigation/native';
 
 
 
@@ -118,9 +119,20 @@ export default function OTPVerification({ navigation, route }) {
             dispatch(setMobile(route.params?.phoneNumber));
             dispatch(setReferalCode(loginResponse.data.referral_code))
             setShowNewUserModal(false);
-            console.log("helow", route.params)
+
+            // navigation.dispatch(
+            //   CommonActions.reset({
+            //     index: 0,
+            //     routes: [{ name: 'BottomNavigation' }],
+            //   })
+            // )
             route.params?.withoutLogin
-              ? navigation.replace("BottomNavigation")
+              ?   navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'BottomNavigation' }],
+              })
+            )
               : dispatch(actionLogin());
           } else {
             setFormError(loginResponse.msg || 'Login failed. Please try again.');
@@ -211,9 +223,14 @@ export default function OTPVerification({ navigation, route }) {
         dispatch(setMobile(route.params?.phoneNumber));
         dispatch(setReferalCode(loginResponse.data.referral_code))
         setShowNewUserModal(false);
-         route.params?.withoutLogin
-              ? navigation.replace("BottomNavigation")
-              : dispatch(actionLogin());
+        route.params?.withoutLogin
+          ? navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'BottomNavigation' }],
+            })
+          )
+          : dispatch(actionLogin());
       } else if (loginResponse.status === 202 && loginResponse.msg === "Invalid referral code") {
         // 🛑 Handle referral code error
         setFormError("Referral code is invalid. Please check and try again.");

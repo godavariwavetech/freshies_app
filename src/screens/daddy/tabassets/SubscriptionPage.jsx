@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteSubscriptionOrder, getSubscriptionOrders, toggleSubscriptionStatus } from '../../../services/services';
 import { useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const MySubscriptionScreen = ({ navigation, route }) => {
@@ -29,6 +30,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
   const { customerId } = useSelector(state => state.Auth);
   const [refreshing, setRefreshing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadSubscribedProductsFromAPI();
@@ -212,7 +214,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
       <StatusBar backgroundColor={backgroundColor} barStyle="light-content" />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor }]}>
+      <View style={[styles.header, { backgroundColor,paddingTop: insets.top }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>

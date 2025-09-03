@@ -27,6 +27,7 @@ import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import { addToCart } from '../../../redux/reducers/cartReducer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width } = Dimensions.get('window');
 
 
@@ -44,6 +45,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
   const [showFull, setShowFull] = useState(false);
   const walletData = useSelector((state) => state.wallet);
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
+    const insets = useSafeAreaInsets();
 
 
   const previewLength = 200; // chars
@@ -463,7 +465,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
         </ScrollView>
 
         {/* Bottom Bar for Buy and Subscribe */}
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, {bottom: insets.bottom}]}>
           <TouchableOpacity
             style={[styles.subscribeButton, { borderColor: backgroundColor }]}
             onPress={() => {

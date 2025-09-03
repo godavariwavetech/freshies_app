@@ -35,13 +35,15 @@ import { setUseDetails } from '../../redux/reducers/auth';
 import { useNavigationState } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { setStoreData } from '../../redux/reducers/auth';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Tab = createBottomTabNavigator();
 
 export default function BottomNavigation() {
   const dispatch = useDispatch();
   const { cartItems } = useSelector((state) => state.Dashboard);
   const { customerId, userDetails, storeData } = useSelector(state => state.Auth);
-
+  const insets = useSafeAreaInsets();
+  console.log("insets", insets)
   useEffect(() => {
     const getUserProfile = async () => {
       try {
@@ -149,7 +151,9 @@ export default function BottomNavigation() {
           tabBarInactiveTintColor: 'gray',
           tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
           tabBarStyle: {
-            height: Platform.OS === 'ios' ? 85 : 60,
+            // height: Platform.OS === 'ios' ? 85 : 60,
+            height: 60 + insets.bottom,  // 👈 extend height
+            paddingBottom: insets.bottom, // 👈 push content above gesture bar
             position: 'absolute',
             bottom: 0,
             left: 0,
@@ -215,7 +219,7 @@ export default function BottomNavigation() {
       {currentTab !== 'Profile' && (
         <Pressable
           onPress={openWhatsApp}
-          style={styles.whatsappButton}
+          style={[styles.whatsappButton,{bottom: (Platform.OS === 'ios' ? 100 : 80) + insets.bottom}]}
         >
           <FontAwesome name="whatsapp" size={32} color="#fff" />
         </Pressable>
@@ -236,6 +240,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
+    
   },
   badgeText: {
     color: '#fff',
@@ -245,7 +250,6 @@ const styles = StyleSheet.create({
   whatsappButton: {
     position: 'absolute',
     right: 20,
-    bottom: Platform.OS === 'ios' ? 100 : 80,
     backgroundColor: '#25D366',
     borderRadius: 30,
     width: 60,

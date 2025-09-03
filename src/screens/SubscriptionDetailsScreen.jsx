@@ -3,10 +3,11 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'rea
 import dayjs from 'dayjs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SubscriptionDetailsScreen({ navigation, route }) {
     const { item } = route.params;
-   
+    const insets = useSafeAreaInsets();
     const today = dayjs();  // mock current date
     const startDate = dayjs(item.startDate);
     const upcoming = startDate.isAfter(today) ? startDate : today.add(1, 'day');
@@ -19,7 +20,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
     return (
         <ScrollView style={styles.container}>
             {/* Header */}
-            <View style={styles.header}>
+            <View style={[styles.header, {paddingTop: insets.top}]}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={wp('6%')} color="#fff" />
                 </TouchableOpacity>

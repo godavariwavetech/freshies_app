@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'; // ✅ Import useSelecto
 import FocusAwareStatusBar from '../components/CustomStatusBar';
 import { actionLogout } from '../redux/reducers/auth';
 import { clearCart } from '../redux/reducers/daddy';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const PreviousOrdersScreen = () => {
@@ -15,8 +16,9 @@ const PreviousOrdersScreen = () => {
   const navigation = useNavigation();
   const customerId = useSelector(state => state.Auth.customerId)
   const [activeTab, setActiveTab] = useState('InProgress'); // 'InProgress' | 'Completed'
-
+  const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  
 
   const fetchOrders = async () => {
     if (!customerId) {
@@ -105,10 +107,10 @@ const PreviousOrdersScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1}}>
         {/* Header */}
         <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, marginBottom: 5, backgroundColor: "#8655d2" }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, marginBottom: 5, backgroundColor: "#8655d2" , paddingTop: insets.top }}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={24} color="white" />
           </TouchableOpacity>

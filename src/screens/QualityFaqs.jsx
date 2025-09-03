@@ -13,6 +13,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import FocusAwareStatusBar from '../components/CustomStatusBar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -23,6 +24,7 @@ const QualityFAQS = ({ navigation }) => {
   const [Qualityfaqs, setFaqs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const insets = useSafeAreaInsets();
 
   const fetchFAQs = async () => {
    
@@ -52,7 +54,7 @@ const QualityFAQS = ({ navigation }) => {
     <View style={styles.container}>
          <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>

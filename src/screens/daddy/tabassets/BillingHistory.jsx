@@ -13,12 +13,13 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import FocusAwareStatusBar from '../../../components/CustomStatusBar';
 import { WalletAPI } from '../../../services/services';
 import { useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const BillingHistoryScreen = ({ navigation }) => {
   const [billingHistory, setBillingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const { customerId } = useSelector(state => state.Auth);
-
+ const insets = useSafeAreaInsets();
   
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const BillingHistoryScreen = ({ navigation }) => {
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>

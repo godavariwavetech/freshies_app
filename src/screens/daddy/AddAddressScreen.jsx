@@ -10,6 +10,9 @@ import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import CustomModal from '../../components/CustomModal';
 import { setUserDetails } from '../../redux/reducers/addressSlice';
+import { API_KEY } from '../../config/config';
+
+
 
 const AddAddressScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -73,7 +76,7 @@ const AddAddressScreen = ({ navigation, route }) => {
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyCjIVYSyhXOFfT7nQ4UoV85c-UB5FXzY2c`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${API_KEY}`
       );
       const data = await response.json();
       
@@ -386,7 +389,7 @@ const AddAddressScreen = ({ navigation, route }) => {
       if (text.trim().length > 2) {
         try {
           const response = await fetch(
-            `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=AIzaSyCjIVYSyhXOFfT7nQ4UoV85c-UB5FXzY2c`
+            `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(text)}&key=${API_KEY}`
           );
           const data = await response.json();
           
@@ -408,7 +411,7 @@ const AddAddressScreen = ({ navigation, route }) => {
   const handlePlaceSelect = useCallback(async (placeId) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry,formatted_address&key=AIzaSyCjIVYSyhXOFfT7nQ4UoV85c-UB5FXzY2c`
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry,formatted_address&key=${API_KEY}`
       );
       const data = await response.json();
       

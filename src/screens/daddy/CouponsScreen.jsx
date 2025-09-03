@@ -361,6 +361,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import { useDispatch, useSelector } from 'react-redux';
 import { applyCoupon, fetchCoupons, removeCoupon } from '../../redux/reducers/coupons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CouponsScreen = ({ navigation, route }) => {
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -371,6 +372,7 @@ const CouponsScreen = ({ navigation, route }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const { coupons } = useSelector(state => state.coupons);
   const dispatch = useDispatch();
+  const insets = useSafeAreaInsets();
 
   const handleApplyCoupon = coupon => {
     if (totalPrice >= coupon.coupon_max_price_limit) {
@@ -409,7 +411,7 @@ const CouponsScreen = ({ navigation, route }) => {
       <StatusBar barStyle={'light-content'} backgroundColor={'#D32F2F'} />
       
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header,{paddingTop: insets.top}]}>
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <AntDesign name="arrowleft" size={24} color="white" />

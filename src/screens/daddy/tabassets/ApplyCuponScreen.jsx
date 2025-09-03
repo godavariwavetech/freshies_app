@@ -16,6 +16,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Toast from 'react-native-toast-message';
 import { getCoupons } from '../../../services/services'; // Import the getCoupons service
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ApplyCouponScreen = ({ navigation, route }) => {
   const [promoCode, setPromoCode] = useState('');
@@ -23,6 +24,7 @@ const ApplyCouponScreen = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { cartItems, totalAmount = 0, status } = route.params || {};
+  const insets = useSafeAreaInsets();
  
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -178,7 +180,7 @@ const ApplyCouponScreen = ({ navigation, route }) => {
       <SafeAreaView style={styles.container}>
         <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header,{paddingTop: insets.top} ]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={wp('6%')} color="#FFF" />
           </TouchableOpacity>

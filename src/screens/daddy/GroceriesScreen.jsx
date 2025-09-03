@@ -28,6 +28,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import LinearGradient from 'react-native-linear-gradient';
 import { compose } from '@reduxjs/toolkit';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const { width, height } = Dimensions.get('window');
@@ -73,6 +74,7 @@ export default function GroceriesScreen({ navigation, route }) {
   const [typeFilterModalVisible, setTypeFilterModalVisible] = useState(false);
   const [priceFilterModalVisible, setPriceFilterModalVisible] = useState(false);
   const [updatingFavoriteId, setUpdatingFavoriteId] = useState(null);
+  const insets = useSafeAreaInsets();
 
   const priceRangeOptions = [
     { label: '₹0 - ₹100', min: 0, max: 100 },
@@ -92,7 +94,7 @@ export default function GroceriesScreen({ navigation, route }) {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
       setSideBarSubCategories(fetchedSubCategories);
-    
+
       const uniqueCategories = [
         ...new Map(
           fetchedSubCategories.map((sub) => [
@@ -118,7 +120,7 @@ export default function GroceriesScreen({ navigation, route }) {
           sub_category_id: route.params?.subcategory_id,
         });
         setSelectedSubcategoryId(subCats[0]?.id);
-       
+
         setSubtotalcategories(subCats);
       } catch (error) {
         Toast.show({
@@ -141,7 +143,7 @@ export default function GroceriesScreen({ navigation, route }) {
       setIsLoading(true);
       setError(null);
       const response = await getItems(selectedSubcategoryId, customerId, filter_one, item_id);
-     
+
       const items = response.data || [];
       // Group items strictly by unique_id and sub_category_id
       const groupedItems = items.reduce((acc, item) => {
@@ -204,7 +206,7 @@ export default function GroceriesScreen({ navigation, route }) {
         wishlistId: item.wishlistId,
         value: item.value
       }));
-    
+
       setProducts(mappedProducts);
     } catch (error) {
       setError('Failed to load items');
@@ -223,13 +225,13 @@ export default function GroceriesScreen({ navigation, route }) {
   useEffect(() => {
     fetchItems(); // For initial mount or route param change
   }, [selectedSubcategoryId, route.params?.category_id]);
-  
+
   useFocusEffect(
     useCallback(() => {
       fetchItems(); // For reloading on focus
     }, [selectedSubcategoryId])
   );
-  
+
 
 
   const toggleFavorite = async (item) => {
@@ -241,7 +243,7 @@ export default function GroceriesScreen({ navigation, route }) {
     try {
       if (isFavorited) {
         const response = await removeFromWishlist({ wishlistId: item.wishlistId });
-       
+
         const updatedProducts = products.map((product) =>
           product.id === item.id
             ? { ...product, wishlist_flag: 0, wishlistId: null }
@@ -279,7 +281,7 @@ export default function GroceriesScreen({ navigation, route }) {
   const isFavorite = (item) => item?.wishlist_flag === 1;
 
   const handleBuyOnce = async (product) => {
-   
+
     try {
       // Get selected quantity type from productWeights or fallback to first
       const selectedQuantityType = productWeights[product.id] || product.variants[0].quantity_type;
@@ -301,7 +303,7 @@ export default function GroceriesScreen({ navigation, route }) {
         category: product.category || '',
         status,
       };
-    
+
       dispatch(addToCart(cartItem));
     } catch (error) {
       Toast.show({
@@ -504,9 +506,9 @@ export default function GroceriesScreen({ navigation, route }) {
         </TouchableOpacity>
         <View style={styles.companyRow}>
           <Icon name="verified" size={14} color="#7D29E8" style={styles.companyIcon} />
-          <Text style={styles.companyName}>{item.filter_one}</Text>
+          <Text  style={styles.companyName}>{item.filter_one}</Text>
         </View>
-        <Text style={styles.productName}>{item.name}</Text>
+        <Text  style={styles.productName}>{item.name}</Text>
         {/* Conditionally render dropdown or text based on item_ind */}
         {item.variants.length > 1 && item.item_ind === 0 ? (
           <Dropdown
@@ -655,38 +657,38 @@ export default function GroceriesScreen({ navigation, route }) {
     );
   }
 
-const selectedIndex = sidebarSubcategories.findIndex(
-  cat => cat.id === subcategory_id
-);
+  const selectedIndex = sidebarSubcategories.findIndex(
+    cat => cat.id === subcategory_id
+  );
 
-// Step 2: Rotate array after selected index (excluding selected item)
-let reorderedSidebarSubcategories = [];
+  // Step 2: Rotate array after selected index (excluding selected item)
+  let reorderedSidebarSubcategories = [];
 
-if (selectedIndex !== -1) {
-  const after = sidebarSubcategories.slice(selectedIndex + 1);
-  const before = sidebarSubcategories.slice(0, selectedIndex);
-  reorderedSidebarSubcategories = [...after, ...before];
-}
+  if (selectedIndex !== -1) {
+    const after = sidebarSubcategories.slice(selectedIndex + 1);
+    const before = sidebarSubcategories.slice(0, selectedIndex);
+    reorderedSidebarSubcategories = [...after, ...before];
+  }
 
-// Step 3: Add type to each item
-const sidebarItems = reorderedSidebarSubcategories.map(item => ({
-  ...item,
-  type: 'subcategory',
-}));
-
-// Step 4: Final merged list (subtotal + label + reordered subcategories)
-const mergedSidebarItems = [
-  ...subtotalcategories.map(item => ({
+  // Step 3: Add type to each item
+  const sidebarItems = reorderedSidebarSubcategories.map(item => ({
     ...item,
-    type: 'subtotal',
-  })),
-  { type: 'label', title: 'Explore More' },
-  ...sidebarItems,
-];
+    type: 'subcategory',
+  }));
+
+  // Step 4: Final merged list (subtotal + label + reordered subcategories)
+  const mergedSidebarItems = [
+    ...subtotalcategories.map(item => ({
+      ...item,
+      type: 'subtotal',
+    })),
+    { type: 'label', title: 'Explore More' },
+    ...sidebarItems,
+  ];
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container,{paddingTop:insets.top}]}>
       <StatusBar backgroundColor="white" barStyle="dark-content" translucent={false} />
 
       <View style={styles.header}>
@@ -759,7 +761,6 @@ const mergedSidebarItems = [
           </TouchableOpacity>
         )}
       </View>
-
 
       <View style={styles.mainContent}>
         <View style={styles.sideMenu}>
@@ -872,7 +873,7 @@ const mergedSidebarItems = [
       </View>
 
       {cartItems.length > 0 && (
-        <View style={[styles.checkoutToast, { backgroundColor: '#8655d2' }]}>
+        <View style={[styles.checkoutToast, { backgroundColor: '#8655d2' },{bottom: insets.bottom}]}>
           <View style={styles.checkoutToastContent}>
             <View style={styles.checkoutToastLeft}>
               <Text style={styles.checkoutToastTitle}>
@@ -956,7 +957,6 @@ const mergedSidebarItems = [
         </View>
       </Modal>
 
-
       <Modal
         isVisible={priceFilterModalVisible}
         onBackdropPress={() => setPriceFilterModalVisible(false)}
@@ -1000,7 +1000,6 @@ const mergedSidebarItems = [
         </View>
       </Modal>
 
-
       <Modal
         isVisible={sortModalVisible}
         onBackdropPress={() => setSortModalVisible(false)}
@@ -1033,7 +1032,7 @@ const mergedSidebarItems = [
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff'},
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1191,6 +1190,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textAlign: 'center',
     width: '100%',
+    paddingHorizontal: 2
   },
   weightDropdown: {
     width: '80%',
@@ -1227,17 +1227,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 2,
+    justifyContent: "center",
+    paddingHorizontal: 2
+
   },
 
   companyIcon: {
     marginRight: 5,
     marginTop: 1,
+    // backgroundColor: "green"
   },
 
   companyName: {
     fontSize: 12,
     color: '#333',
     fontWeight: '500',
+    flexShrink: 1, 
+    // backgroundColor: "red"
   },
 
   priceRow: {

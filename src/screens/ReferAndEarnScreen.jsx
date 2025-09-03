@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector, useDispatch } from 'react-redux';
 import { applicationCharges } from '../services/services';
 import { actionLogout } from '../redux/reducers/auth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 const ReferAndEarnScreen = ({ navigation }) => {
@@ -22,6 +23,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
   const [refferalData, setRefferalData] = useState()
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const loadApplicationCharges = async () => {
@@ -67,7 +69,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
-      <LinearGradient colors={['#8655d2', '#8655d2']} style={styles.gradientContainer}>
+      <LinearGradient colors={['#8655d2', '#8655d2']} style={[styles.gradientContainer,{paddingTop: insets.top }]}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />

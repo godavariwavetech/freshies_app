@@ -20,10 +20,12 @@ import Geolocation from '@react-native-community/geolocation';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomModal from '../../components/CustomModal';
-import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux, setShopAddress } from '../../redux/reducers/auth';
+import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux, setShopAddress, setServiceAvailable } from '../../redux/reducers/auth';
 import { checkAddressExistence } from '../../services/services';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import { useIsFocused } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { API_KEY } from '../../config/config';
 
 const { width, height } = Dimensions.get('window');
 
@@ -56,6 +58,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
   const [shouldRenderMap, setShouldRenderMap] = useState(true);
   const isMountedRef = useRef(true);
   const [mapReady, setMapReady] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -80,7 +83,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
   const getAddressFromCoordinates = async (latitude, longitude) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM`,
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${API_KEY}`,
       );
       const data = await response.json();
 
@@ -234,7 +237,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           const response = await fetch(
             `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
               text,
-            )}&key=AIzaSyDaojSAqWjt4t_nxBX_PfQFVRfoi1kqu-Y&components=country:in`,
+            )}&key=${API_KEY}&components=country:in`,
           );
           if (!response.ok) throw new Error('Network response was not ok');
           const data = await response.json();
@@ -253,7 +256,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
   const handlePlaceSelect = async placeId => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=AIzaSyDaojSAqWjt4t_nxBX_PfQFVRfoi1kqu-Y`,
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}`,
       );
       const data = await response.json();
       const location = data.result.geometry.location;
@@ -303,6 +306,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         dispatch(setLocationName(response.payload.data[0].location_name));
         dispatch(setLocationId(response.payload.data[0].id));
         dispatch(setShopAddress(response.payload.data[0]))
+        dispatch(setServiceAvailable(true));
         route?.params?.selectedAddress?.customer_latitude ? navigation.pop(3) :navigation.goBack();
       } else {
         setShowServiceModal(true);
@@ -312,12 +316,12 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     } finally {
       setIsCheckingAddress(false);
     }
-  };
+  }; 
 
   return (
     <View style={styles.container}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
-      <View style={styles.header}>
+      <View style={[styles.header,{paddingTop: insets.top}]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
         </TouchableOpacity>
@@ -417,7 +421,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       </View>
 
       {!isKeyboardVisible && (
-        <View style={styles.bottomContainer}>
+        <View style={[styles.bottomContainer, {bottom:insets.bottom}]}>
           <View style={styles.locationInfo}>
             <MaterialIcons name="location-on" size={24} color="#8655d2" />
             <View style={styles.locationDetails}>
@@ -462,7 +466,6 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#8655d2', // Changed from #065E2C
-    height: responsiveHeight(9),
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingBottom: responsiveHeight(3),

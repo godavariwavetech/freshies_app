@@ -2,13 +2,15 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar, Linking } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
 
+
 const SupportScreen = ({ navigation }) => {
   const { storeData } = useSelector(state => state.Auth);
-
+  const insets = useSafeAreaInsets();
   const handleCall = () => {
     Linking.openURL(`tel:${storeData?.contact_number}`);
   };
@@ -36,7 +38,7 @@ const SupportScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
         <StatusBar style="light" backgroundColor="#8655d2"/>
-      <LinearGradient colors={['#8655d2', '#8655d2']} style={styles.gradientContainer}>
+      <LinearGradient colors={['#8655d2', '#8655d2']} style={[styles.gradientContainer,{paddingTop: insets.top}]}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />

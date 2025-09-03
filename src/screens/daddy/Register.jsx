@@ -33,7 +33,7 @@ import { useColorScheme } from 'react-native';
 
 export default function Register({ navigation, route }) {
   const { withoutLogin } = route.params || {};   // safe check
-  console.log("withoutLogin:", withoutLogin);
+
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
