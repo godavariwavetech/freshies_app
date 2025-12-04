@@ -43,7 +43,7 @@ export default function BottomNavigation() {
   const { cartItems } = useSelector((state) => state.Dashboard);
   const { customerId, userDetails, storeData } = useSelector(state => state.Auth);
   const insets = useSafeAreaInsets();
-  console.log("insets", insets)
+  
   useEffect(() => {
     const getUserProfile = async () => {
       try {

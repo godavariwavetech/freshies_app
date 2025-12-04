@@ -24,6 +24,16 @@ const initialState = {
   userDetails: {},
   storeData: {},
   serviceAvailable: false,   // 👈 new field
+  // Detailed address fields
+  addressDetails: {
+    landmark: '',
+    contactPerson: '',
+    doorNo: '',
+    addressType: '',
+    alternatePhone: '',
+    phone: '',
+    address: ''
+  }
 };
 
 export const verifyMobile = createAsyncThunk(
@@ -138,7 +148,7 @@ export const AuthSlice = createSlice({
   reducers: {
     actionLogout: () => initialState,
     actionLogin: state => {
-      console.log("actionLogin");
+    
       state.token = 'sample token';
     },
     setMobile: (state, action) => {
@@ -169,6 +179,7 @@ export const AuthSlice = createSlice({
       state.orderOfferAmount = action.payload;
     },
     setAddress: (state, action) => {
+     
       state.address = action.payload
     },
     setShopAddress: (state, action) => {
@@ -191,6 +202,20 @@ export const AuthSlice = createSlice({
     },
     setServiceAvailable: (state, action) => {
       state.serviceAvailable = action.payload;
+    },
+    setAddressDetails: (state, action) => {
+      state.addressDetails = { ...state.addressDetails, ...action.payload };
+    },
+    clearAddressDetails: (state) => {
+      state.addressDetails = {
+        landmark: '',
+        contactPerson: '',
+        doorNo: '',
+        addressType: '',
+        alternatePhone: '',
+        phone: '',
+        address: ''
+      };
     },
   },
   extraReducers: builder => {
@@ -279,6 +304,6 @@ export const AuthSlice = createSlice({
   },
 });
 
-export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setUseDetails, setRestaurnatDetails, setOrderOfferAmount, setReferalCode, setAddress, setShopAddress, setUserName, setCustormarId, setStoreData,setServiceAvailable  } = AuthSlice.actions;
+export const { actionLogout, actionLogin, setMobile, setInitial, setLocation, setLocationName, setLocationId, clearNavigationFlag, setUseDetails, setRestaurnatDetails, setOrderOfferAmount, setReferalCode, setAddress, setShopAddress, setUserName, setCustormarId, setStoreData, setServiceAvailable, setAddressDetails, clearAddressDetails } = AuthSlice.actions;
 
 export default AuthSlice.reducer;

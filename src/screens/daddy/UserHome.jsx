@@ -16,7 +16,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { responsiveWidth } from 'react-native-responsive-dimensions';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import { getSubCategories, getItems } from '../../services/services';
+import { getSubCategories, getItems, saveFcmToken } from '../../services/services';
 import PromoCard from '../../components/promocards';
 import Skeleton from './Skeleton';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
@@ -24,6 +24,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useColorScheme } from 'react-native';
 import SearchBarWithScrollPlaceholder from '../../components/Searchbar';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { getFCMToken } from '../../services/NotificationsService';
 
 
 
@@ -48,10 +49,29 @@ function UserHome() {
   const isDarkMode = colorScheme === 'dark';
   const placeholderOptions = ['meat', 'groceries', 'pickles'];
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const {address} = useSelector(state => state.Auth);
-    const insets = useSafeAreaInsets();
-    console.log("home insets", insets)
-    
+  const { address } = useSelector(state => state.Auth);
+  const insets = useSafeAreaInsets();
+  const { customerId } = useSelector(state => state.Auth);
+
+
+
+  useEffect(() => {
+    const storeFcmToken = async () => {
+      const token = await getFCMToken();
+     
+      if (customerId && token) {
+        try {
+          const result = await saveFcmToken(customerId, token);
+        } catch (err) {
+          console.error("Failed to save FCM token:", err);
+        }
+      }
+    };
+
+    storeFcmToken();
+  }, [customerId]);
+
+
   // Fetch subcategories and derive categories
   useEffect(() => {
     loadSubCategories();
@@ -62,7 +82,7 @@ function UserHome() {
       setIsLoading(true);
       const fetchedSubCategories = await getSubCategories();
       setSubCategories(fetchedSubCategories);
-     
+
       const uniqueCategories = [
         ...new Map(
           fetchedSubCategories.map((sub) => [
@@ -85,6 +105,8 @@ function UserHome() {
       setIsLoading(false);
     }
   };
+
+
 
 
   // Filter subcategories by category_id
@@ -126,7 +148,7 @@ function UserHome() {
   return (
     <View style={styles.mainContainer}>
       <FocusAwareStatusBar barStyle="dark-content" backgroundColor="white" />
-      <View style={[styles.gradientContainer, {paddingTop: insets.top}]}>
+      <View style={[styles.gradientContainer, { paddingTop: insets.top }]}>
         <View style={styles.headerContainer}>
           <TouchableOpacity
             onPress={() => navigation.navigate('SelectServiceFromLocation')}
@@ -141,7 +163,7 @@ function UserHome() {
             <View>
               <Text style={styles.locationTitle}>Delivery to:</Text>
               <Text style={styles.locationAddress} numberOfLines={1}>
-                {address || "Select your delivery location"} 
+                {address || "Select your delivery location"}
               </Text>
             </View>
           </TouchableOpacity>

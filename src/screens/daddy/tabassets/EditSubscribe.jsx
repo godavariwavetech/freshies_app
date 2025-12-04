@@ -17,13 +17,15 @@ import dayjs from 'dayjs';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { useSelector, dispatch, useDispatch } from 'react-redux';
 import { setLocation, setLocationId, setLocationName, setShopAddress } from '../../../redux/reducers/auth';
-import { checkAddressExistence, placeSubscriptionOrder } from '../../../services/services';
+import { checkAddressExistence, placeSubscriptionOrder, WalletAPI } from '../../../services/services';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { setWalletData } from '../../../redux/reducers/walletSlice';
 
 
 const EditSubscriptionScreen = ({ navigation, route }) => {
   const { productDetails } = route.params;
+ 
   const insets = useSafeAreaInsets();
   const today = dayjs().format('YYYY-MM-DD');
   const [scheduleType, setScheduleType] = useState('Custom');
@@ -33,14 +35,26 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
-  const walletBalance = useSelector((state) => state.wallet.amount); // assuming you store wallet balance in redux
-  const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
+  const walletBalance = useSelector((state) => state.wallet); // assuming you store wallet balance in redux
+  const { location: storedLocation, locationName, locationId, address,addressDetails, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
   const dispatch = useDispatch();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(dayjs().add(1, 'day').format('YYYY-MM-DD'));
   const [calendarKey, setCalendarKey] = useState(0);
 
+
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      const data = await WalletAPI.getWalletAmounts(customerId);
+
+      dispatch(setWalletData(data));
+    };
+    fetchWallet();
+  }, []);
+
+ 
 
   useEffect(() => {
     if (startDate) {
@@ -107,6 +121,13 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
       return;
     }
 
+    const abhi24Amount = parseFloat(walletBalance?.abhi24_balanced_amount) || 0;
+    const userAmount = parseFloat(walletBalance?.user_balance_amount) || 0;
+    const walletTotal = abhi24Amount + userAmount;
+
+    const pricePerItem = parseFloat(productDetails.variant?.selling_price || productDetails.selling_price || 0);
+    const totalPrice = pricePerItem * quantity;
+
     try {
       setIsCheckingAddress(true);
       const response = await dispatch(
@@ -130,12 +151,14 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         dispatch(setShopAddress(locationData));
 
         // ✅ Now check wallet balance
-        if (walletBalance <= 0) {
-          navigation.navigate("Wallet");
+        
+
+        if (walletTotal < totalPrice) {
+          navigation.navigate("Wlletscreen");
         } else {
-          // Proceed to place order
           placeSubscriptionOrderHandler();
         }
+
 
       } else {
         // ❌ Location not serviceable
@@ -149,6 +172,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
   };
 
   const placeSubscriptionOrderHandler = async () => {
+    const deliveryAddress = address || addressDetails.address;
     try {
       const payload = {
         subscription_start_date: dayjs(startDate).format('YYYY-MM-DD'),
@@ -173,8 +197,9 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         saving_price: productDetails.variant?.actual_price - productDetails.variant?.selling_price,
         subscription_type: scheduleType,
         selecteddates: Object.keys(markedDates),
+        delivery_address : deliveryAddress,
       };
-
+    
       const res = await placeSubscriptionOrder(payload);
     
       if (res.status === 200) {
@@ -184,13 +209,15 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           navigation.navigate('SubscriptionPage');
         }, 2000);
       } else {
+        
         Toast.show({
           type: 'error',
           text1: 'Failed to subscribe. Try again.',
+          text2: `Status: ${res.status}`,
         });
       }
     } catch (error) {
-
+      console.log('Showing error toast - catch block:', error?.message);
       Toast.show({
         type: 'error',
         text1: 'Something went wrong!',
@@ -210,6 +237,19 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Item Subscription</Text>
+        <TouchableOpacity 
+          onPress={() => {
+            console.log('Test toast button pressed');
+            Toast.show({
+              type: 'success',
+              text1: 'Test Toast',
+              text2: 'This is a test message to verify Toast is working',
+            });
+          }}
+          style={{ marginLeft: 10 }}
+        >
+          <Icon name="notifications" size={wp('5%')} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -227,7 +267,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           <View style={styles.productDetails}>
             <Text style={styles.productCategory}>{productDetails.filter_one || 'Category'}</Text>
             <Text style={styles.productName}>{productDetails.name?.trim()}</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={styles.productWeight}>
                 {productDetails.variant?.quantity_type || productDetails.quantity_type}
               </Text>
@@ -573,7 +613,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: hp('0.5%'),
     width: "50%",
-     backgroundColor: "green",
+    backgroundColor: "green",
   },
   productPrice: {
     fontSize: wp('5%'),
@@ -811,7 +851,7 @@ const styles = StyleSheet.create({
   productWeight: {
     fontSize: 14,
     color: '#555',
-    
+
     width: "50%",
   },
 

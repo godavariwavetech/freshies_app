@@ -46,6 +46,8 @@ import {
   setLocationName,
   setServiceAvailable,
   setShopAddress,
+  setAddressDetails,
+  clearAddressDetails,
 } from '../../../redux/reducers/auth';
 import { setWalletData } from '../../../redux/reducers/walletSlice';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -81,11 +83,13 @@ const BasketScreen = ({ navigation, route }) => {
     mobileNumber,
     shopAddress,
     username,
-    serviceAvailable 
+    serviceAvailable,
+    addressDetails
   } = useSelector(state => state.Auth); 
+  
   const insets = useSafeAreaInsets();
 
-
+  
   const { chargesList, selectedAddress } = useSelector(state => state.address);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const deliveryInstructions = useSelector(state => state.cart.deliveryInstructions);
@@ -151,6 +155,10 @@ const BasketScreen = ({ navigation, route }) => {
 
   const [useAbhiWallet, setUseAbhiWallet] = useState(false);
   const [useUserWallet, setUseUserWallet] = useState(false);
+  
+  // Enhanced location fields - now using Redux state
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
+  const [savedAddress, setSavedAddress] = useState(null);
 
   const { muttonSubtotal, otherSubtotal } = getSplitCartTotals();
   const abhiWalletAmount = Number(walletData?.abhi24_balanced_amount ?? 0);
@@ -269,6 +277,21 @@ const BasketScreen = ({ navigation, route }) => {
         const storedLocation = await AsyncStorage.getItem('location');
         if (storedLocation) {
           setStoredLocation(JSON.parse(storedLocation));
+        }
+        // Load saved address information from AsyncStorage
+        const savedAddressData = await AsyncStorage.getItem('savedAddress');
+        if (savedAddressData) {
+          const parsedAddress = JSON.parse(savedAddressData);
+          setSavedAddress(parsedAddress);
+          // Update Redux state with address details
+          dispatch(setAddressDetails({
+            landmark: parsedAddress.landmark || '',
+            contactPerson: parsedAddress.name || '',
+            doorNo: parsedAddress.doorNo || '',
+            addressType: parsedAddress.addressType || '',
+            alternatePhone: parsedAddress.alternatePhone || '',
+            phone: parsedAddress.phone || ''
+          }));
         }
       } catch (error) {
         console.error('Error loading cart items:', error);
@@ -450,7 +473,7 @@ const BasketScreen = ({ navigation, route }) => {
       const actualPrice = item => parseFloat(item?.variant?.actual_price ?? item?.price ?? 0);
       const sellingPrice = item => parseFloat(item?.variant?.selling_price ?? item?.offer ?? item?.price ?? 0);
       const quantity = item => item?.quantity ?? 1;
-
+      
       const mappedItems = cartItems.map(item => ({
         item_name: item?.name || '',
         item_image: item?.image || '',
@@ -489,7 +512,7 @@ const BasketScreen = ({ navigation, route }) => {
       ).toFixed(2); 
 
       const isCodOrFree = totalAfterWallets === 0  ||  selectedPaymentMethod === 'COD';
-
+  
       const payload = {
         customer_id: customerId,
         customer_name: username || '',
@@ -525,13 +548,13 @@ const BasketScreen = ({ navigation, route }) => {
         packing_charges: '',
         packing_charges_gst: '',
         donation_charges: '',
-        delivery_instruction: deliveryInstructions,
-        abhicash_amount: Number(abhiWalletUsed),
-        userwallet_amount: Number(userWalletUsed),
-        payment_amount: Number(totalAfterWallets.toFixed(2)),
-        sub_order_array: mappedItems,
+                 delivery_instruction: deliveryInstructions,
+         abhicash_amount: Number(abhiWalletUsed),
+         userwallet_amount: Number(userWalletUsed),
+         payment_amount: Number(totalAfterWallets.toFixed(2)),
+         sub_order_array: mappedItems,
       };
-      console.log(payload)
+    
       const orderResponse = await dispatch(placeOrder({ orderDetails: payload }));
       
       if (!orderResponse.payload) return;
@@ -661,47 +684,7 @@ const BasketScreen = ({ navigation, route }) => {
         {/* Invisible spacer to balance the back icon */}
         <View style={{ width: 24 }} />
       </View>
-      {/* Location Section */}
-      <View style={styles.locationSection}>
-        <Icon
-          name="home"
-          size={16}
-          color={backgroundColor}
-          style={styles.homeIcon}
-        />
-        <Text style={styles.locationName}>
-          {address ? address : locationName || 'Address Not Selected'}
-        </Text>
-      </View>
-      {/* change location */}
-      <TouchableOpacity
-        onPress={() => {
-          try {
-            // Retrieve current location from AsyncStorage or Redux if possible
-            const currentLocation = {
-              latitude: storedLocation?.latitude,
-              longitude: storedLocation?.longitude,
-            };
-
-            navigation.navigate('SelectServiceFromLocation', {
-              previousScreen: 'ByOncescreen',
-              ...(currentLocation.latitude && currentLocation.longitude
-                ? { selectedAddress: currentLocation }
-                : {}),
-            });
-          } catch (error) {
-            console.error('Navigation error:', error);
-            Alert.alert(
-              'Navigation Error',
-              'Unable to change address. Please try again later.',
-              [{ text: 'OK' }],
-            );
-          }
-        }}>
-        <Text style={[styles.deliveryTagline, { color: backgroundColor }]}>
-          Change Address
-        </Text>
-      </TouchableOpacity>
+    
 
       {/* Conditional Rendering */}
       {cartItems.length === 0 ? (
@@ -783,8 +766,7 @@ const BasketScreen = ({ navigation, route }) => {
             )}
           </TouchableOpacity>}
 
-          {(abhiWalletAmount > 0 || userWalletAmount > 0) &&
-            abhiWalletAmount > 0 && userWalletAmount > 0 && (
+          {(abhiWalletAmount > 0 || userWalletAmount > 0) && (
               <View style={styles.walletSection}>
                 {abhiWalletAmount > 0 && muttonSubtotal > 0 && (
                   <View style={styles.walletRow}>
@@ -835,19 +817,7 @@ const BasketScreen = ({ navigation, route }) => {
               </View>
             )}
 
-          {/* Add Delivery Instructions */}
-          <TouchableOpacity
-            style={styles.deliveryInstructions}
-            onPress={() => {
-              setTempInstruction(deliveryInstructions); // <-- preload from redux
-              setShowInstructionModal(true);
-            }}>
-            <Text style={styles.deliveryText}>
-              {deliveryInstructions
-                ? `Note: ${deliveryInstructions}`
-                : '+ Add Delivery Instructions'}
-            </Text>
-          </TouchableOpacity>
+ 
 
           {/* Order Summary */}
           <View style={styles.orderSummary}>
@@ -981,53 +951,168 @@ const BasketScreen = ({ navigation, route }) => {
             )}
           </View> */}
 
-         {/* Place Order Button or Login/Address Button */}
-         {serviceAvailable && <View style={{ paddingBottom: 60 }}>
-            {!customerId ? (
-              // 🔑 Login Button
-              <TouchableOpacity
-                style={[
-                  styles.placeOrderButton,
-                  { backgroundColor: backgroundColor },
-                ]}
-               onPress={() => {
-                // dispatch(actionLogout());
-                navigation.navigate('Register1', { withoutLogin: true });
-              }}>
-                <Text style={styles.placeOrderText}>Login to Place Order</Text>
-              </TouchableOpacity>
-            ) :  (
-              // ✅ Place Order Button
-              <TouchableOpacity
-                style={[
-                  styles.placeOrderButton,
-                  {
-                    backgroundColor: isProcessingPayment ? '#ccc' : backgroundColor,
-                  },
-                ]}
-                // onPress={handlePlaceOrder}
-                onPress={() => navigation.navigate('AddressList')}
-                disabled={isProcessingPayment}>
-                {isProcessingPayment ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.placeOrderText}>Place Order</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>}
+            {/* Enhanced Location Section */}
+            <View style={styles.enhancedLocationSection}>
+              <View style={styles.locationHeader}>
+                <Icon
+                  name="home"
+                  size={20}
+                  color={backgroundColor}
+                  style={styles.homeIcon}
+                />
+                <Text style={styles.deliveryToText}>Delivery To:</Text>
+              </View>
+              
+              {/* Delivery Address Banner */}
+              <View style={styles.deliveryBanner}>
+                <Icon name="local-shipping" size={16} color="#fff" />
+                <Text style={styles.bannerText}>
+                  🚚 Your order will be delivered to this address
+                </Text>
+              </View>
+              
+               <View style={styles.addressContainer}>
+                 {/* Main Address from Maps */}
+                 <Text style={styles.locationName}>
+                   {addressDetails.address || address || locationName || 'Address Not Selected'}
+                 </Text>
+                 
+                 {/* Clean Address Details Display */}
+                 <View style={styles.addressDetailsContainer}>
+                   {/* Door No Field */}
+                   {addressDetails.doorNo && (
+                     <View style={styles.addressDetailRow}>
+                       <Icon name="home" size={14} color="#666" />
+                       <Text style={styles.addressDetailText}>{addressDetails.doorNo}</Text>
+                     </View>
+                   )}
 
-        {!serviceAvailable && (
-              // 🏠 Add Address Button
+                    {/* Building Name Field */}
+                    {addressDetails.BuildingName && (
+                     <View style={styles.addressDetailRow}>
+                       <Icon name="home" size={14} color="#666" />
+                       <Text style={styles.addressDetailText}>{addressDetails.BuildingName}</Text>
+                     </View>
+                   )}
+                   
+                   {/* Landmark Field */}
+                   {addressDetails.landmark && (
+                     <View style={styles.addressDetailRow}>
+                       <Icon name="location-pin" size={14} color="#666" />
+                       <Text style={styles.addressDetailText}>Near {addressDetails.landmark}</Text>
+                     </View>
+                   )}
+                   
+                   
+                   {/* Alternate Phone Number Field */}
+                   {addressDetails.alternatePhone && (
+                     <View style={styles.addressDetailRow}>
+                       <Icon name="phone-android" size={14} color="#666" />
+                       <Text style={styles.addressDetailText}>{addressDetails.alternatePhone}</Text>
+                     </View>
+                   )}
+                 </View>
+                 
+                 {/* Delivery Instructions Field */}
+                 {deliveryInstructions && (
+                   <View style={styles.instructionsContainer}>
+                     <Icon name="info" size={14} color="#666" />
+                     <Text style={styles.instructionsText}>Note: {deliveryInstructions}</Text>
+                   </View>
+                 )}
+                 
+               </View>
+
+              {/* Change Address Button */}
               <TouchableOpacity
-                style={[
-                  styles.placeOrderButton,
-                  { backgroundColor: backgroundColor },
-                ]}
-                onPress={() =>  setShowServiceModal(true)}>
-                <Text style={styles.placeOrderText}>Add Address to Place Order</Text>
+                style={styles.changeAddressButton}
+                onPress={() => {
+                  try {
+                    // Retrieve current location from AsyncStorage or Redux if possible
+                    const currentLocation = {
+                      latitude: storedLocation?.latitude,
+                      longitude: storedLocation?.longitude,
+                    };
+
+                    navigation.navigate('SelectServiceFromLocation', {
+                      previousScreen: 'ByOncescreen',
+                      ...(currentLocation.latitude && currentLocation.longitude
+                        ? { selectedAddress: currentLocation }
+                        : {}),
+                    });
+                  } catch (error) {
+                    console.error('Navigation error:', error);
+                    Alert.alert(
+                      'Navigation Error',
+                      'Unable to change address. Please try again later.',
+                      [{ text: 'OK' }],
+                    );
+                  }
+                }}>
+                <Icon name="edit" size={16} color="#fff" />
+                <Text style={styles.changeAddressText}>Change Address</Text>
               </TouchableOpacity>
-            ) }   
+           </View>
+
+
+                    {/* Add Delivery Instructions */}
+          <TouchableOpacity
+            style={styles.deliveryInstructions}
+            onPress={() => {
+              setTempInstruction(deliveryInstructions); // <-- preload from redux
+              setShowInstructionModal(true);
+            }}>
+            <Text style={styles.deliveryText}>
+              {deliveryInstructions
+                ? `Note: ${deliveryInstructions}`
+                : '+ Add Delivery Instructions'}
+            </Text>
+          </TouchableOpacity>
+            
+          
+          <View style={{ paddingBottom: 60 }}>
+  {!customerId ? (
+    // 🔑 Login Button
+    <TouchableOpacity
+      style={[
+        styles.placeOrderButton,
+        { backgroundColor: backgroundColor },
+      ]}
+      onPress={() => {
+        navigation.navigate('Register1', { withoutLogin: true });
+      }}>
+      <Text style={styles.placeOrderText}>Login to Place Order</Text>
+    </TouchableOpacity>
+  ) : !serviceAvailable ? (
+    // 🏠 Add Address Button
+    <TouchableOpacity
+      style={[
+        styles.placeOrderButton,
+        { backgroundColor: backgroundColor },
+      ]}
+      onPress={() => setShowServiceModal(true)}>
+      <Text style={styles.placeOrderText}>Add Address to Place Order</Text>
+    </TouchableOpacity>
+  ) : (
+    // ✅ Place Order Button
+    <TouchableOpacity
+      style={[
+        styles.placeOrderButton,
+        {
+          backgroundColor: isProcessingPayment ? '#ccc' : backgroundColor,
+        },
+      ]}
+      onPress={handlePlaceOrder}
+      disabled={isProcessingPayment}>
+      {isProcessingPayment ? (
+        <ActivityIndicator color="#fff" />
+      ) : (
+        <Text style={styles.placeOrderText}>Place Order</Text>
+      )}
+    </TouchableOpacity>
+  )}
+</View>
+
           
 
         </ScrollView>
@@ -1050,7 +1135,18 @@ const BasketScreen = ({ navigation, route }) => {
                 style={styles.changeLocationBtn}
                 onPress={() => {
                   setShowServiceModal(false);
-                  navigation.navigate('SelectServiceFromLocation'); // 👈 Navigate here
+                   // Retrieve current location from AsyncStorage or Redux if possible
+                   const currentLocation = {
+                    latitude: storedLocation?.latitude,
+                    longitude: storedLocation?.longitude,
+                  };
+
+                  navigation.navigate('SelectServiceFromLocation', {
+                    previousScreen: 'ByOncescreen',
+                    ...(currentLocation.latitude && currentLocation.longitude
+                      ? { selectedAddress: currentLocation }
+                      : {}),
+                  });
                 }}>
                 <Text style={styles.buttonText}>Change Location</Text>
               </TouchableOpacity>
@@ -1137,13 +1233,174 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#fff',
   },
+  enhancedLocationSection: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginTop: 10,
+    borderRadius: 8,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  locationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   homeIcon: {
     marginRight: 8,
   },
-  locationName: {
+  deliveryToText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    color: '#333',
+  },
+  deliveryBanner: {
+    backgroundColor: '#4caf50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginBottom: 15,
+  },
+  bannerText: {
+    color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    marginLeft: 8,
+    textAlign: 'center',
+  },
+  addressContainer: {
+    marginBottom: 15,
+  },
+  locationName: {
+    fontSize: 16,
+    fontWeight: 'bold',
     flex: 1,
+    color: '#333',
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  addressDetailsContainer: {
+    marginTop: 8,
+  },
+  addressDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    paddingVertical: 2,
+  },
+  addressDetailText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+    flex: 1,
+  },
+  instructionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 5,
+  },
+  changeAddressButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D32F2F',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  changeAddressText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  toggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    flex: 1,
+    marginRight: 10,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  editButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  additionalDetailsSection: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    marginTop: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#495057',
+    marginLeft: 8,
+    marginRight: 8,
+    minWidth: 80,
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#666',
+    flex: 1,
+  },
+
+  deliverySummary: {
+    backgroundColor: '#e8f5e8',
+    padding: 10,
+    borderRadius: 6,
+    marginTop: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4caf50',
+  },
+  summaryText: {
+    fontSize: 13,
+    color: '#2e7d32',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   fullAddress: {
     fontSize: 14,
@@ -1299,7 +1556,7 @@ const styles = StyleSheet.create({
   deliveryInstructions: {
     backgroundColor: '#fff',
     padding: 15,
-    marginTop: 2,
+    marginVertical: 10,
     borderRadius: 8,
     marginHorizontal: 10,
   },
@@ -1612,6 +1869,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  changeAddressButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D32F2F',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+  },
+  changeAddressText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 5,
+  },
 });
 
 export default BasketScreen; 
@@ -1714,7 +1986,7 @@ export default BasketScreen;
   //         calculateTotalPrice() +
   //         Number(applicationCharges?.delivery_fixed_charges) +
   //         Number(applicationCharges?.handling_charges) +
-  //         Number(gstCalculation())
+  //         gstCalculation()
   //       ).toFixed(2) || 0,
   //       location_id: locationId,
   //       location_name: locationName,
@@ -1734,7 +2006,7 @@ export default BasketScreen;
   //       actual_total_amount: calculateTotalPrice() || 0,
   //       order_type: 'Online',
   //       delivery_charges_gst: gstCalculation().toFixed(2) || 0,
-  //       handling_charges: applicationCharges.handling_charges || 0,
+  //       handling_charges: applicationCharges?.handling_charges || 0,
   //       packing_charges: '',
   //       packing_charges_gst: '',
   //       donation_charges: '',

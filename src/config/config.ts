@@ -1,4 +1,4 @@
-export const baseURL = 'https://api.abhi24.in/'; 
+export const baseURL = 'https://testapi.abhi24.in'; 
 
 export const API_KEY = 'AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM'; 
 

@@ -98,7 +98,7 @@ export default function Register({ navigation, route }) {
       await savePhoneNumber(phoneNumber);
       try {
         const response = await getUserLoginOTP(parseInt(phoneNumber, 10));
-
+    
         if (response.status === 200) {
           navigation.navigate(  withoutLogin ? "OTPVerification1" : "OTPVerification", {
             phoneNumber: phoneNumber,
@@ -229,7 +229,7 @@ export default function Register({ navigation, route }) {
             </Text>
           </TouchableOpacity>
 
-          {!withoutLogin && <>
+          {/* {!withoutLogin && <>
             <View style={styles.dividerContainer}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>OR</Text>
@@ -243,7 +243,7 @@ export default function Register({ navigation, route }) {
               <Text style={styles.skipText}>Skip Login</Text>
               <Icon name="arrow-right" size={20} color="#8655d2" />
             </TouchableOpacity>
-          </>}
+          </>} */}
         </View>
       </View>
     </Pressable>

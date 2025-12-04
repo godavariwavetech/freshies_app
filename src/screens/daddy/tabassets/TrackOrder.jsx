@@ -166,6 +166,8 @@ const OrderDetailsScreen = ({ navigation, route }) => {
         <View style={{ flex: 1 }}>
           <Text style={styles.productName}>{item?.item_name}</Text>
           <Text style={styles.productWeight}>{item?.quantity_type || ''}</Text>
+           {/* Display item quantity */}
+           <Text style={styles.productQuantity}>Quantity: {item.sub_item_count}</Text>
           <Text style={styles.productDetails} numberOfLines={2}>
             {item?.item_description || 'Abhi24'}
           </Text>

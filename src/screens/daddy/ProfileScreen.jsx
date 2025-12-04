@@ -227,12 +227,12 @@ const ProfileScreen = () => {
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('AddressList')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
-              <Text style={styles.menuText}>addresss</Text>
+              <Text style={styles.menuText}>Address</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('PreviousOrdersScreen')}>
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('PreviousOrdersScreen', { fromProfile: true })}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="clipboard-list-outline" size={24} color="#8655d2" />
               <Text style={styles.menuText}>Your Orders</Text>
@@ -269,7 +269,7 @@ const ProfileScreen = () => {
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('Support')}>
             <View style={styles.menuItemLeft}>
               <Feather name="user" size={24} color="#8655d2" />
-              <Text style={styles.menuText}>Help and Support</Text>
+              <Text style={styles.menuText}>Help & Support</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
@@ -297,8 +297,6 @@ const ProfileScreen = () => {
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
-
-
 
           {/* 📜 Policies */}
           <TouchableOpacity

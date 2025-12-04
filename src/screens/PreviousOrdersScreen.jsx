@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, SafeAreaView } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { getPreviousOrders } from '../services/services';
 import Icon from 'react-native-vector-icons/Ionicons'; // or MaterialIcons, Feather, etc.
 import { useDispatch, useSelector } from 'react-redux'; // ✅ Import useSelector
@@ -14,12 +14,13 @@ const PreviousOrdersScreen = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+  const route = useRoute();
   const customerId = useSelector(state => state.Auth.customerId)
   const [activeTab, setActiveTab] = useState('InProgress'); // 'InProgress' | 'Completed'
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
   
-
+  
   const fetchOrders = async () => {
     if (!customerId) {
       setLoading(false);
@@ -111,7 +112,16 @@ const PreviousOrdersScreen = () => {
         {/* Header */}
         <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
         <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, marginBottom: 5, backgroundColor: "#8655d2" , paddingTop: insets.top }}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() =>  {
+
+                    // Navigate back based on where user came from
+                    if (route.params?.fromProfile) {
+                      navigation.navigate('BottomNavigation', { screen: 'Profile' });
+                    } else {
+                      navigation.goBack();
+                    }
+          }
+             }>
             <Icon name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
           <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 16, color: "white" }}>

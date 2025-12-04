@@ -168,7 +168,7 @@ const AddressListScreen = ({ navigation, route }) => {
     await loadAddresses();
     setRefreshing(false);
   };
-  console.log("insets", insets)
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" backgroundColor="#8655d2" />

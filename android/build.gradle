@@ -17,7 +17,6 @@ buildscript {
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
         classpath 'com.google.gms:google-services:4.3.15'
-        classpath 'gradle.plugin.com.onesignal:onesignal-gradle-plugin:[0.14.0, 0.99.99]'
     }
 }
 
@@ -25,8 +24,6 @@ allprojects {
     repositories {
         google() // Google's Maven repository
         mavenCentral()
-        // Add OneSignal Maven repository
-        maven { url 'https://maven.onesignal.com/com/onesignal/OneSignal/maven-metadata.xml' }
     }
 }
 

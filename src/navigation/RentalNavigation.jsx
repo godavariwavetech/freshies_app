@@ -118,7 +118,7 @@ export default function RentalNavigation() {
       <Stack.Screen name="ReferAndEarnScreen" component={ReferAndEarnScreen} />
       <Stack.Screen name="FAQScreen" component={FAQScreen} />  
       <Stack.Screen name="QualityFAQS" component={QualityFAQS} />  
-      <Stack.Screen name="HelthTips" component={HelthTips} />    
+      <Stack.Screen name="HelthTips" component={HelthTips} />
       <Stack.Screen
         name="CategoriesScreen"
         component={CategoriesScreen}

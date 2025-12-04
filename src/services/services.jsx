@@ -3,17 +3,31 @@ import { panGestureHandlerCustomNativeProps } from 'react-native-gesture-handler
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { baseURL } from '../config/config';
 
-
 // Create Axios instance
 const api = axios.create({
   baseURL: baseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Add request interceptor to log full URL
+api.interceptors.request.use(
+  (config) => {
+    try {
+      const baseURL = config.baseURL || 'No baseURL set';
+   
+    } catch (error) {
+      console.error("Error retrieving baseURL:", error);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // API call to fetch subcategories
 export const getSubCategories = async () => {
   try {
     const response = await api.get('/public_app/getsubcategory');
+   
     if (response.data.status === 200) {
       return response.data.data; // Return the array of subcategories
     } else {
@@ -22,6 +36,20 @@ export const getSubCategories = async () => {
   } catch (error) {
     console.error('Error fetching subcategories:', error.message);
     throw error; // Let the caller handle the error
+  }
+};
+
+
+export const saveFcmToken = async (userId, fcmToken) => {
+  try {
+    const response = await api.post("/public_app/postplayerid", {
+      user_id: userId,
+      player_id:fcmToken,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error saving FCM token:", error);
+    throw error;
   }
 };
 
@@ -96,7 +124,7 @@ export const getUserLoginOTP = async (mobileNumber) => {
     const response = await api.post('/public_app/getuserloginotp', {
       customer_mobile_number: mobileNumber
     });
-
+   
     return response.data;
   } catch (error) {
     console.error('Error getting login OTP:', error);
@@ -106,7 +134,6 @@ export const getUserLoginOTP = async (mobileNumber) => {
 
 // Customer Login API call
 export const customerLogin = async (payload) => {
-
   try {
     const response = await api.post('/public_app/customerlogin', payload);
     return response.data;
@@ -474,6 +501,16 @@ export const toggleSubscriptionStatus = async (id, isResume) => {
     return response.data;
   } catch (error) {
     console.error('❌ Subscription order resume:', error);
+    throw error;
+  }
+};
+
+export const getSubscriptionDetails = async (payload) => {
+  try {
+    const response = await api.post('/public_app/getsubscriptiondetails', payload);
+    return response.data;
+  } catch (error) {
+    console.error('❌ Subscription details error:', error);
     throw error;
   }
 };

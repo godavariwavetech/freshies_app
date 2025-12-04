@@ -30,7 +30,7 @@ const FAQScreen = ({ navigation }) => {
   const fetchFAQs = async () => {
     try {
       const faqsData = await getFAQs();  // this is already the data array
-      console.log("FAQs ===", faqsData);
+     
 
       setFaqs(faqsData);  // set state directly
     } catch (error) {

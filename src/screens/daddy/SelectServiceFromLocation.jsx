@@ -10,7 +10,9 @@ import {
   Keyboard,
   Dimensions,
   Platform,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -20,7 +22,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomModal from '../../components/CustomModal';
-import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux, setShopAddress, setServiceAvailable } from '../../redux/reducers/auth';
+import { setLocation, setLocationName, setLocationId, setAddress as setAddressRedux, setShopAddress, setServiceAvailable, setAddressDetails } from '../../redux/reducers/auth';
 import { checkAddressExistence } from '../../services/services';
 import FocusAwareStatusBar from '../../components/CustomStatusBar';
 import { useIsFocused } from '@react-navigation/native';
@@ -41,6 +43,10 @@ const DEFAULT_REGION = {
 const SelectServiceFromLocation = ({ navigation, route }) => {
   const mapRef = useRef(null);
   const dispatch = useDispatch();
+
+  // Get auth data for prefilling form
+  const { username, mobileNumber } = useSelector(state => state.Auth);
+
   const [region, setRegion] = useState(DEFAULT_REGION);
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -60,6 +66,16 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
   const [mapReady, setMapReady] = useState(false);
   const insets = useSafeAreaInsets();
 
+
+
+  // Additional delivery information fields
+  const [landmark, setLandmark] = useState('');
+  const [doorNo, setDoorNo] = useState('');
+  const [BuildingName, setBuildingName] = useState('');
+  const [alternatePhoneNumber, setAlternatePhoneNumber] = useState('');
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [isCheckingService, setIsCheckingService] = useState(false);
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -67,6 +83,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     };
   }, []);
 
+ 
   useFocusEffect(
     useCallback(() => {
       const timeout = setTimeout(() => {
@@ -86,7 +103,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${API_KEY}`,
       );
       const data = await response.json();
-
+      
       if (data.results && data.results.length > 0) {
         const addr = data.results[0].formatted_address;
         const cityComponent = data.results[0].address_components.find(component =>
@@ -116,7 +133,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       latitudeDelta: 0.005,
       longitudeDelta: 0.005,
     };
-   
+
     setRegion(newRegion)
     // Only update region if coordinates are valid
     if (isMountedRef.current && mapRef.current?.animateToRegion) {
@@ -130,7 +147,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       // Fallback to getting current location if no valid coordinates
       // getCurrentLocation();
     }
-  }, [route?.params?.selectedAddress?.customer_latitude,`${storedLocation}`]);
+  }, [route?.params?.selectedAddress?.customer_latitude, `${storedLocation}`]);
 
   useEffect(() => {
     return () => {
@@ -285,16 +302,20 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
     }
   };
 
-  const handleConfirmLocation = async () => {
+  const handleSaveAddress = async () => {
     try {
-      setIsCheckingAddress(true);
+      setIsCheckingService(true);
       const response = await dispatch(
         checkAddressExistence({
           latitude: parseFloat(region.latitude),
           longitude: parseFloat(region.longitude),
         }),
       );
+
       if (response.payload.data.length > 0) {
+        // Service is available, show the address form
+        setShowAddressForm(true);
+        // Store the location data for later use
         dispatch(
           setLocation({
             latitude: parseFloat(region.latitude),
@@ -305,23 +326,89 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
         );
         dispatch(setLocationName(response.payload.data[0].location_name));
         dispatch(setLocationId(response.payload.data[0].id));
-        dispatch(setShopAddress(response.payload.data[0]))
+        dispatch(setShopAddress(response.payload.data[0]));
         dispatch(setServiceAvailable(true));
-        route?.params?.selectedAddress?.customer_latitude ? navigation.pop(3) :navigation.goBack();
       } else {
+        // 
         setShowServiceModal(true);
       }
     } catch (error) {
-      console.error('Location confirmation error:', error);
+      console.error('Service check error:', error);
+      Alert.alert('Error', 'Unable to check service availability. Please try again.');
     } finally {
-      setIsCheckingAddress(false);
+      setIsCheckingService(false);
     }
-  }; 
+  };
+
+  const handleConfirmLocation = async () => {
+    try {
+      // Create full combined address string with ALL form fields
+      const fullAddressParts = [];
+      if (address) fullAddressParts.push(address);
+      if (doorNo) fullAddressParts.push(`House No./Floor No.: ${doorNo}`);
+      if (BuildingName) fullAddressParts.push(`Building & Block No.: ${BuildingName}`);
+      if (landmark) fullAddressParts.push(`Near: ${landmark}`);
+      if (alternatePhoneNumber) fullAddressParts.push(`Alt Phone: ${alternatePhoneNumber}`);
+      const fullCombinedAddress = fullAddressParts.join(', ');
+
+      // Save all the address information to AsyncStorage
+      const addressData = {
+        alternatePhone: alternatePhoneNumber || '',
+        address: address,
+        fullCombinedAddress: fullCombinedAddress,
+
+        doorNo: doorNo,
+        landmark: landmark,
+        latitude: region.latitude,
+        longitude: region.longitude,
+        locationName: city,
+        timestamp: new Date().toISOString()
+      };
+
+
+
+      // Save full combined address to auth slice
+      dispatch(setAddressRedux(fullCombinedAddress));
+
+      // Update Redux state with detailed address information
+      dispatch(setAddressDetails({
+        landmark: landmark || '',
+        doorNo: doorNo || '',
+        BuildingName: BuildingName || '',
+        alternatePhone: alternatePhoneNumber || '',
+        address: address || '',
+
+      }));
+
+      // Save address data to AsyncStorage for persistence
+      await AsyncStorage.setItem('savedAddress', JSON.stringify(addressData));
+
+      // Navigate back or to home
+
+      if (route?.params?.previousScreen === 'ByOncescreen') {
+       
+        navigation.goBack();
+      } else {
+        // navigation.navigate('BottomNavigation', { screen: 'Home' });
+        navigation.goBack();
+      }
+
+      // Show success message
+      Alert.alert(
+        'Address Saved Successfully!',
+        'Your delivery address has been saved and will be used for future orders.',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Address save error:', error);
+      Alert.alert('Error', 'Failed to save address. Please try again.');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
-      <View style={[styles.header,{paddingTop: insets.top}]}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
         </TouchableOpacity>
@@ -355,73 +442,80 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[
-            styles.currentLocationButton,
-            isLoadingLocation && styles.currentLocationButtonLoading,
-            isKeyboardVisible && { bottom: 20 },
-          ]}
-          onPress={getCurrentLocation}
-          disabled={isLoadingLocation}
-        >
-          {isLoadingLocation ? (
-            <ActivityIndicator color="#8655d2" size="small" />
-          ) : (
-            <>
-              <MaterialIcons name="my-location" size={24} color="#8655d2" />
-              <Text style={styles.currentLocationText}>use current location</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <AntDesign name="search1" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
-            placeholder="Search for Area/Location"
-            style={styles.searchInput}
-            placeholderTextColor="#666"
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={() => {
-                setSearchQuery('');
-                setSearchResults([]);
-                setShowResults(false);
-              }}>
-              <AntDesign name="close" size={20} color="#7A7A7A" />
-            </TouchableOpacity>
-          )}
-        </View>
-        {showResults && searchResults.length > 0 && (
-          <View style={styles.searchResultsContainer}>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              {searchResults.map(result => (
-                <TouchableOpacity
-                  key={result.place_id}
-                  style={styles.searchResultItem}
-                  onPress={() => handlePlaceSelect(result.place_id)}>
-                  <MaterialIcons name="location-on" size={20} color="#8655d2" />
-                  <View style={styles.searchResultText}>
-                    <Text style={styles.searchResultMain}>
-                      {result.structured_formatting?.main_text}
-                    </Text>
-                    <Text style={styles.searchResultSecondary}>
-                      {result.structured_formatting?.secondary_text}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+        {/* Current Location Button - Hidden when form is open */}
+        {!showAddressForm && (
+          <TouchableOpacity
+            style={[
+              styles.currentLocationButton,
+              isLoadingLocation && styles.currentLocationButtonLoading,
+              isKeyboardVisible && { bottom: 20 },
+            ]}
+            onPress={getCurrentLocation}
+            disabled={isLoadingLocation}
+          >
+            {isLoadingLocation ? (
+              <ActivityIndicator color="#8655d2" size="small" />
+            ) : (
+              <>
+                <MaterialIcons name="my-location" size={24} color="#8655d2" />
+                <Text style={styles.currentLocationText}>use current location</Text>
+              </>
+            )}
+          </TouchableOpacity>
         )}
       </View>
 
-      {!isKeyboardVisible && (
-        <View style={[styles.bottomContainer, {bottom:insets.bottom}]}>
+      {/* Search Container - Hidden when form is open */}
+      {!showAddressForm && (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <AntDesign name="search1" size={20} color="#666" style={styles.searchIcon} />
+            <TextInput
+              placeholder="Search for Area/Location"
+              style={styles.searchInput}
+              placeholderTextColor="#666"
+              value={searchQuery}
+              onChangeText={handleSearch}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setShowResults(false);
+                }}>
+                <AntDesign name="close" size={20} color="#7A7A7A" />
+              </TouchableOpacity>
+            )}
+          </View>
+          {showResults && searchResults.length > 0 && (
+            <View style={styles.searchResultsContainer}>
+              <ScrollView keyboardShouldPersistTaps="handled">
+                {searchResults.map(result => (
+                  <TouchableOpacity
+                    key={result.place_id}
+                    style={styles.searchResultItem}
+                    onPress={() => handlePlaceSelect(result.place_id)}>
+                    <MaterialIcons name="location-on" size={20} color="#8655d2" />
+                    <View style={styles.searchResultText}>
+                      <Text style={styles.searchResultMain}>
+                        {result.structured_formatting?.main_text}
+                      </Text>
+                      <Text style={styles.searchResultSecondary}>
+                        {result.structured_formatting?.secondary_text}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+      )}
+
+      {!isKeyboardVisible && !showAddressForm && (
+        <View style={[styles.bottomContainer, { bottom: insets.bottom }]}>
           <View style={styles.locationInfo}>
             <MaterialIcons name="location-on" size={24} color="#8655d2" />
             <View style={styles.locationDetails}>
@@ -433,14 +527,104 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
           </View>
           <TouchableOpacity
             style={styles.confirmButton}
-            onPress={handleConfirmLocation}
-            disabled={isCheckingAddress}>
-            {isCheckingAddress ? (
+            onPress={handleSaveAddress}
+            disabled={isCheckingService}>
+            {isCheckingService ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.confirmButtonText}>Confirm Location</Text>
+              <Text style={styles.confirmButtonText}>Save Address</Text>
             )}
           </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Address Form Section - Takes up to 90% of screen height */}
+      {showAddressForm && (
+        <View style={[styles.addressFormContainer, { bottom: insets.bottom }]}>
+          <ScrollView style={styles.formScrollView} showsVerticalScrollIndicator={false}>
+            {/* Form Header with Close Button */}
+            <View style={styles.formHeader}>
+              <Text style={styles.formTitle}>Complete Your Delivery Address</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowAddressForm(false)}>
+                <MaterialIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Current Address Display */}
+            <View style={styles.currentAddressSection}>
+              <Text style={styles.sectionTitle}>Selected Location</Text>
+              <View style={styles.addressDisplay}>
+                <MaterialIcons name="location-on" size={20} color="#8655d2" />
+                <Text style={styles.addressText}>{address}</Text>
+              </View>
+            </View>
+
+
+            {/* Door No Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="home" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="House No./Floor (Optional)"
+                value={doorNo}
+                onChangeText={setDoorNo}
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            {/* Building Name Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="home" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Building & Block No. (Optional)"
+                value={BuildingName}
+                onChangeText={setBuildingName}
+                placeholderTextColor="#999"
+              />
+            </View>
+
+            {/* Landmark Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="location-pin" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Landmark & Area Name (Optional)"
+                value={landmark}
+                onChangeText={setLandmark}
+                placeholderTextColor="#999"
+              />
+            </View>
+
+
+
+            {/* Alternate Phone Number Input */}
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="phone-android" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Alternate Phone Number (Optional)"
+                value={alternatePhoneNumber}
+                onChangeText={setAlternatePhoneNumber}
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+              />
+            </View>
+
+
+
+
+
+
+            {/* Confirm Location Button */}
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={handleConfirmLocation}>
+              <Text style={styles.confirmButtonText}>Confirm Location</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
       )}
       <CustomModal
@@ -523,7 +707,7 @@ const styles = StyleSheet.create({
     top: responsiveHeight(10),
     left: 20,
     right: 20,
-    zIndex: 1,
+    zIndex: 1000,
   },
   searchInputContainer: {
     backgroundColor: '#fff',
@@ -617,6 +801,123 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  addressFormContainer: {
+    position: 'absolute',
+    top: '10%', // Start from 10% from top (90% height)
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  formScrollView: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  formHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingRight: 10,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+    textAlign: 'center',
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    paddingVertical: 4,
+  },
+  currentAddressSection: {
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#495057',
+    marginBottom: 10,
+  },
+  addressDisplay: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  addressText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 20,
+  },
+  addressTypeSection: {
+    marginBottom: 20,
+  },
+  addressTypeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10,
+  },
+  addressTypeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f9f9f9',
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  addressTypeButtonActive: {
+    backgroundColor: '#8655d2',
+    borderColor: '#8655d2',
+  },
+  addressTypeButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  addressTypeButtonTextActive: {
+    color: '#fff',
     fontWeight: '600',
   },
 });

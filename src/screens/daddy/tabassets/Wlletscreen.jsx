@@ -62,7 +62,7 @@ const WalletPage = ({ navigation }) => {
     const fetchAmounts = async () => {
       setLoading(true);
       const data = await WalletAPI.getDefaultWalletAmounts();
-
+     
       const formatted = data.map(item => ({
         label: `₹${item.wallet_amount}`,
         value: parseInt(item.wallet_amount),
@@ -80,7 +80,7 @@ const WalletPage = ({ navigation }) => {
     const fetchWallet = async () => {
       setWalletLoading(true);
       const data = await WalletAPI.getWalletAmounts(customerId);
-   
+      console.log('data', data);
       dispatch(setWalletData(data));
 
       setWalletDataState(data);

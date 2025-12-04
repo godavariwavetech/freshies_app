@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const BillingHistoryScreen = ({ navigation }) => {
   const [billingHistory, setBillingHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState({ totalDebits: 0, totalCredits: 0 });
   const { customerId } = useSelector(state => state.Auth);
  const insets = useSafeAreaInsets();
   
@@ -26,23 +27,50 @@ const BillingHistoryScreen = ({ navigation }) => {
     const fetchBillingHistory = async () => {
       setLoading(true);
       const data = await WalletAPI.getBillingHistory(customerId);
-      
+     
       setBillingHistory(data);
+      
+      // Calculate summary
+      const summaryData = data.reduce((acc, item) => {
+        if (item.payment_type_text === 'Debited') {
+          acc.totalDebits += parseFloat(item.payment_amount);
+        } else {
+          acc.totalCredits += parseFloat(item.payment_amount);
+        }
+        return acc;
+      }, { totalDebits: 0, totalCredits: 0 });
+      
+      setSummary(summaryData);
       setLoading(false);
     };
 
     fetchBillingHistory();
   }, []);
 
-  const renderBillingItem = ({ item }) => (
-    <View style={styles.billingItem}>
-      <View style={styles.billingDetails}>
-        <Text style={styles.billingDescription}>Txn ID: {item.razorpay_order_id}</Text>
-        <Text style={styles.billingDate}>{item.formatted_datetime}</Text>
+  const renderBillingItem = ({ item }) => {
+    // Determine if it's a credit or debit based on payment_type_text
+    const isDebit = item.payment_type_text === 'Debited';
+    const amountColor = isDebit ? '#D32F2F' : '#4CAF50'; // Red for debit, Green for credit
+    const amountPrefix = isDebit ? '- ₹' : '+ ₹';
+    
+    return (
+      <View style={styles.billingItem}>
+        <View style={styles.billingDetails}>
+          <Text style={styles.billingDescription}>{item.description}</Text>
+          <Text style={styles.billingDate}>{item.formatted_datetime}</Text>
+          <Text style={styles.billingType}>Type: {item.payment_type_text}</Text>
+        </View>
+        <View style={styles.billingAmountContainer}>
+          <Text style={[styles.billingAmount, { color: amountColor }]}>
+            {amountPrefix}{parseFloat(item.payment_amount).toFixed(2)}
+          </Text>
+          {/* <Text style={styles.billingStatus}>
+            {item.payment_status === 0 ? 'Pending' : 'Completed'}
+          </Text> */}
+        </View>
       </View>
-      <Text style={styles.billingAmount}>- ₹{parseFloat(item.payment_amount).toFixed(2)}</Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,6 +85,24 @@ const BillingHistoryScreen = ({ navigation }) => {
         <View style={{ width: wp('6%') }} />
       </View>
 
+      {/* Summary Section */}
+      {!loading && billingHistory.length > 0 && (
+        <View style={styles.summaryContainer}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Total Credits</Text>
+            <Text style={[styles.summaryAmount, { color: '#4CAF50' }]}>
+              + ₹{summary.totalCredits.toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Total Debits</Text>
+            <Text style={[styles.summaryAmount, { color: '#D32F2F' }]}>
+              - ₹{summary.totalDebits.toFixed(2)}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* List or Loading */}
       {loading ? (
         <ActivityIndicator size="large" color="#8655d2" style={{ marginTop: 40 }} />
@@ -68,9 +114,11 @@ const BillingHistoryScreen = ({ navigation }) => {
           style={styles.billingList}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <Text style={{ textAlign: 'center', marginTop: 30, color: '#999' }}>
-              No billing history found.
-            </Text>
+            <View style={styles.emptyContainer}>
+              <Icon name="receipt" size={60} color="#CCC" />
+              <Text style={styles.emptyText}>No billing history found</Text>
+              <Text style={styles.emptySubText}>Your transaction history will appear here</Text>
+            </View>
           }
         />
       )}
@@ -105,59 +153,88 @@ const styles = StyleSheet.create({
   },
   billingItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: hp('2%'),
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  billingDetails: {
-    flex: 1,
-  },
-  billingDescription: {
-    fontSize: wp('4%'),
-    fontWeight: '500',
-    color: '#000',
-  },
-  billingDate: {
-    fontSize: wp('3.5%'),
-    color: '#666',
-    marginTop: hp('0.5%'),
-  },
-  billingAmount: {
-    fontSize: wp('4%'),
-    fontWeight: 'bold',
-    color: '#8655d2', // Red for debits
-  },
-  billingItem: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
     borderBottomWidth: 0.5,
-    borderColor: '#ccc',
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FFF',
   },
-  
   billingDetails: {
     flex: 1,
+    marginRight: 10,
   },
-  
   billingDescription: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
+    marginBottom: 4,
   },
-  
   billingDate: {
     fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  billingType: {
+    fontSize: 11,
     color: '#888',
-    marginTop: 4,
+    fontStyle: 'italic',
   },
-  
+  billingAmountContainer: {
+    alignItems: 'flex-end',
+  },
   billingAmount: {
-    fontSize: 14,
-    color: '#D32F2F',
-    alignSelf: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
-  
+  billingStatus: {
+    fontSize: 10,
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  summaryContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F8F9FA',
+    marginHorizontal: wp('4%'),
+    marginTop: hp('2%'),
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  summaryItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  summaryAmount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
+    fontWeight: '500',
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: '#CCC',
+    marginTop: 8,
+    textAlign: 'center',
+  },
 });
 
 export default BillingHistoryScreen;

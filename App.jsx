@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { store } from './src/redux/store';
 import SplashScreen from 'react-native-splash-screen'
 import { Alert, Linking, BackHandler, PermissionsAndroid, Platform, View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { checkNotifications, requestNotifications } from 'react-native-permissions';
 import VersionCheck from 'react-native-version-check';
 import CustomAlert from './src/components/CustomAlert';
@@ -13,11 +14,8 @@ import { setIsNetworkConnected } from './src/redux/reducers/addressSlice';
 import { useDispatch } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import RootNavigation from './src/navigation/AppNavigation';
-import { OneSignal, LogLevel } from 'react-native-onesignal'; // Import OneSignal
 import { SafeAreaProvider } from 'react-native-safe-area-context'; // 👈 add this
-
-// OneSignal App ID
-const ONESIGNAL_APP_ID = '2f9cf292-abd6-4f8f-9d4e-72e7b38f9a14'; // 🔁 Replace this with your real App ID
+import { getFCMToken } from './src/services/NotificationsService';
 
 const NetworkStatusBanner = () => {
   const [isConnected, setIsConnected] = useState(true);
@@ -60,7 +58,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    zIndex: 1000,
+    zIndex: 999,
   },
   text: {
     color: 'white',
@@ -73,37 +71,19 @@ const App = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   useEffect(() => {
+    const getToken = async () => {
+      const token = await getFCMToken();
+      console.log('FCM Token:', token);
+    }
+    getToken();
+  }, [showUpdateModal]);
+
+  useEffect(() => {
     SplashScreen.hide();
     checkForUpdate();
     checkAndRequestPermissions();
   }, []);
 
-  useEffect(() => {
-
-    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-
-    // OneSignal Initialization
-    OneSignal.initialize(ONESIGNAL_APP_ID);
-
-    // **Delay the permission request**
-    setTimeout(() => {
-      OneSignal.Notifications.requestPermission(true);
-    }, 500); // Delay by 500 milliseconds (adjust if needed)
-
-
-    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-
-      event.complete(event.notification);
-    });
-
-    OneSignal.Notifications.addEventListener('opened', (event) => {
-
-    });
-
-    OneSignal.User.addEmail('your_user_email@example.com');
-    OneSignal.User.addTag('user_type', 'premium');
-
-  }, []);
 
   useEffect(() => {
     if (showUpdateModal) {
@@ -174,7 +154,94 @@ const App = () => {
               onConfirm={handleUpdate}
               cancelText=""
             />
-            <Toast />
+            <Toast
+              config={{
+                success: (props) => (
+                  <View style={{
+                    backgroundColor: '#4CAF50',
+                    padding: 16,
+                    borderRadius: 8,
+                    marginHorizontal: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}>
+                    <Icon name="check-circle" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                        {props.text1}
+                      </Text>
+                      {props.text2 && (
+                        <Text style={{ color: '#fff', fontSize: 14, marginTop: 2 }}>
+                          {props.text2}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ),
+                error: (props) => (
+                  <View style={{
+                    backgroundColor: '#f44336',
+                    padding: 16,
+                    borderRadius: 8,
+                    marginHorizontal: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}>
+                    <Icon name="error" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                        {props.text1}
+                      </Text>
+                      {props.text2 && (
+                        <Text style={{ color: '#fff', fontSize: 14, marginTop: 2 }}>
+                          {props.text2}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ),
+                info: (props) => (
+                  <View style={{
+                    backgroundColor: '#2196F3',
+                    padding: 16,
+                    borderRadius: 8,
+                    marginHorizontal: 20,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}>
+                    <Icon name="info" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                        {props.text1}
+                      </Text>
+                      {props.text2 && (
+                        <Text style={{ color: '#fff', fontSize: 14, marginTop: 2 }}>
+                          {props.text2}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ),
+              }}
+              topOffset={Platform.OS === 'ios' ? 60 : 40}
+              visibilityTime={4000}
+              autoHide={true}
+            />
           </View>
         </NavigationContainer>
       </SafeAreaProvider>

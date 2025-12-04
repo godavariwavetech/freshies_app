@@ -21,7 +21,12 @@ const ApplyCouponScreen = ({ navigation, route }) => {
   const [coupons, setCoupons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { cartItems, totalAmount = 0, status } = route.params || {};
+  const { cartItems, totalAmount: rawTotalAmount, status } = route.params || {};
+  console.log("rawTotalAmount",totalAmount)
+  // Ensure totalAmount is always a valid number
+  const totalAmount = typeof rawTotalAmount === 'number' && !isNaN(rawTotalAmount) 
+    ? rawTotalAmount 
+    : parseFloat(rawTotalAmount) || 0;
 
   // Fetch coupons when the screen loads
   useEffect(() => {
@@ -181,7 +186,7 @@ const ApplyCouponScreen = ({ navigation, route }) => {
               No applicable coupons available
             </Text>
             <Text style={styles.emptyCouponsSubtext}>
-              Total cart value: ₹{totalAmount.toFixed(2)}
+              Total cart value: ₹{Number(totalAmount).toFixed(2)}
             </Text>
           </View>
         ) : (

@@ -11,6 +11,7 @@ import Geolocation from '@react-native-community/geolocation';
 import CustomModal from '../../components/CustomModal';
 import { setUserDetails } from '../../redux/reducers/addressSlice';
 import { API_KEY } from '../../config/config';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
@@ -54,7 +55,7 @@ const AddAddressScreen = ({ navigation, route }) => {
   });
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const {userDetails} = useSelector(state=>state.address)
-
+  const insets = useSafeAreaInsets();
 
   const showCustomModal = useCallback((title, message, onConfirm, onCancel = null, confirmText = 'OK', cancelText = null) => {
     setCustomModal({
@@ -300,6 +301,7 @@ const AddAddressScreen = ({ navigation, route }) => {
   }
 
   const handleSave = useCallback(() => {
+    
     if (validateInputs()) {
       setModalVisible(false);
        addAddress();
@@ -469,7 +471,7 @@ const AddAddressScreen = ({ navigation, route }) => {
               <Text style={styles.markerText}>Order will be delivered here</Text>
               {/* <View style={styles.markerArrow} /> */}
             </View>
-            <MaterialIcons name="location-on" size={40} color="#348338" />
+            <MaterialIcons name="location-on" size={40} color="#8655d2" />
           </View>
         </View>
         <TouchableOpacity 
@@ -478,17 +480,17 @@ const AddAddressScreen = ({ navigation, route }) => {
           disabled={isLoadingLocation}
         >
           {isLoadingLocation ? (
-            <ActivityIndicator color="#348338" size="small" />
+            <ActivityIndicator color="#8655d2" size="small" />
           ) : (
             <>
-              <MaterialIcons name="my-location" size={24} color="#348338" />
+              <MaterialIcons name="my-location" size={24} color="#8655d2" />
               <Text style={styles.currentLocationText}>use current location</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, {top: insets.top + responsiveHeight(10)}]}>
         <View style={styles.searchInputContainer}>
           <AntDesign name="search1" size={20} color="#666" style={styles.searchIcon} />
           <TextInput
@@ -520,7 +522,7 @@ const AddAddressScreen = ({ navigation, route }) => {
                   style={styles.searchResultItem}
                   onPress={() => handlePlaceSelect(result.place_id)}
                 >
-                  <MaterialIcons name="location-on" size={20} color="#348338" />
+                  <MaterialIcons name="location-on" size={20} color="#8655d2" />
                   <View style={styles.searchResultText}>
                     <Text style={styles.searchResultMain}>{result.structured_formatting?.main_text || result.description}</Text>
                     <Text style={styles.searchResultSecondary}>{result.structured_formatting?.secondary_text || ''}</Text>
@@ -536,7 +538,7 @@ const AddAddressScreen = ({ navigation, route }) => {
         <View style={styles.bottomContainer}>
           <View style={styles.locationInfo}>
             <View style={styles.locationIcon}>
-              <MaterialIcons name="location-on" size={24} color="#065E2C" />
+              <MaterialIcons name="location-on" size={24} color="#8655d2" />
             </View>
             <View style={styles.locationDetails}>
               <Text style={styles.locationTitle}>{city || 'Location'}</Text>
@@ -728,8 +730,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#348338',
-    height: responsiveHeight(15),
+    backgroundColor: '#8655d2',
+    height: responsiveHeight(7),
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingBottom: responsiveHeight(3),
@@ -764,7 +766,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   markerTextContainer: {
-    backgroundColor: '#348338',
+    backgroundColor: '#8655d2',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -798,11 +800,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#348338',
+    borderTopColor: '#8655d2',
   },
   searchContainer: {
     position: 'absolute',
-    top: responsiveHeight(17),
     left: 0,
     right: 0,
     zIndex: 2,
@@ -894,7 +895,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#348338',
+    borderColor: '#8655d2',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -904,13 +905,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   currentLocationText: {
-    color: '#348338',
+    color: '#8655d2',
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 8,
   },
   addButton: {
-    backgroundColor: '#348338',
+    backgroundColor: '#8655d2',
     borderRadius: 8,
     paddingVertical: responsiveHeight(2),
     alignItems: 'center',
@@ -971,7 +972,7 @@ const styles = StyleSheet.create({
     marginHorizontal:responsiveWidth(1)
   },
   selectedTypeButton: { 
-    backgroundColor: '#065E2C' 
+    backgroundColor: '#8655d2' 
   },
   typeButtonText: { 
     color: '#666',
@@ -1008,7 +1009,7 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   saveButton: { 
-    backgroundColor: '#065E2C', 
+    backgroundColor: '#8655d2', 
     padding: 15, 
     borderRadius: 5, 
     alignItems: 'center' 

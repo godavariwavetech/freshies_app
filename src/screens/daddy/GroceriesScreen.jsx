@@ -506,9 +506,9 @@ export default function GroceriesScreen({ navigation, route }) {
         </TouchableOpacity>
         <View style={styles.companyRow}>
           <Icon name="verified" size={14} color="#7D29E8" style={styles.companyIcon} />
-          <Text  style={styles.companyName}>{item.filter_one}</Text>
+          <Text style={styles.companyName}>{item.filter_one}</Text>
         </View>
-        <Text  style={styles.productName}>{item.name}</Text>
+        <Text style={styles.productName}>{item.name}</Text>
         {/* Conditionally render dropdown or text based on item_ind */}
         {item.variants.length > 1 && item.item_ind === 0 ? (
           <Dropdown
@@ -546,18 +546,27 @@ export default function GroceriesScreen({ navigation, route }) {
                   ? parseFloat(walletData.abhi24_balanced_amount || '0')
                   : parseFloat(walletData.user_balance_amount || '0');
 
-                if (balanceToCheck <= 0) {
-                  navigation.navigate('Wlletscreen'); // 👈 adjust route name
-                } else {
-                  navigation.navigate('EditSubscribe', {
-                    productDetails: {
-                      ...item,
-                      subcategory_id: selectedSubcategoryId,
-                      status,
-                      variant: selectedVariant,
-                    },
-                  });
-                }
+                navigation.navigate('EditSubscribe', {
+                  productDetails: {
+                    ...item,
+                    subcategory_id: selectedSubcategoryId,
+                    status,
+                    variant: selectedVariant,
+                  }
+                })
+
+                // if (balanceToCheck <= 0) {
+                //   navigation.navigate('Wlletscreen'); 
+                // } else {
+                //   navigation.navigate('EditSubscribe', {
+                //     productDetails: {
+                //       ...item,
+                //       subcategory_id: selectedSubcategoryId,
+                //       status,
+                //       variant: selectedVariant,
+                //     },
+                //   });
+                // }
               }}
             >
               <Text style={styles.subscribeText}>Subscribe</Text>
@@ -688,7 +697,7 @@ export default function GroceriesScreen({ navigation, route }) {
 
 
   return (
-    <View style={[styles.container,{paddingTop:insets.top}]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar backgroundColor="white" barStyle="dark-content" translucent={false} />
 
       <View style={styles.header}>
@@ -873,7 +882,7 @@ export default function GroceriesScreen({ navigation, route }) {
       </View>
 
       {cartItems.length > 0 && (
-        <View style={[styles.checkoutToast, { backgroundColor: '#8655d2' },{bottom: insets.bottom}]}>
+        <View style={[styles.checkoutToast, { backgroundColor: '#8655d2' }, { bottom: insets.bottom }]}>
           <View style={styles.checkoutToastContent}>
             <View style={styles.checkoutToastLeft}>
               <Text style={styles.checkoutToastTitle}>
@@ -1032,7 +1041,7 @@ export default function GroceriesScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff'},
+  container: { flex: 1, backgroundColor: '#fff' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1242,7 +1251,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
     fontWeight: '500',
-    flexShrink: 1, 
+    flexShrink: 1,
     // backgroundColor: "red"
   },
 

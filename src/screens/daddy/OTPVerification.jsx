@@ -29,7 +29,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { checkAddressExistence } from '../../redux/reducers/daddy';
 import { customerLogin } from '../../services/services';
 import { useColorScheme } from 'react-native';
-import { type } from 'metro/private/integration_tests/basic_bundle/TypeScript';
+
 import { CommonActions } from '@react-navigation/native';
 
 
@@ -113,11 +113,11 @@ export default function OTPVerification({ navigation, route }) {
             referral_code: referralCode.trim() || '',
           });
 
-          if (loginResponse.status === 200) {
-            dispatch(setCustormarId(loginResponse.data.customer_id))
-            dispatch(setUserName(loginResponse.data.customer_name));
+          if (loginResponse?.status === 200) {
+            dispatch(setCustormarId(loginResponse?.data?.customer_id))
+            dispatch(setUserName(loginResponse?.data?.customer_name));
             dispatch(setMobile(route.params?.phoneNumber));
-            dispatch(setReferalCode(loginResponse.data.referral_code))
+            dispatch(setReferalCode(loginResponse?.data?.referral_code))
             setShowNewUserModal(false);
 
             // navigation.dispatch(
@@ -135,7 +135,7 @@ export default function OTPVerification({ navigation, route }) {
             )
               : dispatch(actionLogin());
           } else {
-            setFormError(loginResponse.msg || 'Login failed. Please try again.');
+            setFormError(loginResponse?.data?.msg || 'Login failed. Please try again.');
           }
           setLoader(false);
         } else {
@@ -217,11 +217,11 @@ export default function OTPVerification({ navigation, route }) {
         referral_code: referralCode.trim() || '',
       });
 
-      if (loginResponse.status === 200) {
-        dispatch(setCustormarId(loginResponse.data.customer_id))
-        dispatch(setUserName(newUsername));
+      if (loginResponse?.status === 200) {
+        dispatch(setCustormarId(loginResponse?.data?.customer_id))
+        dispatch(setUserName(loginResponse?.data?.customer_name));
         dispatch(setMobile(route.params?.phoneNumber));
-        dispatch(setReferalCode(loginResponse.data.referral_code))
+        dispatch(setReferalCode(loginResponse?.data?.referral_code))
         setShowNewUserModal(false);
         route.params?.withoutLogin
           ? navigation.dispatch(
@@ -231,11 +231,11 @@ export default function OTPVerification({ navigation, route }) {
             })
           )
           : dispatch(actionLogin());
-      } else if (loginResponse.status === 202 && loginResponse.msg === "Invalid referral code") {
+      } else if (loginResponse?.status === 202 && loginResponse?.data?.msg === "Invalid referral code") {
         // 🛑 Handle referral code error
         setFormError("Referral code is invalid. Please check and try again.");
       } else {
-        setFormError(loginResponse.msg || 'Login failed. Please try again.');
+        setFormError(loginResponse?.data?.msg || 'Login failed. Please try again.');
       }
 
     } catch (err) {
