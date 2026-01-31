@@ -511,7 +511,8 @@ const BasketScreen = ({ navigation, route }) => {
         totalPrice + delivery + handling + gst - Number(couponAmount || 0)
       ).toFixed(2); 
 
-      const isCodOrFree = totalAfterWallets === 0  ||  selectedPaymentMethod === 'COD';
+      // Fix: Use fixed-point comparison to avoid floating point issues
+      const isCodOrFree = Number(totalAfterWallets.toFixed(2)) === 0  ||  selectedPaymentMethod === 'COD';
   
       const payload = {
         customer_id: customerId,
@@ -527,7 +528,7 @@ const BasketScreen = ({ navigation, route }) => {
         location_id: locationId,
         location_name: locationName,
         // payment_type: selectedPaymentMethod,
-        payment_type: totalAfterWallets === 0 ? "COD" : selectedPaymentMethod,
+        payment_type: Number(totalAfterWallets.toFixed(2)) === 0 ? "COD" : selectedPaymentMethod,
         payment_id: '',
         razorpay_order_id: '',
         // order_status: selectedPaymentMethod === 'COD' || totalAfterWallets === 0 ? 0 : 7,
@@ -764,7 +765,9 @@ const BasketScreen = ({ navigation, route }) => {
                 <Icon name="chevron-right" size={24} color="#000" />
               </>
             )}
-          </TouchableOpacity>}
+          </TouchableOpacity>} 
+
+  
 
           {(abhiWalletAmount > 0 || userWalletAmount > 0) && (
               <View style={styles.walletSection}>
@@ -780,8 +783,8 @@ const BasketScreen = ({ navigation, route }) => {
                     <View style={styles.walletTextContainer}>
                       <Text style={styles.walletText}>
                         {useAbhiWallet
-                          ? `Using ₹${abhiWalletUsed.toFixed(2)} from Abhi Wallet`
-                          : `Use Abhi Wallet (₹${abhiWalletAmount})`}
+                          ? `Using ₹${abhiWalletUsed.toFixed(2)} from Abhi24 Wallet`
+                          : `Use Abhi24 Wallet (₹${abhiWalletAmount})`}
                       </Text>
                     </View>
                     <Switch
@@ -791,7 +794,7 @@ const BasketScreen = ({ navigation, route }) => {
                   </View>
                 )}
 
-                {userWalletAmount > 0 && otherSubtotal > 0 && (
+                {userWalletAmount > 0  && (
                   <View style={styles.walletRow}>
                     <View style={styles.walletIcon}>
                       <Icon

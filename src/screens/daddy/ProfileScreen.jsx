@@ -183,7 +183,7 @@ const ProfileScreen = () => {
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <LinearGradient
         colors={['#8655d2', '#8655d2']}
-        style={[styles.gradientContainer,{paddingTop: insets.top}]}>
+        style={[styles.gradientContainer, { paddingTop: insets.top }]}>
         <View
           style={{
             flexDirection: 'row',
@@ -298,6 +298,14 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('RefundPolicy')}>
+            <View style={styles.menuItemLeft}>
+              <MaterialCommunityIcons name="cash-refund" size={22} color="#8655d2" />
+              <Text style={styles.menuText}>Refund Policy</Text>
+            </View>
+            <Icon name="chevron-right" size={24} color="#666" />
+          </TouchableOpacity>
+
           {/* 📜 Policies */}
           <TouchableOpacity
             style={styles.menuItemMain}
@@ -312,7 +320,6 @@ const ProfileScreen = () => {
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
-
           {isPoliciesExpanded && (
             <>
               <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/privacypolicy')}>
@@ -322,6 +329,8 @@ const ProfileScreen = () => {
                 </View>
                 <MaterialCommunityIcons name="open-in-new" size={20} color="#666" />
               </TouchableOpacity>
+
+
 
               <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/terms')}>
                 <View style={styles.menuItemLeft}>

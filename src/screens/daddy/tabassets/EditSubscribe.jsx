@@ -8,7 +8,8 @@ import {
   Image,
   StatusBar,
   ScrollView,
-  Modal
+  Modal,
+  ActivityIndicator
 } from 'react-native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -25,7 +26,7 @@ import { setWalletData } from '../../../redux/reducers/walletSlice';
 
 const EditSubscriptionScreen = ({ navigation, route }) => {
   const { productDetails } = route.params;
- 
+
   const insets = useSafeAreaInsets();
   const today = dayjs().format('YYYY-MM-DD');
   const [scheduleType, setScheduleType] = useState('Custom');
@@ -36,12 +37,13 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
   const [isCheckingAddress, setIsCheckingAddress] = useState(false);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const walletBalance = useSelector((state) => state.wallet); // assuming you store wallet balance in redux
-  const { location: storedLocation, locationName, locationId, address,addressDetails, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
+  const { location: storedLocation, locationName, locationId, address, addressDetails, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
   const dispatch = useDispatch();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(dayjs().add(1, 'day').format('YYYY-MM-DD'));
   const [calendarKey, setCalendarKey] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
@@ -54,7 +56,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
     fetchWallet();
   }, []);
 
- 
+
 
   useEffect(() => {
     if (startDate) {
@@ -151,7 +153,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         dispatch(setShopAddress(locationData));
 
         // ✅ Now check wallet balance
-        
+
 
         if (walletTotal < totalPrice) {
           navigation.navigate("Wlletscreen");
@@ -173,9 +175,21 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
 
   const placeSubscriptionOrderHandler = async () => {
     const deliveryAddress = address || addressDetails.address;
+
+    // Determine the correct start date based on schedule type
+    let actualStartDate = startDate;
+    if (scheduleType === 'Custom' && Object.keys(markedDates).length > 0) {
+      // For custom dates, use the earliest selected date
+      const selectedDates = Object.keys(markedDates).sort();
+      actualStartDate = new Date(selectedDates[0]);
+    }
+
+    if (isSubmitting) return;
+
     try {
+      setIsSubmitting(true);
       const payload = {
-        subscription_start_date: dayjs(startDate).format('YYYY-MM-DD'),
+        subscription_start_date: dayjs(actualStartDate).format('YYYY-MM-DD'),
         customer_id: customerId.toString(), // ensure string
         item_name: productDetails.name,
         item_image: productDetails.image,
@@ -197,11 +211,11 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         saving_price: productDetails.variant?.actual_price - productDetails.variant?.selling_price,
         subscription_type: scheduleType,
         selecteddates: Object.keys(markedDates),
-        delivery_address : deliveryAddress,
+        delivery_address: deliveryAddress,
       };
-    
+
       const res = await placeSubscriptionOrder(payload);
-    
+
       if (res.status === 200) {
         setShowSuccessModal(true); // Show success modal
         setTimeout(() => {
@@ -209,7 +223,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           navigation.navigate('SubscriptionPage');
         }, 2000);
       } else {
-        
+
         Toast.show({
           type: 'error',
           text1: 'Failed to subscribe. Try again.',
@@ -223,6 +237,8 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         text1: 'Something went wrong!',
         text2: error?.message,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -237,7 +253,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           <Icon name="arrow-back" size={wp('6%')} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Item Subscription</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => {
             console.log('Test toast button pressed');
             Toast.show({
@@ -302,10 +318,12 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
           </View>
         </View>
 
+        {/* 'Alternate Days' */}
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Choose Schedule</Text>
           <View style={styles.scheduleOptions}>
-            {['Weekly', 'Alternate Days', 'Custom'].map((type) => (
+            {['Weekly', 'Custom'].map((type) => (
               <TouchableOpacity
                 key={type}
                 style={[
@@ -423,12 +441,16 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         <TouchableOpacity
           style={[
             styles.updateButton,
-            Object.keys(markedDates).length === 0 && { backgroundColor: '#ccc' }
+            (Object.keys(markedDates).length === 0 || isSubmitting) && { backgroundColor: '#ccc' }
           ]}
-          disabled={Object.keys(markedDates).length === 0}
+          disabled={Object.keys(markedDates).length === 0 || isSubmitting}
           onPress={handleSubscribe}
         >
-          <Text style={styles.updateButtonText}>Subscribe</Text>
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.updateButtonText}>Subscribe</Text>
+          )}
         </TouchableOpacity>
         {/* <View style={styles.secondaryButtons}>
           <TouchableOpacity style={[styles.resumeButton, { borderColor: backgroundColor }]}>
@@ -440,15 +462,17 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
         </View> */}
       </View>
 
-      {showSuccessModal && (
-        <View style={styles.successModalOverlay}>
-          <View style={styles.successModalContainer}>
-            <Icon name="check-circle" size={48} color="#4CAF50" style={styles.successIcon} />
-            <Text style={styles.successTitle}>🎉 Subscription Successful!</Text>
-            <Text style={styles.successMessage}>Your order has been placed.</Text>
+      {
+        showSuccessModal && (
+          <View style={styles.successModalOverlay}>
+            <View style={styles.successModalContainer}>
+              <Icon name="check-circle" size={48} color="#4CAF50" style={styles.successIcon} />
+              <Text style={styles.successTitle}>🎉 Subscription Successful!</Text>
+              <Text style={styles.successMessage}>Your order has been placed.</Text>
+            </View>
           </View>
-        </View>
-      )}
+        )
+      }
       <Modal
         transparent
         visible={showServiceModal}
@@ -541,9 +565,14 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
                   setShowConfirmationModal(false);
                   placeSubscriptionOrderHandler();
                 }}
-                style={styles['subscribeConfirm-confirmBtn']}
+                disabled={isSubmitting}
+                style={[styles['subscribeConfirm-confirmBtn'], isSubmitting && { opacity: 0.7 }]}
               >
-                <Text style={styles['subscribeConfirm-confirmText']}>✅ Confirm & Subscribe</Text>
+                {isSubmitting ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles['subscribeConfirm-confirmText']}>✅ Confirm & Subscribe</Text>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -555,13 +584,13 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
             </View>
           </View>
         </View>
-      </Modal>
+      </Modal >
 
 
 
 
 
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
@@ -633,7 +662,8 @@ const styles = StyleSheet.create({
   },
   scheduleOptions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+
   },
   scheduleButton: {
     borderWidth: 1,
@@ -644,6 +674,8 @@ const styles = StyleSheet.create({
     marginHorizontal: wp('1%'),
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
   scheduleButtonSmall: {
     flex: 1, // Smaller width for Daily and Custom

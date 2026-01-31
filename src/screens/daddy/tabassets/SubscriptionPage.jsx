@@ -48,7 +48,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
     try {
       setRefreshing(true);
       const response = await getSubscriptionOrders({ customer_id: customerId });
-      console.log("subscription orders", response);
+      console.log("subscription orders", response.data[0]?.expected_delivery_dates);
       if (response?.status === 200 && Array.isArray(response.data)) {
         // Format data to match your local UI expectations if needed
         
@@ -65,6 +65,7 @@ const MySubscriptionScreen = ({ navigation, route }) => {
           orderDate: item.orderdate,
           startDate: item.startdate,
           orderId: item.order_id, // Add order_id to the mapping
+          selectedDate:item?.expected_delivery_dates
         }));
 
         // Sort by orderDate (most recent first)

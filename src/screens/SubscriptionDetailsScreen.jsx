@@ -5,7 +5,8 @@ import utc from 'dayjs/plugin/utc';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getSubscriptionDetails } from '../services/services';
+import { useSelector } from 'react-redux';
+import { getSubscriptionDetails, WalletAPI } from '../services/services';
 
 dayjs.extend(utc);
 dayjs.extend(isSameOrAfter);
@@ -31,7 +32,7 @@ try {
 
 export default function SubscriptionDetailsScreen({ navigation, route }) {
     const { item } = route?.params || {};
-    
+    console.log('Subscription Details Item:', item);
     if (!item) {
         return (
             <View style={styles.container}>
@@ -40,13 +41,29 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
         );
     }
     const insets = useSafeAreaInsets();
+    const { customerId } = useSelector(state => state.Auth);
+    const [walletBalance, setWalletBalance] = useState(0);
     const [loading, setLoading] = useState(true);
     const [subscriptionData, setSubscriptionData] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         loadSubscriptionDetails();
+        loadWalletBalance();
     }, []);
+
+    const loadWalletBalance = async () => {
+        if (customerId) {
+            try {
+                const data = await WalletAPI.getWalletAmounts(customerId);
+                if (data) {
+                    setWalletBalance(parseFloat(data.user_balance_amount || 0));
+                }
+            } catch (err) {
+                console.error('Error fetching wallet balance:', err);
+            }
+        }
+    };
 
     const loadSubscriptionDetails = async () => {
         try {
@@ -54,7 +71,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
             setError(null);
             const response = await getSubscriptionDetails({ order_id: item.id });
             console.log('Subscription Details API Response:', response);
-            
+
             if (response?.status === 200) {
                 setSubscriptionData(response.data);
             } else {
@@ -82,7 +99,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
 
     const upcomingDeliveries = [];
     const completedDeliveries = [];
-    
+
     if (subscriptionData && Array.isArray(subscriptionData)) {
         subscriptionData.forEach((delivery) => {
             // Check for completed deliveries
@@ -99,15 +116,15 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
                     status: delivery.subscription_order_status,
                 });
             }
-            
+
             // Check for upcoming deliveries - check this separately
             // Always show expected dates if they exist
-            if (delivery.expected_delivery_date) {
+            if (delivery.expected_date) {
                 // Upcoming delivery - use expected_delivery_date (in UTC to avoid timezone conversion)
-                const expectedDate = dayjs.utc(delivery.expected_delivery_date);
-                console.log('Upcoming Delivery - expected_delivery_date:', delivery.expected_delivery_date, 'Formatted:', expectedDate.format('ddd, DD MMM YYYY'));
+                const expectedDate = dayjs.utc(delivery.expected_date);
+                console.log('Upcoming Delivery - expected_date:', delivery.expected_date, 'Formatted:', delivery.expected_date || expectedDate.format('DD-MM-YYYY'));
                 upcomingDeliveries.push({
-                    date: expectedDate.format('ddd, DD MMM YYYY'),
+                    date: delivery.expected_date || expectedDate.format('DD-MM-YYYY'),
                     expectedDate: delivery.expected_date,
                     expectedDeliveryDate: delivery.expected_delivery_date,
                     orderId: delivery.order_id,
@@ -115,27 +132,24 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
                 });
             } else if (delivery.expected_date) {
                 // Fallback to expected_date if expected_delivery_date is not available
-                const expectedDate = parseDate(delivery.expected_date);
-                if (expectedDate) {
-                    console.log('Upcoming Delivery - expected_date:', delivery.expected_date, 'Formatted:', expectedDate.format('ddd, DD MMM YYYY'));
-                    upcomingDeliveries.push({
-                        date: expectedDate.format('ddd, DD MMM YYYY'),
-                        expectedDate: delivery.expected_date,
-                        expectedDeliveryDate: null,
-                        orderId: delivery.order_id,
-                        status: delivery.subscription_order_status,
-                    });
-                }
+                console.log('Upcoming Delivery - expected_date:', delivery.expected_date);
+                upcomingDeliveries.push({
+                    date: delivery.expected_date,
+                    expectedDate: delivery.expected_date,
+                    expectedDeliveryDate: null,
+                    orderId: delivery.order_id,
+                    status: delivery.subscription_order_status,
+                });
             }
         });
-        
+
         // Sort upcoming deliveries by expected_delivery_date (ascending)
         upcomingDeliveries.sort((a, b) => {
             const dateA = a.expectedDeliveryDate ? dayjs.utc(a.expectedDeliveryDate) : parseDate(a.expectedDate) || dayjs();
             const dateB = b.expectedDeliveryDate ? dayjs.utc(b.expectedDeliveryDate) : parseDate(b.expectedDate) || dayjs();
             return dateA - dateB;
         });
-        
+
         // Sort completed deliveries by delivered_date_time (descending - most recent first)
         completedDeliveries.sort((a, b) => {
             const dateA = dayjs.utc(a.deliveredDateTime);
@@ -147,7 +161,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
     if (loading) {
         return (
             <View style={styles.container}>
-                <View style={[styles.header, {paddingTop: insets.top}]}>
+                <View style={[styles.header, { paddingTop: insets.top }]}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
                         <Icon name="arrow-back" size={wp('6%')} color="#fff" />
                     </TouchableOpacity>
@@ -164,7 +178,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
     if (error) {
         return (
             <View style={styles.container}>
-                <View style={[styles.header, {paddingTop: insets.top}]}>
+                <View style={[styles.header, { paddingTop: insets.top }]}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
                         <Icon name="arrow-back" size={wp('6%')} color="#fff" />
                     </TouchableOpacity>
@@ -181,13 +195,13 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
     }
 
     return (
-        <ScrollView 
+        <ScrollView
             style={styles.container}
             showsVerticalScrollIndicator={true}
             contentContainerStyle={styles.scrollContent}
         >
             {/* Header */}
-            <View style={[styles.header, {paddingTop: insets.top}]}>
+            <View style={[styles.header, { paddingTop: insets.top }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={wp('6%')} color="#fff" />
                 </TouchableOpacity>
@@ -209,6 +223,41 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
                 )}
                 <Text style={styles.detail}>Start Date: {item.startDate}</Text>
                 <Text style={styles.detail}>Schedule: {item.frequency || item.schedule}</Text>
+
+                {/* Selected Dates */}
+                {((item.frequency || item.schedule) === 'Weekly' ? true : (item.selectedDate && item.selectedDate.trim())) && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>📅 Selected Dates</Text>
+                        <View style={styles.selectedDatesContainer}>
+                            {(item.frequency || item.schedule) === 'Weekly' ? (
+                                (() => {
+                                    const deliveryPrice = parseFloat(item.price) || 0;
+                                    const count = deliveryPrice > 0 ? Math.floor(walletBalance / deliveryPrice) : 0;
+                                    const dates = [];
+                                    if (count > 0 && item.startDate) {
+                                        const [day, month, year] = item.startDate.split('-');
+                                        let currentDate = dayjs(`${year}-${month}-${day}`);
+                                        for (let i = 0; i < count; i++) {
+                                            dates.push(currentDate.format('DD-MM-YYYY'));
+                                            currentDate = currentDate.add(7, 'day');
+                                        }
+                                    }
+                                    return dates.length > 0 ? dates.map((date, index) => (
+                                        <View key={index} style={styles.dateBadge}>
+                                            <Text style={styles.dateBadgeText}>{date}</Text>
+                                        </View>
+                                    )) : <Text style={styles.dateText}>No deliverable weeks based on wallet balance.</Text>;
+                                })()
+                            ) : (
+                                item.selectedDate.split(',').map((date, index) => (
+                                    <View key={index} style={styles.dateBadge}>
+                                        <Text style={styles.dateBadgeText}>{date.trim()}</Text>
+                                    </View>
+                                ))
+                            )}
+                        </View>
+                    </View>
+                )}
 
                 {/* Upcoming Deliveries */}
                 <View style={styles.section}>
@@ -320,6 +369,24 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 8,
         color: '#000',
+    },
+    selectedDatesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        padding: 8,
+        gap: 8,
+    },
+    dateBadge: {
+        backgroundColor: '#8655d2',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginBottom: 4,
+    },
+    dateBadgeText: {
+        fontSize: 12,
+        color: '#fff',
+        fontWeight: '600',
     },
     dateText: {
         fontSize: 14,

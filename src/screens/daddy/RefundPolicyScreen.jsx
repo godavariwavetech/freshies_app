@@ -1,11 +1,69 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity,StatusBar } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { responsiveHeight, responsiveWidth } from 'react-native-responsive-dimensions';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
+import { applicationCharges } from '../../services/services';
 
 const RefundPolicyScreen = () => {
   const navigation = useNavigation();
+  const [policyItems, setPolicyItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRefundPolicy = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await applicationCharges();
+        console.log("data", data);
+        const rawPolicy = data?.[0]?.refund_policy;
+        console.log("rawPolicy", rawPolicy);
+        if (rawPolicy) {
+          const sanitize = (value) =>
+            typeof value === 'string'
+              // keep \n and \r so paragraphs are preserved; strip other control chars
+              ? value.replace(/[\u0000-\u0009\u000B\u000C\u000E-\u001F]/g, '').trim()
+              : value;
+
+          const parsePolicy = (value) => {
+            if (typeof value !== 'string') return value;
+            try {
+              return JSON.parse(sanitize(value));
+            } catch {
+              return sanitize(value);
+            }
+          };
+
+          const parsed = parsePolicy(rawPolicy);
+          const normalized = (Array.isArray(parsed) ? parsed : [parsed])
+            .flatMap(item => {
+              if (item == null) return [];
+              const cleaned = sanitize(String(item));
+              const hasParagraphBreak = /\r?\n\s*\r?\n/.test(cleaned);
+              return cleaned
+                .split(hasParagraphBreak ? /\r?\n\s*\r?\n/ : /\r?\n+/)
+                .map(line => line.trim())
+                .filter(Boolean);
+            });
+
+          setPolicyItems(normalized);
+        } else {
+          setPolicyItems([]);
+        }
+      } catch (err) {
+        console.error('Failed to load refund policy', err);
+        setError('Unable to load refund policy right now. Please try again.');
+        setPolicyItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRefundPolicy();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -17,44 +75,28 @@ const RefundPolicyScreen = () => {
         </TouchableOpacity>
         <Text style={styles.title}>Refund Policy</Text>
       </View>
-      <ScrollView style={{ padding: 20 }}>
-        <Text style={styles.effectiveDate}>Effective Date: 4/3/2025</Text>
-        <Text style={styles.sectionTitle}>1. Order Cancellation</Text>
-        <Text style={styles.content}>
-          • Orders can only be canceled before the restaurant starts preparing your food{"\n"}
-          • Check order status in the app for cancellation availability{"\n"}
-          • Local Daddy reserves the right to cancel orders in special cases (full refund issued)
-        </Text>
-        <View style={styles.separator} />
-        <Text style={styles.sectionTitle}>2. Refund Policy</Text>
-        <Text style={styles.content}>
-          <Text style={styles.subsectionTitle}>Canceled Orders:</Text> Full refund if canceled before preparation{"\n"}
-          <Text style={styles.subsectionTitle}>Delayed/Undelivered:</Text> Full/partial refund eligible{"\n"}
-          <Text style={styles.subsectionTitle}>Quality Issues:</Text> Refund within 24 hours with photo proof{"\n"}
-          <Text style={styles.subsectionTitle}>Payment Issues:</Text> Refund in 5–7 business days
-        </Text>
-        <View style={styles.separator} />
-        <Text style={styles.sectionTitle}>3. How to Request a Refund</Text>
-        <Text style={styles.content}>
-          1. Go to Orders → Select Order → Help & Support → Request Refund{"\n"}
-          2. Provide details and supporting images{"\n"}
-          3. Processing time: 5–7 business days
-        </Text>
-        <View style={styles.separator} />
-        <Text style={styles.sectionTitle}>4. Non-Refundable Cases</Text>
-        <Text style={styles.content}>
-          • Change of mind after ordering{"\n"}
-          • Food taste preferences{"\n"}
-          • Incorrect address provided{"\n"}
-          • Late cancellations (after preparation starts)
-        </Text>
-        <View style={styles.separator} />
-        <Text style={styles.sectionTitle}>5. Contact Us</Text>
-        <Text style={[styles.content, { marginBottom: responsiveHeight(10) }]}>
-          For refund-related queries:{"\n"}
-          Email: abhi24web@gmail.com{"\n"}
-          Phone: 80747 09926
-        </Text>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#8655d2" />
+            <Text style={styles.loadingText}>Loading refund policy...</Text>
+          </View>
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : policyItems.length ? (
+          policyItems.map((item, index) => (
+            <View key={`${index}-${item?.slice?.(0, 10) || 'policy'}`} style={styles.policyItem}>
+              <Text style={styles.bullet}>{'\u2022'}</Text>
+              <Text style={styles.policyText}>{item}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyState}>Refund policy is not available at the moment.</Text>
+        )}
       </ScrollView>
     </View>
   );
@@ -67,14 +109,21 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#8655d2',
-    height: responsiveHeight(15),
+    gap: 10,
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingBottom: responsiveHeight(3),
+    paddingVertical: responsiveHeight(3),
     paddingLeft: responsiveWidth(5),
   },
   backButton: {
     width: responsiveWidth(7),
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: responsiveHeight(4),
   },
   title: {
     fontSize: 16,
@@ -82,32 +131,38 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: "left",
   },
-  effectiveDate: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 15,
-    fontStyle: 'italic',
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: responsiveHeight(2),
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 15,
+  loadingText: {
+    marginTop: 8,
+    color: '#666',
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 14,
+  },
+  policyItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  bullet: {
+    fontSize: 16,
     color: '#8655d2',
+    marginRight: 10,
+    lineHeight: 20,
   },
-  subsectionTitle: {
-    fontWeight: '600',
-    color: '#333',
-  },
-  content: {
+  policyText: {
+    flex: 1,
     fontSize: 14,
-    marginTop: 5,
-    lineHeight: 24,
-    color: '#666',
+    color: '#444',
+    lineHeight: 20,
   },
-  separator: {
-    height: 1,
-    backgroundColor: '#E0E0E0',
-    marginVertical: 15,
+  emptyState: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 export default RefundPolicyScreen;

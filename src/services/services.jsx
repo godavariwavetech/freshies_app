@@ -473,6 +473,7 @@ export const placeSubscriptionOrder = async (payload) => {
 export const getSubscriptionOrders = async (payload) => {
   try {
     const response = await api.post('/public_app/getsubscriptionorders', payload);
+    console.log("subscriptonsss", response)
     return response.data;
   } catch (error) {
     console.error('❌ Subscription order error:', error);
