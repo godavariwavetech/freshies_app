@@ -249,6 +249,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
       <View style={styles.container}>
         <ScrollView
+          showsVerticalScrollIndicator={true}
           contentContainerStyle={[
             styles.scrollContent,
             { paddingTop: statusBarHeight },
@@ -293,7 +294,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
             <Text style={styles.productName}>
               {productDetails[0].name}
             </Text>
-            {/* Quantity Type from Backend */}
+            {/* Quantity Type from Backend - wraps to next line when row is full */}
             <View style={styles.weightOptions}>
               {productDetails.map((item, index) => (
                 <TouchableOpacity
@@ -502,7 +503,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
               handleBuyOnce(selectedItem)
             }}
           >
-            <Text style={styles.buyButtonText}>BUY ONCE</Text>
+            <Text style={styles.buyButtonText}>ADD</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -624,6 +625,7 @@ const styles = StyleSheet.create({
   },
   weightOptions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     marginBottom: hp('2%'),
   },
   weightButton: {
@@ -633,6 +635,7 @@ const styles = StyleSheet.create({
     paddingVertical: hp('1%'),
     paddingHorizontal: wp('4%'),
     marginRight: wp('2%'),
+    marginBottom: hp('1%'),
   },
   weightButtonSelected: {
     borderWidth: 1,

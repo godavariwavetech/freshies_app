@@ -159,7 +159,7 @@ export default function FavoritesScreen({ navigation, route }) {
               ]}
               onPress={() => handleBuyOnce(item.id)}
             >
-              <Text style={styles.buyText}>Buy Once</Text>
+              <Text style={styles.buyText}>Add</Text>
             </TouchableOpacity>
           )}
         </View>

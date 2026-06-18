@@ -542,7 +542,7 @@ const ProductsPage = ({ navigation, route }) => {
             <Text style={styles.buttonText}>Subscribe</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.buyButton} onPress={() => navigation.navigate("ByOncescreen")}>
-            <Text style={styles.buttonText2}>Buy Once</Text>
+            <Text style={styles.buttonText2}>Add</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -597,7 +597,7 @@ export default function GroceriesScreen({ navigation, route }) {
               style={[styles.buyBtn, { backgroundColor: '#8655d2' }]}
               onPress={() => handleBuyOnce(item)}
             >
-              <Text style={styles.buyText}>Buy Once</Text>
+              <Text style={styles.buyText}>Add</Text>
             </TouchableOpacity>
           )}
         </View>

@@ -331,7 +331,7 @@ const CheckoutScreen = ({ navigation, route }) => {
   const navigateToCoupons = () => {
     navigation.navigate('Coupons', {
       onCouponSelect: coupon => {
-        // Handle the coupon selection here
+        // handlePlaceOrder the coupon selection here
       },
     });
   };
