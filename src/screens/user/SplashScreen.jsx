@@ -25,7 +25,11 @@ const SplashScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
       <View style={styles.imgContainer}>
-        <Image source={require('../daddy/tabassets/voiletsplash.png')} style={{ flex: 1, width: responsiveWidth(100), height: responsiveHeight(100) }} />
+        <Image
+          source={require('../daddy/tabassets/freshieslogo.png')}
+          style={{ width: responsiveWidth(72), height: responsiveHeight(20) }}
+          resizeMode="contain"
+        />
       </View>
     </SafeAreaView>
   )

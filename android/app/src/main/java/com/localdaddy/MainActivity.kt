@@ -1,4 +1,4 @@
-package com.Abhi24
+package com.freshies
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
