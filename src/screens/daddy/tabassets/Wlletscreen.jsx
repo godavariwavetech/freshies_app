@@ -111,7 +111,7 @@ const WalletPage = ({ navigation }) => {
         icon:
           item.payment_type_text === 'Credited' ? 'arrow-downward' : 'arrow-upward',
         color:
-          item.payment_type_text === 'Credited' ? '#00C853' : '#8655d2',
+          item.payment_type_text === 'Credited' ? '#00C853' : '#117943',
         payment_ind: item.payment_ind, // ✅ add this
       }));
       setTransactions(formattedData);
@@ -165,7 +165,7 @@ const WalletPage = ({ navigation }) => {
           marginRight: 12,
         }}
       >
-        <Icon name={item.icon} size={24} color="#8655d2" />
+        <Icon name={item.icon} size={24} color="#117943" />
       </View>
       {/* Description + date */}
       <View style={{ flex: 1 }}>
@@ -210,7 +210,7 @@ const WalletPage = ({ navigation }) => {
             contact: mobileNumber,
             name: username,
           },
-          theme: { color: '#8655d2' },
+          theme: { color: '#117943' },
         };
         RazorpayCheckout.open(options)
           .then(async (paymentResult) => {
@@ -270,7 +270,7 @@ const WalletPage = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       {/* Header Section */}
       <View style={[styles.header, {paddingTop: insets.top}]}>
         <View style={styles.headerContent}>
@@ -285,7 +285,7 @@ const WalletPage = ({ navigation }) => {
       {!customerId && (
         <View style={styles.loginRequiredContainer}>
           <View style={styles.loginRequiredContent}>
-            <Icon name="account-circle" size={60} color="#8655d2" />
+            <Icon name="account-circle" size={60} color="#117943" />
             <Text style={styles.loginRequiredTitle}>Login Required</Text>
             <Text style={styles.loginRequiredMessage}>
               Please login to access your wallet and manage your transactions.
@@ -514,7 +514,7 @@ const WalletPage = ({ navigation }) => {
                 styles.addMoneyButton,
                 {
                   backgroundColor:
-                    selectedAmount > 0 && !isLoading ? '#8655d2' : '#ccc',
+                    selectedAmount > 0 && !isLoading ? '#117943' : '#ccc',
                   opacity: isLoading ? 0.7 : 1,
                 },
               ]}
@@ -543,7 +543,7 @@ const WalletPage = ({ navigation }) => {
                     paddingHorizontal: 14,
                     paddingVertical: 6,
                     borderRadius: 20,
-                    backgroundColor: selectedFilter === filter ? '#8655d2' : '#eee',
+                    backgroundColor: selectedFilter === filter ? '#117943' : '#eee',
                   }}
                 >
                   <Text style={{ color: selectedFilter === filter ? '#fff' : '#444' }}>{filter}</Text>
@@ -551,7 +551,7 @@ const WalletPage = ({ navigation }) => {
               ))}
             </View>
             {loading ? (
-              <ActivityIndicator size="large" color="#8655d2" style={{ marginTop: 30 }} />
+              <ActivityIndicator size="large" color="#117943" style={{ marginTop: 30 }} />
             ) : filteredTransactions.length === 0 ? (
               <View style={{ alignItems: 'center', marginTop: 40 }}>
                 <Text style={{ color: '#888', fontSize: 16 }}>
@@ -578,14 +578,14 @@ const WalletPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#8655d2', // instead of '#F5F5F5'
+    backgroundColor: '#117943', // instead of '#F5F5F5'
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: wp('4%'),
     paddingVertical: hp('2%'),
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
   },
   headerTitle: {
     fontSize: wp('5%'),
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
   },
   skeletonButton: {
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     borderRadius: 8,
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
   },
   amountButton: {
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     borderRadius: 8,
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('4%'),
@@ -756,12 +756,12 @@ const styles = StyleSheet.create({
     marginHorizontal: wp('1%'),
   },
   amountButtonSelected: {
-    backgroundColor: '#8655d2',
-    borderColor: '#8655d2',
+    backgroundColor: '#117943',
+    borderColor: '#117943',
   },
   amountText: {
     fontSize: wp('4%'),
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: '500',
   },
   amountTextSelected: {
@@ -797,7 +797,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   addMoneyButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 8,
     paddingVertical: hp('2%'),
     alignItems: 'center',
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   filterButtonSelected: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
   },
   filterText: {
     fontSize: wp('4%'),
@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   loginButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: hp('2%'),
     paddingHorizontal: wp('8%'),
     borderRadius: 8,

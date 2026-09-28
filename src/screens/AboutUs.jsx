@@ -6,7 +6,7 @@ import FocusAwareStatusBar from '../components/CustomStatusBar';
 const AboutUsScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={styles.header}>
          <TouchableOpacity
           onPress={() => navigation.goBack()} // This will navigate back
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 20,
-    backgroundColor: '#8655d2', // Light background for the header
+    backgroundColor: '#117943', // Light background for the header
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },

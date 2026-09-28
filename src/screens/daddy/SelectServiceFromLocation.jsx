@@ -407,7 +407,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
@@ -438,7 +438,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
 
         <View style={styles.markerOverlay}>
           <View style={styles.markerContainer}>
-            <MaterialIcons name="location-on" size={40} color="#8655d2" />
+            <MaterialIcons name="location-on" size={40} color="#117943" />
           </View>
         </View>
 
@@ -454,10 +454,10 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
             disabled={isLoadingLocation}
           >
             {isLoadingLocation ? (
-              <ActivityIndicator color="#8655d2" size="small" />
+              <ActivityIndicator color="#117943" size="small" />
             ) : (
               <>
-                <MaterialIcons name="my-location" size={24} color="#8655d2" />
+                <MaterialIcons name="my-location" size={24} color="#117943" />
                 <Text style={styles.currentLocationText}>use current location</Text>
               </>
             )}
@@ -497,7 +497,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
                     key={result.place_id}
                     style={styles.searchResultItem}
                     onPress={() => handlePlaceSelect(result.place_id)}>
-                    <MaterialIcons name="location-on" size={20} color="#8655d2" />
+                    <MaterialIcons name="location-on" size={20} color="#117943" />
                     <View style={styles.searchResultText}>
                       <Text style={styles.searchResultMain}>
                         {result.structured_formatting?.main_text}
@@ -517,7 +517,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
       {!isKeyboardVisible && !showAddressForm && (
         <View style={[styles.bottomContainer, { bottom: insets.bottom }]}>
           <View style={styles.locationInfo}>
-            <MaterialIcons name="location-on" size={24} color="#8655d2" />
+            <MaterialIcons name="location-on" size={24} color="#117943" />
             <View style={styles.locationDetails}>
               <Text style={styles.locationTitle}>{city || 'Select Location'}</Text>
               <Text style={styles.locationSubtitle} numberOfLines={1}>
@@ -556,7 +556,7 @@ const SelectServiceFromLocation = ({ navigation, route }) => {
             <View style={styles.currentAddressSection}>
               <Text style={styles.sectionTitle}>Selected Location</Text>
               <View style={styles.addressDisplay}>
-                <MaterialIcons name="location-on" size={20} color="#8655d2" />
+                <MaterialIcons name="location-on" size={20} color="#117943" />
                 <Text style={styles.addressText}>{address}</Text>
               </View>
             </View>
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#8655d2', // Changed from #065E2C
+    backgroundColor: '#117943', // Changed from #065E2C
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingBottom: responsiveHeight(3),
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
   },
   currentLocationText: {
-    color: '#8655d2', // Changed from #065E2C
+    color: '#117943', // Changed from #065E2C
     fontSize: 14,
     fontWeight: '500',
   },
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#8655d2', // Changed from #065E2C
+    borderColor: '#117943', // Changed from #065E2C
   },
   searchIcon: {
     marginRight: 10,
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   confirmButton: {
-    backgroundColor: '#8655d2', // Changed from #065E2C
+    backgroundColor: '#117943', // Changed from #065E2C
     borderRadius: 8,
     padding: 15,
     alignItems: 'center',
@@ -908,8 +908,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addressTypeButtonActive: {
-    backgroundColor: '#8655d2',
-    borderColor: '#8655d2',
+    backgroundColor: '#117943',
+    borderColor: '#117943',
   },
   addressTypeButtonText: {
     fontSize: 14,

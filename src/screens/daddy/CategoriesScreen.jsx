@@ -113,7 +113,7 @@ const CategoryScreen = ({ navigation, route }) => {
 
 
 
-  const backgroundColor = '#8655d2';
+  const backgroundColor = '#117943';
 
   // Render search results or default items
   const dataToRender = searchResults.length > 0
@@ -202,7 +202,7 @@ const CategoryScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: backgroundColor }]}>
       {/* Status Bar */}
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={styles.mainContainer}>
         {/* Sidebar */}
         <View style={styles.sidebar}>
@@ -265,14 +265,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   selectedCategoryItem: {
-    backgroundColor: '#8655d220', // Light green background with 20% opacity
+    backgroundColor: '#11794320', // Light green background with 20% opacity
   },
   categoryText: {
     fontSize: 16,
     color: '#333',
   },
   selectedCategoryText: {
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
   },
   content: {
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   selectedProductImage: {
     borderWidth: 2,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
   },
   productName: {
     fontSize: 14,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   selectedProductText: {
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
   },
   searchResultsHeader: {
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   clearSearchText: {
     fontSize: 14,
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
   },
 
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
 
   // Selected subcategory
   categoriesSidebarSubItemSelected: {
-    backgroundColor: '#8655d220',
+    backgroundColor: '#11794320',
   },
 
   // Subcategory text

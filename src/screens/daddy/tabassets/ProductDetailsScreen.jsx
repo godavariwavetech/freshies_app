@@ -50,7 +50,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
   const previewLength = 200; // chars
 
-  const backgroundColor = '#8655d2';
+  const backgroundColor = '#117943';
 
 
 
@@ -246,7 +246,7 @@ const ProductDetailScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={styles.container}>
         <ScrollView
           showsVerticalScrollIndicator={true}

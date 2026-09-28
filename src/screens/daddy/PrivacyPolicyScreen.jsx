@@ -8,7 +8,7 @@ const PrivacyPolicyScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container}>
       {/* Custom Header with Back Navigation */}
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => navigation.goBack()} // Navigates back to the previous screen
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 7,
     paddingHorizontal: 15,
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     // shadow properties for a subtle lift on iOS

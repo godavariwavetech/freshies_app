@@ -70,9 +70,9 @@ const GlobalSearchScreen = ({ navigation }) => {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
-            <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+            <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
             {/* Header with Back Button */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderColor: '#ddd',paddingTop: insets.top, backgroundColor: '#8655d2', }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderColor: '#ddd',paddingTop: insets.top, backgroundColor: '#117943', }}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Icon name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
@@ -96,7 +96,7 @@ const GlobalSearchScreen = ({ navigation }) => {
                 />
 
                 {loading ? (
-                    <ActivityIndicator size="large" color="#8655d2" />
+                    <ActivityIndicator size="large" color="#117943" />
                 ) : query.trim().length < 3 ? (
                     <View style={{ alignItems: 'center', marginTop: 30 }}>
                         <Icon name="information-circle-outline" size={48} color="#ccc" />

@@ -168,7 +168,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
                     <Text style={styles.headerTitle}>Subscription Details</Text>
                 </View>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#8655d2" />
+                    <ActivityIndicator size="large" color="#117943" />
                     <Text style={styles.loadingText}>Loading subscription details...</Text>
                 </View>
             </View>
@@ -266,7 +266,7 @@ export default function SubscriptionDetailsScreen({ navigation, route }) {
                         upcomingDeliveries.map((delivery, index) => (
                             <View key={index} style={styles.deliveryCard}>
                                 <View style={styles.deliveryRow}>
-                                    <Icon name="schedule" size={16} color="#8655d2" style={styles.deliveryIcon} />
+                                    <Icon name="schedule" size={16} color="#117943" style={styles.deliveryIcon} />
                                     <Text style={styles.dateText}>{delivery.date}</Text>
                                 </View>
                             </View>
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     header: {
-        backgroundColor: '#8655d2',
+        backgroundColor: '#117943',
         paddingVertical: 14,
         paddingHorizontal: 16,
         flexDirection: 'row',
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     dateBadge: {
-        backgroundColor: '#8655d2',
+        backgroundColor: '#117943',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 8,
         borderLeftWidth: 3,
-        borderLeftColor: '#8655d2',
+        borderLeftColor: '#117943',
     },
     deliveryRow: {
         flexDirection: 'row',
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     retryButton: {
-        backgroundColor: '#8655d2',
+        backgroundColor: '#117943',
         paddingVertical: 12,
         paddingHorizontal: 24,
         borderRadius: 8,

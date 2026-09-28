@@ -59,7 +59,7 @@ const OffersScreen = ({ navigation }) => {
   const renderCoupon = ({ item }) => (
     <View style={styles.couponCard}>
       <View style={styles.couponHeader}>
-        <MaterialCommunityIcons name="tag-outline" size={24} color="#8655d2" />
+        <MaterialCommunityIcons name="tag-outline" size={24} color="#117943" />
         <Text style={styles.couponName}>{item.coupon_name}</Text>
       </View>
       <Text style={styles.couponDescription}>{item.coupon_description}</Text>
@@ -77,7 +77,7 @@ const OffersScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container}>
       <SafeAreaView >
-        <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
+        <StatusBar backgroundColor="#117943" barStyle="light-content" />
 
         {/* Header */}
         <View style={[styles.header,{paddingTop: insets.top}]}>
@@ -91,7 +91,7 @@ const OffersScreen = ({ navigation }) => {
         <View style={styles.couponsSection}>
           {/* Refer & Earn Card — Always Visible */}
           <LinearGradient
-            colors={['#a77be9', '#8655d2']}
+            colors={['#a77be9', '#117943']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.referCard}
@@ -121,7 +121,7 @@ const OffersScreen = ({ navigation }) => {
 
           {/* Rest of the offers logic */}
           {isLoading ? (
-            <ActivityIndicator size="large" color="#8655d2" />
+            <ActivityIndicator size="large" color="#117943" />
           ) : coupons.length === 0 ? (
             <View style={styles.emptyCouponsContainer}>
               <Icon name="local-offer" size={80} color="#999" />
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: 16,
     paddingHorizontal: 16,
   },
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   couponName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#8655d2',
+    color: '#117943',
     marginLeft: 8,
   },
   couponDescription: {
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     marginLeft: 8,
-    color: '#8655d2',
+    color: '#117943',
   },
   
   couponDescription: {

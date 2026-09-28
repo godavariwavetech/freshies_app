@@ -55,7 +55,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
         ? refferalData.refer_content.slice(0, 2).map((item) => `• ${item}`).join('\n')
         : '';
 
-      const message = `Hey! Use my referral code *${referralCode}* to sign up on Abhi24.\n\n📲 Download the app: https://play.google.com/store/apps/details?id=com.Abhi24&hl=en\n\n${bulletPoints}`;
+      const message = `Hey! Use my referral code *${referralCode}* to sign up on Freshies.\n\n📲 Download the app: https://play.google.com/store/apps/details?id=com.freshies&hl=en\n\n${bulletPoints}`;
 
       await Share.share({ message });
     } catch (error) {
@@ -68,8 +68,8 @@ const ReferAndEarnScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
-      <LinearGradient colors={['#8655d2', '#8655d2']} style={[styles.gradientContainer,{paddingTop: insets.top }]}>
+      <StatusBar backgroundColor="#117943" barStyle="light-content" />
+      <LinearGradient colors={['#117943', '#117943']} style={[styles.gradientContainer,{paddingTop: insets.top }]}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
@@ -82,7 +82,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
       {!customerId && (
         <View style={styles.loginRequiredContainer}>
           <View style={styles.loginRequiredContent}>
-            <Ionicons name="person-circle-outline" size={60} color="#8655d2" />
+            <Ionicons name="person-circle-outline" size={60} color="#117943" />
             <Text style={styles.loginRequiredTitle}>Login Required</Text>
             <Text style={styles.loginRequiredMessage}>
               Please login to access your referral code and start earning rewards.
@@ -111,7 +111,7 @@ const ReferAndEarnScreen = ({ navigation }) => {
           <View style={styles.codeContainer}>
             <Text style={styles.code}>{referralCode}</Text>
             <TouchableOpacity onPress={handleCopy}>
-              <Ionicons name="copy-outline" size={24} color="#8655d2" />
+              <Ionicons name="copy-outline" size={24} color="#117943" />
             </TouchableOpacity>
           </View>
           {copied && <Text style={styles.copiedText}>Code copied to clipboard!</Text>}
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   loginButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     padding: 12,
     borderRadius: 8,
     marginBottom: 10,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   bulletPoint: {
     fontSize: 20,
     lineHeight: 24,
-    color: '#8655d2',
+    color: '#117943',
     marginRight: 6,
   },
 
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   shareButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,

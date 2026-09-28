@@ -54,7 +54,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import {addToCart} from "../../../redux/reducers/cartReducer"
 
 const paymentMethods = ['Pay Online', 'COD'];
-const backgroundColor = '#8655d2'; // Replacing dynamic color with specific color
+const backgroundColor = '#117943'; // Replacing dynamic color with specific color
 
 const BasketScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -601,7 +601,7 @@ const BasketScreen = ({ navigation, route }) => {
           contact: mobileNumber,
           name: selectedAddress?.customer_name,
         },
-        theme: { color: '#8655d2' },
+        theme: { color: '#117943' },
       };
 
       RazorpayCheckout.open(options)
@@ -2102,7 +2102,7 @@ export default BasketScreen;
   //         contact: mobileNumber,
   //         name: selectedAddress?.customer_name,
   //       },
-  //       theme: { color: '#8655d2' },
+  //       theme: { color: '#117943' },
   //     };
 
   //     RazorpayCheckout.open(options)

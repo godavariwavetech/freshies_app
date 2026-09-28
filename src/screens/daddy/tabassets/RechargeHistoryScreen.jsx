@@ -75,7 +75,7 @@ const RechargeHistoryScreen = ({ navigation }) => {
         break;
       case 'failed':
         statusStyle = styles.failedButton;
-        borderColor = '#8655d2';
+        borderColor = '#117943';
         break;
       case 'pending':
       default:
@@ -100,7 +100,7 @@ const RechargeHistoryScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
 
       {/* Header */}
       <View style={[styles.header,{paddingTop: insets.top}]}>
@@ -159,7 +159,7 @@ const RechargeHistoryScreen = ({ navigation }) => {
 
       {/* List or Loader */}
       {loading ? (
-        <ActivityIndicator size="large" color="#8655d2" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#117943" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={filteredTransactions}
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: wp('4%'),
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     top: hp('1.5%'),
   },
   calendarButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 8,
     padding: wp('3%'),
     marginLeft: wp('2%'),
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
   },
   failedButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
   },
   pendingButton: {
     backgroundColor: '#FFA000',

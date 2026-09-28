@@ -594,7 +594,7 @@ export default function GroceriesScreen({ navigation, route }) {
 
           ) : (
             <TouchableOpacity
-              style={[styles.buyBtn, { backgroundColor: '#8655d2' }]}
+              style={[styles.buyBtn, { backgroundColor: '#117943' }]}
               onPress={() => handleBuyOnce(item)}
             >
               <Text style={styles.buyText}>Add</Text>
@@ -882,7 +882,7 @@ export default function GroceriesScreen({ navigation, route }) {
       </View>
 
       {cartItems.length > 0 && (
-        <View style={[styles.checkoutToast, { backgroundColor: '#8655d2' }, { bottom: insets.bottom }]}>
+        <View style={[styles.checkoutToast, { backgroundColor: '#117943' }, { bottom: insets.bottom }]}>
           <View style={styles.checkoutToastContent}>
             <View style={styles.checkoutToastLeft}>
               <Text style={styles.checkoutToastTitle}>
@@ -1104,10 +1104,10 @@ const styles = StyleSheet.create({
   },
   selectedCategoryItem: {
     borderLeftWidth: 5,
-    borderLeftColor: '#8655d2',
+    borderLeftColor: '#117943',
     backgroundColor: '#f3e8ff', // light lavender background
     borderRadius: 5,
-    shadowColor: '#8655d2',
+    shadowColor: '#117943',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -1127,7 +1127,7 @@ const styles = StyleSheet.create({
   },
   selectedCategoryText: {
     fontWeight: 'bold',
-    color: '#8655d2',
+    color: '#117943',
   },
   productArea: { width: productAreaWidth, flex: 1 },
   filterRow: {

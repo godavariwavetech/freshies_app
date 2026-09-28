@@ -243,7 +243,7 @@ const EditSubscriptionScreen = ({ navigation, route }) => {
   };
 
   // Define the background color
-  const backgroundColor = '#8655d2';
+  const backgroundColor = '#117943';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: hp('2%'),
     paddingHorizontal: wp('4%'),
     flexDirection: 'row',
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
     flex: 2, // Larger width for Alternate Days
   },
   scheduleButtonSelected: {
-    borderColor: '#8655d2',
+    borderColor: '#117943',
   },
   radioCircle: {
     width: wp('3%'),
@@ -697,15 +697,15 @@ const styles = StyleSheet.create({
     marginRight: wp('2%'),
   },
   radioCircleSelected: {
-    borderColor: '#8655d2',
-    backgroundColor: '#8655d2',
+    borderColor: '#117943',
+    backgroundColor: '#117943',
   },
   scheduleButtonText: {
     fontSize: wp('4%'),
     color: '#666',
   },
   scheduleButtonTextSelected: {
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
   },
   daysContainer: {
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   quantityTextSelected: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     color: '#fff',
     borderRadius: 10,
     paddingHorizontal: wp('2%'),
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   updateButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 20,
     paddingVertical: hp('1.5%'),
     alignItems: 'center',
@@ -823,7 +823,7 @@ const styles = StyleSheet.create({
   resumeButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     borderRadius: 20,
     paddingVertical: hp('1.5%'),
     alignItems: 'center',
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   },
   resumeButtonText: {
     fontSize: wp('4%'),
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
   },
   deleteButton: {
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#8655d2',
+    color: '#117943',
   },
 
   actualPrice: {
@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
   },
 
   quantityButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,

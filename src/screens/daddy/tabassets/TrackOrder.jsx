@@ -33,7 +33,7 @@ const OrderDetailsScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const { orderDetails, status } = route.params || {};
 
-  const backgroundColor = '#8655d2';
+  const backgroundColor = '#117943';
   const [storedOrders, setStoredOrders] = useState([]);
   const [viewSavedOrders, setViewSavedOrders] = useState(false);
   const { location: storedLocation, locationName, locationId, address, customerId, mobileNumber, shopAddress } = useSelector(state => state.Auth);
@@ -268,7 +268,7 @@ const formatIndianDateTime = (dateString) => {
 
   return (
     <View style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={[styles.header, {paddingTop: insets.top}]}>
         <Ionicons
           name="arrow-back"
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: responsiveHeight(8),
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: responsiveWidth(4),
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     paddingBottom: responsiveHeight(5),
   },
   orderId: {
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: '500',
   },
   productCard: {
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
-    color: '#8655d2',
+    color: '#117943',
     fontSize: responsiveFontSize(2.2),
     fontWeight: 'bold',
     marginRight: responsiveWidth(2),
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: responsiveFontSize(2),
     marginBottom: responsiveHeight(1),
-    color: '#8655d2',
+    color: '#117943',
   },
   shippingText: {
     fontSize: responsiveFontSize(1.8),
@@ -601,19 +601,19 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     padding: responsiveHeight(1.2),
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     borderWidth: 1,
     borderRadius: 6,
     alignItems: 'center',
   },
   footerBtnTextOutline: {
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
   },
   footerBtnFilled: {
     flex: 1,
     padding: responsiveHeight(1.2),
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 6,
     alignItems: 'center',
   },

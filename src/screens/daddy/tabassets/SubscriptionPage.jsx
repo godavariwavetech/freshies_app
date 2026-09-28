@@ -23,7 +23,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 
 const MySubscriptionScreen = ({ navigation, route }) => {
-  const backgroundColor = '#8655d2';
+  const backgroundColor = '#117943';
   const [subscriptions, setSubscriptions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: hp('4%'),
     paddingHorizontal: wp('4%'),
     flexDirection: 'row',
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     marginRight: wp('1.5%'),
   },
   buttonText: {
-    color: '#8655d2',
+    color: '#117943',
     fontSize: wp('3.5%'),
     fontWeight: '600',
   },
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
   },
   okButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
   },
   modalButtonText: {
     fontSize: wp('4%'),
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
     marginTop: hp('2%'),
     paddingVertical: hp('1.5%'),
     paddingHorizontal: wp('5%'),
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 10,
   },
   exploreButtonText: {

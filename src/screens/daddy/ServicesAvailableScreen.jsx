@@ -78,7 +78,7 @@ const ServicesAvailableScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+       <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     // paddingTop: responsiveHeight(2),
   },
   header: {
-    backgroundColor: "#8655d2",
+    backgroundColor: "#117943",
     height: responsiveHeight(10),
     flexDirection: "row",
     alignItems: "flex-end",

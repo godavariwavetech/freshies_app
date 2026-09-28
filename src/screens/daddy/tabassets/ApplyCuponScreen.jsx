@@ -109,7 +109,7 @@ const ApplyCouponScreen = ({ navigation, route }) => {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4B3395" />
+        <ActivityIndicator size="large" color="#117943" />
         <Text style={styles.loadingText}>Loading Coupons...</Text>
       </SafeAreaView>
     );
@@ -183,7 +183,7 @@ const ApplyCouponScreen = ({ navigation, route }) => {
 
   return (
       <SafeAreaView style={styles.container}>
-        <StatusBar backgroundColor="#8655d2" barStyle="light-content" />
+        <StatusBar backgroundColor="#117943" barStyle="light-content" />
         {/* Header */}
         <View style={[styles.header,{paddingTop: insets.top} ]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: wp('4%'),
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     padding: wp('2%'),
   },
   promoApplyButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 8,
     paddingVertical: hp('1.5%'),
     alignItems: 'center',
@@ -364,10 +364,10 @@ const styles = StyleSheet.create({
   couponCode: {
     fontSize: wp('5%'),
     fontWeight: 'bold',
-    color: '#8655d2',
+    color: '#117943',
   },
   applyButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 20,
     paddingVertical: hp('1%'),
     paddingHorizontal: wp('4%'),
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   viewDetails: {
     fontSize: wp('3.5%'),
-    color: '#4B3395',
+    color: '#117943',
     fontWeight: '600',
   },
   emptyCouponsContainer: {
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: wp('4%'),
-    backgroundColor: '#4B3395',
+    backgroundColor: '#117943',
     paddingHorizontal: wp('6%'),
     paddingVertical: wp('2%'),
     borderRadius: 5,

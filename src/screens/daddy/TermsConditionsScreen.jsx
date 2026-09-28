@@ -10,7 +10,7 @@ const TermsAndConditionsScreen = () => {
   return (
     <View style={styles.container}>
       {/* Custom Header */}
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },

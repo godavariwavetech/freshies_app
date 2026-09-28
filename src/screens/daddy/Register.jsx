@@ -145,7 +145,7 @@ export default function Register({ navigation, route }) {
           style={{
             width: responsiveWidth(100),
             height: responsiveHeight(30),
-            backgroundColor: '#8655d2',
+            backgroundColor: '#117943',
             justifyContent: "flex-end"
           }}>
         </ImageBackground>
@@ -241,7 +241,7 @@ export default function Register({ navigation, route }) {
               style={styles.skipButton}
             >
               <Text style={styles.skipText}>Skip Login</Text>
-              <Icon name="arrow-right" size={20} color="#8655d2" />
+              <Icon name="arrow-right" size={20} color="#117943" />
             </TouchableOpacity>
           </>} */}
         </View>
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   loginButton: {
-    backgroundColor: "#8655d2", // updated
+    backgroundColor: "#117943", // updated
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -371,13 +371,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     backgroundColor: 'transparent',
     marginTop: responsiveHeight(2),
     marginHorizontal: responsiveWidth(1),
   },
   skipText: {
-    color: '#8655d2',
+    color: '#117943',
     fontSize: 16,
     fontWeight: '600',
     marginRight: 8,

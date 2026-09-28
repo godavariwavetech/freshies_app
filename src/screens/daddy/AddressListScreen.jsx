@@ -141,7 +141,7 @@ const AddressListScreen = ({ navigation, route }) => {
             <Feather name="edit-2" size={20} color="#525252" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => handleDeletePress(item)}>
-            <Ionicons name="trash-outline" size={20} color="#8655d2" />
+            <Ionicons name="trash-outline" size={20} color="#117943" />
           </TouchableOpacity>
         </View>
       </View>
@@ -154,7 +154,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
-      <MaterialIcons name="location-off" size={80} color="#8655d2" />
+      <MaterialIcons name="location-off" size={80} color="#117943" />
       <Text style={styles.emptyTitle}>No Addresses Found</Text>
       <Text style={styles.emptyText}>You haven't added any delivery addresses yet.</Text>
       <TouchableOpacity style={styles.addAddressButton} onPress={handleAddAddress}>
@@ -171,7 +171,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#8655d2" />
+      <StatusBar style="light" backgroundColor="#117943" />
 
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -182,7 +182,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8655d2" />
+          <ActivityIndicator size="large" color="#117943" />
           <Text style={styles.loadingText}>Loading addresses...</Text>
         </View>
       ) : (
@@ -214,7 +214,7 @@ const AddressListScreen = ({ navigation, route }) => {
         onCancel={handleCancelDelete}
         confirmText="Delete"
         cancelText="Cancel"
-        confirmButtonColor="#8655d2"
+        confirmButtonColor="#117943"
       />
 
 
@@ -256,7 +256,7 @@ const AddressListScreen = ({ navigation, route }) => {
 
       {isCheckingAddress && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#8655d2" />
+          <ActivityIndicator size="large" color="#117943" />
         </View>
       )}
     </View>
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: responsiveHeight(2),
     fontSize: 16,
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: '500',
   },
   emptyContainer: {
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     marginBottom: responsiveHeight(3),
   },
   addAddressButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: responsiveHeight(1.5),
     paddingHorizontal: responsiveWidth(10),
     borderRadius: 8,
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     flexDirection: 'row',
     alignItems: "flex-end",
     justifyContent: "flex-start",
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 50,
     padding: 10,
     elevation: 5,
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#8655d2',
+    color: '#117943',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   redButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
   },
   cancelButtonText: {
     color: '#666',

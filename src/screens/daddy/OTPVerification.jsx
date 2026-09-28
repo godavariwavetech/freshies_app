@@ -259,7 +259,7 @@ export default function OTPVerification({ navigation, route }) {
           style={{
             width: responsiveWidth(100),
             height: responsiveHeight(30),
-            backgroundColor: '#8655d2',
+            backgroundColor: '#117943',
             justifyContent: "flex-end"
           }}>
         </ImageBackground>
@@ -306,7 +306,7 @@ export default function OTPVerification({ navigation, route }) {
           <View style={{ marginTop: responsiveHeight(5) }}>
             {timer !== 0 && <Text style={{ color: "#3D3D3D", fontSize: 18, fontWeight: "700", textAlign: "center" }}>Resend OTP in {timer}s </Text>}
             <TouchableOpacity disabled={timer != 0} onPress={resendOtpHandler}>
-              <Text style={{ fontSize: 14, color: timer == 0 ? "#8655d2" : "#8F8F8F", fontWeight: "700", textAlign: "center", marginTop: responsiveHeight(1) }}>Resend OTP</Text>
+              <Text style={{ fontSize: 14, color: timer == 0 ? "#117943" : "#8F8F8F", fontWeight: "700", textAlign: "center", marginTop: responsiveHeight(1) }}>Resend OTP</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity
@@ -327,7 +327,7 @@ export default function OTPVerification({ navigation, route }) {
         <View style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "#8655d2", // Semi-transparent ABHI24 purple
+          backgroundColor: "#117943", // Semi-transparent ABHI24 purple
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 999,
@@ -397,7 +397,7 @@ export default function OTPVerification({ navigation, route }) {
             <TouchableOpacity
               onPress={handleNewUserSubmit}
               style={{
-                backgroundColor: "#8655d2",
+                backgroundColor: "#117943",
                 width: '100%',
                 paddingVertical: 14,
                 borderRadius: 8,
@@ -475,11 +475,11 @@ const styles = StyleSheet.create({
   forgotPassword: {
     // marginLeft: "auto",
     fontSize: 14,
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: '400',
   },
   loginButton: {
-    backgroundColor: "#8655d2",
+    backgroundColor: "#117943",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     // backgroundColor: '#F5F9FF',
-    borderColor: '#8655d2',
+    borderColor: '#117943',
   },
   timer: {
     color: 'gray',
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   locationLoadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: '500',
   },
   locationErrorContainer: {
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

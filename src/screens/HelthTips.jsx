@@ -52,7 +52,7 @@ const HelthTips = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-         <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+         <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       {/* Header */}
       <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -64,7 +64,7 @@ const HelthTips = ({ navigation }) => {
       {/* Loading */}
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#8655d2" />
+          <ActivityIndicator size="large" color="#117943" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomColor: '#eee',
     borderBottomWidth: 1,
-    backgroundColor: "#8655d2"
+    backgroundColor: "#117943"
   },
   headerTitle: {
     fontSize: 18,

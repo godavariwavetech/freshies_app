@@ -143,7 +143,7 @@ const UserProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity
           onPress={() =>
@@ -162,7 +162,7 @@ const UserProfileScreen = () => {
       {!customerId && (
         <View style={styles.loginRequiredContainer}>
           <View style={styles.loginRequiredContent}>
-            <Icon name="person-circle-outline" size={60} color="#8655d2" />
+            <Icon name="person-circle-outline" size={60} color="#117943" />
             <Text style={styles.loginRequiredTitle}>Login Required</Text>
             <Text style={styles.loginRequiredMessage}>
               Please login to access your profile and manage your account settings.
@@ -260,12 +260,12 @@ const UserProfileScreen = () => {
               style={styles.prefCard}
               onPress={() => togglePreference('callBefore')}
               activeOpacity={editMode ? 0.7 : 1}>
-              <Icon name="call-outline" size={26} color="#8655d2" />
+              <Icon name="call-outline" size={26} color="#117943" />
               <Text style={styles.prefText}>Call before delivery</Text>
               <MaterialIcons
                 name={preferences.callBefore ? 'toggle-on' : 'toggle-off'}
                 size={36}
-                color={preferences.callBefore ? '#8655d2' : '#ccc'}
+                color={preferences.callBefore ? '#117943' : '#ccc'}
               />
             </TouchableOpacity>
 
@@ -274,12 +274,12 @@ const UserProfileScreen = () => {
               style={styles.prefCard}
               onPress={() => togglePreference('ringBell')}
               activeOpacity={editMode ? 0.7 : 1}>
-              <Icon name="notifications-outline" size={26} color="#8655d2" />
+              <Icon name="notifications-outline" size={26} color="#117943" />
               <Text style={styles.prefText}>Ring the bell</Text>
               <MaterialIcons
                 name={preferences.ringBell ? 'toggle-on' : 'toggle-off'}
                 size={36}
-                color={preferences.ringBell ? '#8655d2' : '#ccc'}
+                color={preferences.ringBell ? '#117943' : '#ccc'}
               />
             </TouchableOpacity>
 
@@ -288,12 +288,12 @@ const UserProfileScreen = () => {
               style={styles.prefCard}
               onPress={() => togglePreference('leaveAtDoorstep')}
               activeOpacity={editMode ? 0.7 : 1}>
-              <Icon name="home-outline" size={26} color="#8655d2" />
+              <Icon name="home-outline" size={26} color="#117943" />
               <Text style={styles.prefText}>Leave at doorstep</Text>
               <MaterialIcons
                 name={preferences.leaveAtDoorstep ? 'toggle-on' : 'toggle-off'}
                 size={36}
-                color={preferences.leaveAtDoorstep ? '#8655d2' : '#ccc'}
+                color={preferences.leaveAtDoorstep ? '#117943' : '#ccc'}
               />
             </TouchableOpacity>
           </View>
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 14,
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     elevation: 2,
   },
   backButton: {
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   loginButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
   },
   editButtonActive: {
     backgroundColor: '#6f40c5',
-    shadowColor: '#8655d2',
+    shadowColor: '#117943',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   editButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 6,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
 
   editButtonActive: {
     backgroundColor: '#6f40c5', // slightly different from default
-    shadowColor: '#8655d2',
+    shadowColor: '#117943',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

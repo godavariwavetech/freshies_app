@@ -1,4 +1,6 @@
 <resources>
-    <color name="splash_background">#4B3395</color>
-     <color name="primary_dark">#FFFFFF</color>
+    <color name="splash_background">#117943</color>
+    <color name="primary">#117943</color>
+    <color name="accent">#F5D61D</color>
+    <color name="primary_dark">#FFFFFF</color>
 </resources>

@@ -74,7 +74,7 @@ const BillingHistoryScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
 
       {/* Header */}
       <View style={[styles.header, {paddingTop: insets.top}]}>
@@ -105,7 +105,7 @@ const BillingHistoryScreen = ({ navigation }) => {
 
       {/* List or Loading */}
       {loading ? (
-        <ActivityIndicator size="large" color="#8655d2" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#117943" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={billingHistory}
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: wp('4%'),
     paddingVertical: hp('2%'),
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
   },
   headerTitle: {
     fontSize: wp('5%'),

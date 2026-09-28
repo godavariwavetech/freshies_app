@@ -110,8 +110,8 @@ const PreviousOrdersScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={{ flex: 1}}>
         {/* Header */}
-        <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, marginBottom: 5, backgroundColor: "#8655d2" , paddingTop: insets.top }}>
+        <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
+        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10, marginBottom: 5, backgroundColor: "#117943" , paddingTop: insets.top }}>
           <TouchableOpacity onPress={() =>  {
 
                     // Navigate back based on where user came from
@@ -132,7 +132,7 @@ const PreviousOrdersScreen = () => {
         {/* Login Prompt for users without customer ID */}
         {!customerId && (
           <View style={styles.loginPromptContainer}>
-            <Icon name="person-circle-outline" size={60} color="#8655d2" />
+            <Icon name="person-circle-outline" size={60} color="#117943" />
             <Text style={styles.loginPromptTitle}>Login Required</Text>
             <Text style={styles.loginPromptText}>
               Please login to view your previous orders and track your deliveries.
@@ -158,7 +158,7 @@ const PreviousOrdersScreen = () => {
                   paddingVertical: 8,
                   paddingHorizontal: 20,
                   borderRadius: 20,
-                  backgroundColor: activeTab === 'InProgress' ? '#8655d2' : '#ddd',
+                  backgroundColor: activeTab === 'InProgress' ? '#117943' : '#ddd',
                   marginRight: 10,
                 }}
               >
@@ -171,7 +171,7 @@ const PreviousOrdersScreen = () => {
                   paddingVertical: 8,
                   paddingHorizontal: 20,
                   borderRadius: 20,
-                  backgroundColor: activeTab === 'Completed' ? '#8655d2' : '#ddd',
+                  backgroundColor: activeTab === 'Completed' ? '#117943' : '#ddd',
                 }}
               >
                 <Text style={{ color: activeTab === 'Completed' ? '#fff' : '#000' }}>Completed</Text>
@@ -180,7 +180,7 @@ const PreviousOrdersScreen = () => {
 
             {loading ? (
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#8655d2" />
+                <ActivityIndicator size="large" color="#117943" />
               </View>
             ) : (activeTab === 'InProgress' ? getInProgressOrders().length === 0 : getCompletedOrders().length === 0) ? (
               <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   orderStatus: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#8655d2',
+    color: '#117943',
   },
 
   orderDate: {
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   loginButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,

@@ -67,7 +67,7 @@ const RefundPolicyScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#8655d2" />
+      <StatusBar style="light" backgroundColor="#117943" />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -82,7 +82,7 @@ const RefundPolicyScreen = () => {
       >
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#8655d2" />
+            <ActivityIndicator size="large" color="#117943" />
             <Text style={styles.loadingText}>Loading refund policy...</Text>
           </View>
         ) : error ? (
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     gap: 10,
     flexDirection: "row",
     alignItems: "flex-end",
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 16,
-    color: '#8655d2',
+    color: '#117943',
     marginRight: 10,
     lineHeight: 20,
   },

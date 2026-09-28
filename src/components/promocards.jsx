@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 3,
   },
   activeDot: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     width: 19,
   },
   loader: {

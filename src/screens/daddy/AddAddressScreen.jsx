@@ -471,7 +471,7 @@ const AddAddressScreen = ({ navigation, route }) => {
               <Text style={styles.markerText}>Order will be delivered here</Text>
               {/* <View style={styles.markerArrow} /> */}
             </View>
-            <MaterialIcons name="location-on" size={40} color="#8655d2" />
+            <MaterialIcons name="location-on" size={40} color="#117943" />
           </View>
         </View>
         <TouchableOpacity 
@@ -480,10 +480,10 @@ const AddAddressScreen = ({ navigation, route }) => {
           disabled={isLoadingLocation}
         >
           {isLoadingLocation ? (
-            <ActivityIndicator color="#8655d2" size="small" />
+            <ActivityIndicator color="#117943" size="small" />
           ) : (
             <>
-              <MaterialIcons name="my-location" size={24} color="#8655d2" />
+              <MaterialIcons name="my-location" size={24} color="#117943" />
               <Text style={styles.currentLocationText}>use current location</Text>
             </>
           )}
@@ -522,7 +522,7 @@ const AddAddressScreen = ({ navigation, route }) => {
                   style={styles.searchResultItem}
                   onPress={() => handlePlaceSelect(result.place_id)}
                 >
-                  <MaterialIcons name="location-on" size={20} color="#8655d2" />
+                  <MaterialIcons name="location-on" size={20} color="#117943" />
                   <View style={styles.searchResultText}>
                     <Text style={styles.searchResultMain}>{result.structured_formatting?.main_text || result.description}</Text>
                     <Text style={styles.searchResultSecondary}>{result.structured_formatting?.secondary_text || ''}</Text>
@@ -538,7 +538,7 @@ const AddAddressScreen = ({ navigation, route }) => {
         <View style={styles.bottomContainer}>
           <View style={styles.locationInfo}>
             <View style={styles.locationIcon}>
-              <MaterialIcons name="location-on" size={24} color="#8655d2" />
+              <MaterialIcons name="location-on" size={24} color="#117943" />
             </View>
             <View style={styles.locationDetails}>
               <Text style={styles.locationTitle}>{city || 'Location'}</Text>
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     height: responsiveHeight(7),
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   markerTextContainer: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: '#8655d2',
+    borderTopColor: '#117943',
   },
   searchContainer: {
     position: 'absolute',
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#8655d2',
+    borderColor: '#117943',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -905,13 +905,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   currentLocationText: {
-    color: '#8655d2',
+    color: '#117943',
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 8,
   },
   addButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 8,
     paddingVertical: responsiveHeight(2),
     alignItems: 'center',
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
     marginHorizontal:responsiveWidth(1)
   },
   selectedTypeButton: { 
-    backgroundColor: '#8655d2' 
+    backgroundColor: '#117943' 
   },
   typeButtonText: { 
     color: '#666',
@@ -1009,7 +1009,7 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   saveButton: { 
-    backgroundColor: '#8655d2', 
+    backgroundColor: '#117943', 
     padding: 15, 
     borderRadius: 5, 
     alignItems: 'center' 

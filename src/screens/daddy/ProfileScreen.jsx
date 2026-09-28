@@ -97,7 +97,7 @@ const ProfileScreen = () => {
   const handleUpdate = async () => {
     try {
       await Linking.openURL(
-        'https://play.google.com/store/apps/details?id=com.Abhi24',
+        'https://play.google.com/store/apps/details?id=com.freshies',
       );
     } catch (error) {
 
@@ -176,13 +176,13 @@ const ProfileScreen = () => {
         <RefreshControl
           refreshing={isLoading}
           // onRefresh={getOrdersData}
-          colors={['#8655d2']}
+          colors={['#117943']}
         />
       }
     >
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
       <LinearGradient
-        colors={['#8655d2', '#8655d2']}
+        colors={['#117943', '#117943']}
         style={[styles.gradientContainer, { paddingTop: insets.top }]}>
         <View
           style={{
@@ -218,7 +218,7 @@ const ProfileScreen = () => {
           {/* 👤 Account */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('UserProfileScreen')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="account-circle-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Account</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -226,7 +226,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('AddressList')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="account-circle-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="account-circle-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Address</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -234,7 +234,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('PreviousOrdersScreen', { fromProfile: true })}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="clipboard-list-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="clipboard-list-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Your Orders</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -242,7 +242,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('MyFavoritesScreen')}>
             <View style={styles.menuItemLeft}>
-              <Icon name="favorite" size={24} color="#8655d2" />
+              <Icon name="favorite" size={24} color="#117943" />
               <Text style={styles.menuText}>My Favorites</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -251,7 +251,7 @@ const ProfileScreen = () => {
           {/* 💰 Offers & Referrals */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('OffersScreen')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="tag-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="tag-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Offers</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -259,7 +259,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('ReferAndEarnScreen')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="gift-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="gift-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Refer & Earn</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -268,7 +268,7 @@ const ProfileScreen = () => {
           {/* ❓ Support & Info */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('Support')}>
             <View style={styles.menuItemLeft}>
-              <Feather name="user" size={24} color="#8655d2" />
+              <Feather name="user" size={24} color="#117943" />
               <Text style={styles.menuText}>Help & Support</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -276,7 +276,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('FAQScreen')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="help-circle-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="help-circle-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>FAQs</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -284,7 +284,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('QualityFAQS')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="check-decagram" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="check-decagram" size={24} color="#117943" />
               <Text style={styles.menuText}>Quality</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -292,7 +292,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('HelthTips')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="heart-pulse" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="heart-pulse" size={24} color="#117943" />
               <Text style={styles.menuText}>Health Tips</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -300,7 +300,7 @@ const ProfileScreen = () => {
 
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('RefundPolicy')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="cash-refund" size={22} color="#8655d2" />
+              <MaterialCommunityIcons name="cash-refund" size={22} color="#117943" />
               <Text style={styles.menuText}>Refund Policy</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -315,7 +315,7 @@ const ProfileScreen = () => {
             }}
           >
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="shield-lock-outline" size={24} color="#8655d2" />
+              <MaterialCommunityIcons name="shield-lock-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Policies</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
@@ -324,7 +324,7 @@ const ProfileScreen = () => {
             <>
               <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/privacypolicy')}>
                 <View style={styles.menuItemLeft}>
-                  <MaterialCommunityIcons name="file-document-outline" size={22} color="#8655d2" />
+                  <MaterialCommunityIcons name="file-document-outline" size={22} color="#117943" />
                   <Text style={styles.menuText}>Privacy Policy</Text>
                 </View>
                 <MaterialCommunityIcons name="open-in-new" size={20} color="#666" />
@@ -334,7 +334,7 @@ const ProfileScreen = () => {
 
               <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/terms')}>
                 <View style={styles.menuItemLeft}>
-                  <MaterialCommunityIcons name="file-certificate-outline" size={22} color="#8655d2" />
+                  <MaterialCommunityIcons name="file-certificate-outline" size={22} color="#117943" />
                   <Text style={styles.menuText}>Terms & Conditions</Text>
                 </View>
                 <MaterialCommunityIcons name="open-in-new" size={20} color="#666" />
@@ -345,7 +345,7 @@ const ProfileScreen = () => {
           {/* ℹ️ About */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => openLink('https://abhi24.in/about')}>
             <View style={styles.menuItemLeft}>
-              <MaterialCommunityIcons name="file-document-outline" size={22} color="#8655d2" />
+              <MaterialCommunityIcons name="file-document-outline" size={22} color="#117943" />
               <Text style={styles.menuText}>About Us</Text>
             </View>
             <MaterialCommunityIcons name="open-in-new" size={20} color="#666" />
@@ -359,7 +359,7 @@ const ProfileScreen = () => {
               onPress={() => setLogoutModalVisible(true)}
             >
               <View style={styles.menuItemLeft}>
-                <Feather name="log-out" size={24} color="#8655d2" />
+                <Feather name="log-out" size={24} color="#117943" />
                 <Text style={styles.menuText}>Logout</Text>
               </View>
               <Icon name="chevron-right" size={24} color="#666" />
@@ -373,7 +373,7 @@ const ProfileScreen = () => {
               }}
             >
               <View style={styles.menuItemLeft}>
-                <Feather name="log-in" size={24} color="#8655d2" />
+                <Feather name="log-in" size={24} color="#117943" />
                 <Text style={styles.menuText}>Login</Text>
               </View>
               <Icon name="chevron-right" size={24} color="#666" />
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#333',
   },
-  header: { padding: 20, backgroundColor: '#8655d2', alignItems: 'center' },
+  header: { padding: 20, backgroundColor: '#117943', alignItems: 'center' },
   profileName: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
   ordersHeader: {
     flexDirection: 'row',
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   ordersTitle: { fontSize: 18, fontWeight: 'bold' },
-  viewAll: { color: '#8655d2', fontWeight: 'bold' },
+  viewAll: { color: '#117943', fontWeight: 'bold' },
   orderCard: {
     backgroundColor: '#fff',
     margin: 10,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     // elevation: 3
   },
   orderId: { fontSize: 14, fontWeight: '500', color: '#3D3D3D' },
-  orderStatus: { color: '#8655d2', fontWeight: '600', fontSize: 14 },
+  orderStatus: { color: '#117943', fontWeight: '600', fontSize: 14 },
   orderDetails: {
     fontSize: 12,
     color: '#3D3D3D',
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   menuItem: { fontSize: 14, color: '#555' },
   price: {
     fontSize: 16,
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: 'bold',
     alignSelf: 'flex-start',
   },
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
-    color: '#8655d2',
+    color: '#117943',
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     padding: 15,
     borderRadius: 8,
     width: '100%',
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   seeAllText: {
-    color: '#8655d2',
+    color: '#117943',
     fontSize: 14,
     marginRight: 5,
   },
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
   favoriteItemPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#8655d2',
+    color: '#117943',
   },
   recentOrderContainer: {
     backgroundColor: '#fff',
@@ -770,7 +770,7 @@ const styles = StyleSheet.create({
   recentOrderPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#8655d2',
+    color: '#117943',
   },
   recentOrderItemsPreview: {
     flexDirection: 'row',
@@ -785,7 +785,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   viewAllText: {
-    color: '#8655d2',
+    color: '#117943',
     fontSize: 14,
     fontWeight: 'bold',
   },

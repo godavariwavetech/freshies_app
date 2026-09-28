@@ -268,7 +268,7 @@ function UserHome() {
       {isLoading && (
         <ActivityIndicator
           size="large"
-          color="#8655d2"
+          color="#117943"
           style={styles.loadingIndicator}
         />
       )}
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
     shadowOffset: { width: 0, height: 2 },
-    shadowColor: '#8655d2',
+    shadowColor: '#117943',
     shadowOpacity: 0.3,
     shadowRadius: 6,
     // elevation: 4,

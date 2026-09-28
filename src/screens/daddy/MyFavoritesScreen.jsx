@@ -154,7 +154,7 @@ const MyFavoritesScreen = () => {
           <Icon
             name="heart"
             size={24}
-            color={updatingFavoriteId === item.id ? '#ccc' : '#8655d2'}
+            color={updatingFavoriteId === item.id ? '#ccc' : '#117943'}
           />
         </TouchableOpacity>
 
@@ -165,7 +165,7 @@ const MyFavoritesScreen = () => {
 
   return (
     <View style={styles.container}>
-      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#8655d2" />
+      <FocusAwareStatusBar barStyle="light-content" backgroundColor="#117943" />
 
       <View style={[styles.headerContainer,{paddingTop: insets.top}]}>
         <TouchableOpacity
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    backgroundColor: "#8655d2"
+    backgroundColor: "#117943"
   },
   backButton: {
     marginRight: 15,

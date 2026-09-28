@@ -37,8 +37,8 @@ const SupportScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-        <StatusBar style="light" backgroundColor="#8655d2"/>
-      <LinearGradient colors={['#8655d2', '#8655d2']} style={[styles.gradientContainer,{paddingTop: insets.top}]}>
+        <StatusBar style="light" backgroundColor="#117943"/>
+      <LinearGradient colors={['#117943', '#117943']} style={[styles.gradientContainer,{paddingTop: insets.top}]}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
@@ -52,15 +52,15 @@ const SupportScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Contact Us</Text>
           <View style={styles.contactOptions}>
             <TouchableOpacity style={styles.contactOption} onPress={handleCall}>
-              <MaterialIcons name="phone" size={32} color="#8655d2" />
+              <MaterialIcons name="phone" size={32} color="#117943" />
               <Text style={styles.contactText}>Call Support Team</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.contactOption} onPress={handleEmail}>
-              <MaterialIcons name="email" size={32} color="#8655d2" />
+              <MaterialIcons name="email" size={32} color="#117943" />
               <Text style={styles.contactText}>Send Email</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.contactOption} onPress={handleWhatsApp}>
-              <FontAwesome6 name="whatsapp" size={32} color="#8655d2" />
+              <FontAwesome6 name="whatsapp" size={32} color="#117943" />
               <Text style={styles.contactText}>Chat on WhatsApp</Text>
             </TouchableOpacity>
           </View>

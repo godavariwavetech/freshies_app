@@ -25,8 +25,8 @@ const FeedbackScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor="#8655d2" />
-      <LinearGradient colors={['#8655d2', '#8655d2']} style={styles.gradientContainer}>
+      <StatusBar style="light" backgroundColor="#117943" />
+      <LinearGradient colors={['#117943', '#117943']} style={styles.gradientContainer}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <FontAwesome6 name="arrow-left-long" size={20} color="#fff" />
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: responsiveHeight(3),
   },
   submitButton: {
-    backgroundColor: '#8655d2',
+    backgroundColor: '#117943',
     borderRadius: 8,
     padding: responsiveHeight(2),
     alignItems: 'center',

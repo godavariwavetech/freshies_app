@@ -128,8 +128,7 @@ const App = () => {
 
   const handleUpdate = async () => {
     try {
-      // await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24");
-      await Linking.openURL("https://play.google.com/store/apps/details?id=com.Abhi24&pcampaignid=web_share");
+      await Linking.openURL("https://play.google.com/store/apps/details?id=com.freshies&pcampaignid=web_share");
 
     } catch (error) {
       console.error('Failed to open Play Store:', error);

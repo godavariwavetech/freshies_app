@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ViewTrackScreen = ({ navigation, route }) => {
   const { orderDetails } = route.params || {};
-  const backgroundColor = "#8655d2";
+  const backgroundColor = "#117943";
   const [refreshing, setRefreshing] = useState(false);
   const [currentOrderDetails, setCurrentOrderDetails] = useState(orderDetails);
   const insets = useSafeAreaInsets();
@@ -135,7 +135,7 @@ const ViewTrackScreen = ({ navigation, route }) => {
                 }}
                 style={styles.copyIconButton}
               >
-                <Ionicons name="copy-outline" size={16} color="#8655d2" />
+                <Ionicons name="copy-outline" size={16} color="#117943" />
               </TouchableOpacity>
             )}
           </View>
