@@ -4,6 +4,11 @@ apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
 
 
+// When set (e.g. in CI) the debug variant also bundles JS/assets, so the debug
+// APK is standalone and can be installed without a Metro server. Left unset for
+// local development so debug keeps using fast refresh.
+def bundleDebugApk = project.hasProperty("bundleDebugApk")
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -24,6 +29,10 @@ react {
     //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
     //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
     // debuggableVariants = ["liteDebug", "prodDebug"]
+
+    if (bundleDebugApk) {
+        debuggableVariants = []
+    }
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
