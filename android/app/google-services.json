@@ -1,29 +1,33 @@
 {
-  "project_info": {
-    "project_number": "865322914879",
-    "project_id": "abhi24-2cdf7",
-    "storage_bucket": "abhi24-2cdf7.firebasestorage.app"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:865322914879:android:482e1c880ded90b1e3d48a",
-        "android_client_info": {
-          "package_name": "com.Abhi24"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDr6w93G2KEGTDx-oSq1ZPtwweg-JspsWc"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
+    "project_info":  {
+                         "project_number":  "865322914879",
+                         "project_id":  "abhi24-2cdf7",
+                         "storage_bucket":  "abhi24-2cdf7.firebasestorage.app"
+                     },
+    "client":  [
+                   {
+                       "client_info":  {
+                                           "mobilesdk_app_id":  "1:865322914879:android:482e1c880ded90b1e3d48a",
+                                           "android_client_info":  {
+                                                                       "package_name":  "com.freshies"
+                                                                   }
+                                       },
+                       "oauth_client":  [
+
+                                        ],
+                       "api_key":  [
+                                       {
+                                           "current_key":  "AIzaSyDr6w93G2KEGTDx-oSq1ZPtwweg-JspsWc"
+                                       }
+                                   ],
+                       "services":  {
+                                        "appinvite_service":  {
+                                                                  "other_platform_oauth_client":  [
+
+                                                                                                  ]
+                                                              }
+                                    }
+                   }
+               ],
+    "configuration_version":  "1"
 }
