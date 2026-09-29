@@ -1,4 +1,4 @@
-export const baseURL = 'https://api.abhi24.in'; 
+export const baseURL = 'https://ekart360.in:2166/'; 
 
 export const API_KEY = 'AIzaSyAwNKqqg4T954ZchoSdnXuyeXIRpE1QxiM'; 
 

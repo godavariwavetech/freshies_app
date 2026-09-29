@@ -3,7 +3,7 @@ import {
   Text,
   StyleSheet,
   StatusBar,
-  ImageBackground,
+  Image,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -253,16 +253,23 @@ export default function OTPVerification({ navigation, route }) {
     <Pressable onPress={() => Keyboard.dismiss()} style={{ flex: 1 }}>
       <View style={styles.main}>
         <StatusBar translucent hidden />
-        <ImageBackground
-          source={require('./tabassets/voiletverification.png')}
-          resizeMode="stretch"
+        <View
           style={{
             width: responsiveWidth(100),
             height: responsiveHeight(30),
             backgroundColor: '#117943',
-            justifyContent: "flex-end"
+            alignItems: 'center',
+            justifyContent: 'center',
           }}>
-        </ImageBackground>
+          <Image
+            source={require('./tabassets/freshieslogo.png')}
+            resizeMode="contain"
+            style={{
+              width: responsiveWidth(62),
+              height: responsiveHeight(14),
+            }}
+          />
+        </View>
         <View
           style={{
             flex: 1,

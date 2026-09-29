@@ -104,23 +104,23 @@ export default function BottomNavigation() {
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
             if (route.name === 'Home') {
-              iconName = focused ? <HomeSvg color={'#F5D61D'} /> : <HomeInactive />;
+              iconName = focused ? <HomeSvg color={'#117943'} /> : <HomeInactive />;
             } else if (route.name === 'Reorder') {
               iconName = focused ? (
-                <ReorderInactive color={'#F5D61D'} />
+                <ReorderInactive color={'#117943'} />
               ) : (
                 <ReorderInactive color={'gray'} />
               );
             } else if (route.name === 'Categories') {
               iconName = focused ? (
-                <CategoryInactive color={'#F5D61D'} />
+                <CategoryInactive color={'#117943'} />
               ) : (
                 <Categoreis />
               );
             } else if (route.name === 'Cart') {
               iconName = (
                 <View>
-                  {focused ? <CartInactive color={'#F5D61D'} /> : <Cart />}
+                  {focused ? <CartInactive color={'#117943'} /> : <Cart />}
                   {cartItems.length > 0 && (
                     <View style={styles.badge}>
                       <Text style={styles.badgeText}>{cartItems.length}</Text>
@@ -130,7 +130,7 @@ export default function BottomNavigation() {
               );
             } else if (route.name === 'Profile') {
               iconName = focused ? (
-                <ProfileSvg color={'#F5D61D'} />
+                <ProfileSvg color={'#117943'} />
               ) : (
                 <ProfileSvg color={'gray'} />
               );
@@ -139,7 +139,7 @@ export default function BottomNavigation() {
                 <Ionicons
                   name={focused ? 'receipt' : 'receipt-outline'} // example icon
                   size={24}
-                  color={focused ? '#F5D61D' : 'gray'}
+                  color={focused ? '#117943' : 'gray'}
                 />
               );
             }
@@ -147,7 +147,7 @@ export default function BottomNavigation() {
             return iconName;
           },
 
-          tabBarActiveTintColor: '#F5D61D',
+          tabBarActiveTintColor: '#117943',
           tabBarInactiveTintColor: 'gray',
           tabBarLabelStyle: { fontSize: 10, fontWeight: '400' },
           tabBarStyle: {
