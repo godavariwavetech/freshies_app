@@ -40,7 +40,7 @@ const SplashScreen = ({ navigation }) => {
         </View>
         <View style={styles.logoBadge}>
           <Image
-            source={require('../daddy/tabassets/singlevendorlogo.png')}
+            source={require('./tabassets/freshieslogo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
