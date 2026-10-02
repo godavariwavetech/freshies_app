@@ -22,16 +22,12 @@ import {
 } from 'react-native-responsive-dimensions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-// import GoogleIcon from '../user/svgs/GoogleIcon';
 import { actionLogin, setInitial, verifyCustomerMobile } from '../../redux/reducers/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomModal from '../../components/CustomModal';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getUserLoginOTP } from '../../services/services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import CustomModal from '../components/CustomModal';
-
-
 
 export default function Register({ navigation, route }) {
   const { withoutLogin } = route.params || {};   // safe check
@@ -49,7 +45,6 @@ export default function Register({ navigation, route }) {
   const [phoneSuggestions, setPhoneSuggestions] = useState([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
 
-
   useEffect(() => {
     const loadPhoneHistory = async () => {
       try {
@@ -62,7 +57,6 @@ export default function Register({ navigation, route }) {
     loadPhoneHistory();
     dispatch(setInitial());
   }, []);
-
 
   const showErrorModal = (title, message) => {
     setModalContent({ title, message });
@@ -107,7 +101,6 @@ export default function Register({ navigation, route }) {
             user_ind: response.user_ind,
             message: response.message,
             withoutLogin: withoutLogin
-            // username: username.trim()
           });
         } else {
           Alert.alert('Error', 'Failed to generate OTP');
@@ -120,7 +113,6 @@ export default function Register({ navigation, route }) {
       }
     }
   };
-
 
   return (
     <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()} >
@@ -149,17 +141,11 @@ export default function Register({ navigation, route }) {
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.brandHeader}>
-              <View style={styles.logoBadge}>
-                <Image
-                  source={require('./tabassets/freshieslogo.png')}
-                  resizeMode="contain"
-                  style={styles.logoImage}
-                />
-              </View>
-              <View>
-                <Text style={styles.headerTitle}>Single Vendor</Text>
-                <Text style={styles.headerCaption}>FRESHNESS AT YOUR DOORSTEP</Text>
-              </View>
+              <Image
+                source={require('./tabassets/freshieslogo.png')}
+                resizeMode="contain"
+                style={styles.logoImage}
+              />
             </View>
             <View style={styles.card}>
               <Text style={styles.eyebrow}>WELCOME</Text>
@@ -233,21 +219,6 @@ export default function Register({ navigation, route }) {
                 <Text style={styles.securityText}>A quick, secure sign-in with OTP</Text>
               </View>
 
-              {/* {!withoutLogin && <>
-                <View style={styles.dividerContainer}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>OR</Text>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => dispatch(actionLogin())}
-                  style={styles.skipButton}
-                >
-                  <Text style={styles.skipText}>Skip Login</Text>
-                  <Icon name="arrow-right" size={20} color="#117943" />
-                </TouchableOpacity>
-              </>} */}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -277,38 +248,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: responsiveWidth(1),
-    paddingBottom: responsiveHeight(1.2),
-  },
-  logoBadge: {
-    width: 54,
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E7EEE8',
-    marginRight: 12,
+    paddingVertical: responsiveHeight(4),
   },
   logoImage: {
-    width: 44,
-    height: 38,
-  },
-  headerTitle: {
-    color: '#14241A',
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: 0.1,
-  },
-  headerCaption: {
-    marginTop: 3,
-    color: '#718176',
-    fontSize: 9,
-    letterSpacing: 1.05,
-    fontWeight: '700',
+    width: responsiveWidth(40),
+    height: responsiveHeight(15),
   },
   scrollContent: {
     flexGrow: 1,
