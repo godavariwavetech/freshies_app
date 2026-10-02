@@ -24,7 +24,6 @@ import {
 } from 'react-native-responsive-dimensions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-// import GoogleIcon from '../user/svgs/GoogleIcon';
 import { useDispatch } from 'react-redux';
 import { actionLogin, addCustomer, setCustormarId, setMobile, setReferalCode, setUserName, verifyCustomerMobile, verifyCustomerOTP } from '../../redux/reducers/auth';
 import Geolocation from '@react-native-community/geolocation';
@@ -33,12 +32,6 @@ import { customerLogin } from '../../services/services';
 import { useColorScheme } from 'react-native';
 
 import { CommonActions } from '@react-navigation/native';
-
-
-
-
-
-
 
 export default function OTPVerification({ navigation, route }) {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -93,8 +86,6 @@ export default function OTPVerification({ navigation, route }) {
     return () => clearInterval(countdown);
   }, [timer]);
 
-
-
   const handleVerifyOtp = async () => {
     if (otp.includes('')) {
       setError('Please enter all 4 digits of the OTP');
@@ -123,14 +114,8 @@ export default function OTPVerification({ navigation, route }) {
             dispatch(setReferalCode(loginResponse?.data?.referral_code))
             setShowNewUserModal(false);
 
-            // navigation.dispatch(
-            //   CommonActions.reset({
-            //     index: 0,
-            //     routes: [{ name: 'BottomNavigation' }],
-            //   })
-            // )
             route.params?.withoutLogin
-              ?   navigation.dispatch(
+              ? navigation.dispatch(
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: 'BottomNavigation' }],
@@ -156,7 +141,6 @@ export default function OTPVerification({ navigation, route }) {
       console.error(error);
     }
   };
-
 
   const handleOTPChange = (value, index) => {
     let newOtp = [...otp];
@@ -187,14 +171,11 @@ export default function OTPVerification({ navigation, route }) {
       inputRefs.current[index - 1]?.focus();
     }
   };
-  
 
   const maskPhoneNumber = number => {
     if (!number) return '';
     return number.replace(/(\d{2})\d{5}(\d{3})/, '$1*****$2');
   };
-
- 
 
   const resendOtpHandler = async () => {
     setError("")
@@ -237,7 +218,6 @@ export default function OTPVerification({ navigation, route }) {
           )
           : dispatch(actionLogin());
       } else if (loginResponse?.status === 202 && loginResponse?.data?.msg === "Invalid referral code") {
-        // 🛑 Handle referral code error
         setFormError("Referral code is invalid. Please check and try again.");
       } else {
         setFormError(loginResponse?.data?.msg || 'Login failed. Please try again.');
@@ -250,9 +230,6 @@ export default function OTPVerification({ navigation, route }) {
       setLoader(false);
     }
   };
-
-
-
 
   return (
     <Pressable onPress={() => Keyboard.dismiss()} style={{ flex: 1 }}>
@@ -268,17 +245,11 @@ export default function OTPVerification({ navigation, route }) {
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.brandHeader}>
-              <View style={styles.logoBadge}>
-                <Image
-                  source={require('./tabassets/freshieslogo.png')}
-                  resizeMode="contain"
-                  style={styles.logoImage}
-                />
-              </View>
-              <View>
-                <Text style={styles.headerTitle}>Single Vendor</Text>
-                <Text style={styles.headerCaption}>FRESHNESS AT YOUR DOORSTEP</Text>
-              </View>
+              <Image
+                source={require('./tabassets/freshieslogo.png')}
+                resizeMode="contain"
+                style={styles.logoImage}
+              />
             </View>
             <View style={styles.card}>
               <View style={styles.stepBadge}>
@@ -435,7 +406,6 @@ export default function OTPVerification({ navigation, route }) {
               }}
             />
 
-
             {formError ? (
               <Text style={{ color: 'red', marginBottom: 10 }}>{formError}</Text>
             ) : null}
@@ -455,7 +425,6 @@ export default function OTPVerification({ navigation, route }) {
           </Animated.View>
         </View>
       )}
-
     </Pressable>
   );
 }
@@ -503,7 +472,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // marginVertical: 10,
   },
   checkbox: {
     width: 18,
@@ -519,7 +487,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   forgotPassword: {
-    // marginLeft: "auto",
     fontSize: 14,
     color: '#117943',
     fontWeight: '400',
@@ -538,7 +505,6 @@ const styles = StyleSheet.create({
   },
   signupText: {
     textAlign: 'center',
-    // marginTop: 15,
     fontSize: 14,
     color: '#646982',
     fontWeight: '400',
@@ -550,49 +516,22 @@ const styles = StyleSheet.create({
   },
   orText: {
     textAlign: 'center',
-    // marginVertical: 10,
     fontSize: 16,
     color: '#646982',
   },
-
   errorText: {
     color: '#DC2626',
     fontSize: 13,
     flex: 1,
   },
   brandHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: responsiveWidth(1),
-    paddingBottom: responsiveHeight(1.2),
-  },
-  logoBadge: {
-    width: 54,
-    height: 54,
-    borderRadius: 16,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E7EEE8',
-    marginRight: 12,
+    paddingVertical: responsiveHeight(4),
   },
   logoImage: {
-    width: 44,
-    height: 38,
-  },
-  headerTitle: {
-    color: '#14241A',
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: 0.1,
-  },
-  headerCaption: {
-    marginTop: 3,
-    color: '#718176',
-    fontSize: 9,
-    letterSpacing: 1.05,
-    fontWeight: '700',
+    width: responsiveWidth(40),
+    height: responsiveHeight(15),
   },
   scrollContent: {
     flexGrow: 1,
