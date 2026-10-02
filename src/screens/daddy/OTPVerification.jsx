@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  ScrollView,
+  Platform,
   Animated, Easing
 } from 'react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -58,6 +60,7 @@ export default function OTPVerification({ navigation, route }) {
   const [referralCode, setReferralCode] = useState('');
   const [formError, setFormError] = useState('');
   const [responseOtp, setResponseOtp] = useState(route.params.otp || "")
+  const [focusedBox, setFocusedBox] = useState(0);
 
   useEffect(() => {
     if (showNewUserModal) {
@@ -159,16 +162,18 @@ export default function OTPVerification({ navigation, route }) {
     let newOtp = [...otp];
   
     // Only allow paste in first box
-    if (index === 0 && value.length === otp.length) {
-      newOtp = value.split('');
+    const digits = value.replace(/\D/g, '');
+    if (index === 0 && digits.length > 1) {
+      newOtp = digits.slice(0, otp.length).split('');
+      while (newOtp.length < otp.length) newOtp.push('');
       setOtp(newOtp);
-      inputRefs.current[otp.length - 1]?.focus(); // focus last input
+      inputRefs.current[Math.min(digits.length, otp.length) - 1]?.focus();
       setError('');
       return;
     }
   
     // Normal single character entry
-    newOtp[index] = value;
+    newOtp[index] = digits.slice(-1);
     setOtp(newOtp);
     setError('');
   
@@ -252,89 +257,123 @@ export default function OTPVerification({ navigation, route }) {
   return (
     <Pressable onPress={() => Keyboard.dismiss()} style={{ flex: 1 }}>
       <View style={styles.main}>
-        <StatusBar translucent hidden />
-        <View
-          style={{
-            width: responsiveWidth(100),
-            height: responsiveHeight(30),
-            backgroundColor: '#117943',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Image
-            source={require('./tabassets/freshieslogo.png')}
-            resizeMode="contain"
-            style={{
-              width: responsiveWidth(62),
-              height: responsiveHeight(14),
-            }}
-          />
-        </View>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: '#fff',
-            transform: [{ translateY: -responsiveHeight(4.5) }],
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingHorizontal: responsiveWidth(5),
-            paddingVertical: responsiveHeight(3),
-          }}>
-          <Text
-            style={{
-              color: '#3D3D3D',
-              textAlign: 'center',
-              fontSize: 20,
-              fontWeight: '500',
-            }}>
-            Enter the verification code we just sent on the mobile number
-            {maskPhoneNumber(` ${route.params?.phoneNumber}`)}
-          </Text>
-          <View style={styles.otpContainer}>
-            {otp.map((digit, index) => (
-              <TextInput
-              key={index}
-              ref={el => (inputRefs.current[index] = el)}
-              style={[styles.otpBox, { borderColor: isDarkMode ? '#555' : '#ccc' }]}
-              keyboardType="numeric"
-              maxLength={index === 0 ? otp.length : 1} // only first input allows full paste
-              placeholderTextColor={isDarkMode ? '#aaa' : '#666'}
-              value={digit}
-              onChangeText={value => handleOTPChange(value, index)}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
-                  inputRefs.current[index - 1]?.focus();
-                }
-              }}
-            />
-            ))}
-          </View>
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          <View style={{ marginTop: responsiveHeight(5) }}>
-            {timer !== 0 && <Text style={{ color: "#3D3D3D", fontSize: 18, fontWeight: "700", textAlign: "center" }}>Resend OTP in {timer}s </Text>}
-            <TouchableOpacity disabled={timer != 0} onPress={resendOtpHandler}>
-              <Text style={{ fontSize: 14, color: timer == 0 ? "#117943" : "#8F8F8F", fontWeight: "700", textAlign: "center", marginTop: responsiveHeight(1) }}>Resend OTP</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={handleVerifyOtp}
-            style={[styles.loginButton, loader && { opacity: 0.6 }]}
-            disabled={loader}
+        <StatusBar backgroundColor="#F4F7F4" barStyle="dark-content" />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
           >
-            {loader ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.loginText}>Verify</Text>
-            )}
-          </TouchableOpacity>
+            <View style={styles.brandHeader}>
+              <View style={styles.logoBadge}>
+                <Image
+                  source={require('./tabassets/singlevendorlogo.png')}
+                  resizeMode="contain"
+                  style={styles.logoImage}
+                />
+              </View>
+              <View>
+                <Text style={styles.headerTitle}>Single Vendor</Text>
+                <Text style={styles.headerCaption}>FRESHNESS AT YOUR DOORSTEP</Text>
+              </View>
+            </View>
+            <View style={styles.card}>
+              <View style={styles.stepBadge}>
+                <Icon name="shield-check-outline" size={14} color="#147A43" />
+                <Text style={styles.stepText}>SECURE SIGN-IN</Text>
+              </View>
+              <Text style={styles.title}>Check your messages</Text>
+              <Text style={styles.subtitle}>
+                Enter the 4-digit code we sent to
+              </Text>
+              <View style={styles.phoneRow}>
+                <Text style={styles.phoneNumber}>
+                  +91 {maskPhoneNumber(route.params?.phoneNumber)}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  accessibilityRole="button"
+                  accessibilityLabel="Change phone number">
+                  <Text style={styles.changePhone}>Change</Text>
+                </TouchableOpacity>
+              </View>
 
-        </View>
+              <View style={styles.otpContainer}>
+                {otp.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={el => (inputRefs.current[index] = el)}
+                    style={[
+                      styles.otpBox,
+                      error && styles.otpBoxError,
+                      focusedBox === index && !error && styles.otpBoxFocused,
+                    ]}
+                    keyboardType="number-pad"
+                    maxLength={index === 0 ? otp.length : 1}
+                    placeholderTextColor="#D1D5DB"
+                    textContentType={index === 0 ? 'oneTimeCode' : 'none'}
+                    autoComplete={index === 0 ? 'sms-otp' : 'off'}
+                    value={digit}
+                    onFocus={() => setFocusedBox(index)}
+                    onBlur={() => setFocusedBox(-1)}
+                    onChangeText={value => handleOTPChange(value, index)}
+                    onKeyPress={({ nativeEvent }) => {
+                      if (nativeEvent.key === 'Backspace' && !digit && index > 0) {
+                        setFocusedBox(index - 1);
+                        inputRefs.current[index - 1]?.focus();
+                      }
+                    }}
+                  />
+                ))}
+              </View>
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Icon name="alert-circle" size={15} color="#DC2626" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.resendRow}>
+                {timer !== 0 ? (
+                  <Text style={styles.resendTimer}>
+                    Resend code in{' '}
+                    <Text style={styles.resendTimerValue}>{timer}s</Text>
+                  </Text>
+                ) : (
+                  <TouchableOpacity
+                    onPress={resendOtpHandler}
+                    style={styles.resendButton}
+                    activeOpacity={0.7}>
+                    <Icon name="refresh" size={15} color="#117943" />
+                    <Text style={styles.resendButtonText}>Resend code</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                onPress={handleVerifyOtp}
+                style={[styles.primaryButton, loader && { opacity: 0.7 }]}
+                disabled={loader}
+                activeOpacity={0.85}>
+                {loader ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.primaryButtonText}>Verify</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
       {showNewUserModal && (
         <View style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "#117943", // Semi-transparent ABHI24 purple
+          backgroundColor: "rgba(6, 94, 44, 0.92)",
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 999,
@@ -424,7 +463,7 @@ export default function OTPVerification({ navigation, route }) {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F4F7F4',
   },
   container: {
     flex: 1,
@@ -517,33 +556,184 @@ const styles = StyleSheet.create({
   },
 
   errorText: {
-    color: 'red',
-    fontSize: 14,
+    color: '#DC2626',
+    fontSize: 13,
+    flex: 1,
+  },
+  brandHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: responsiveWidth(1),
+    paddingBottom: responsiveHeight(1.2),
+  },
+  logoBadge: {
+    width: 54,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E7EEE8',
+    marginRight: 12,
+  },
+  logoImage: {
+    width: 44,
+    height: 38,
+  },
+  headerTitle: {
+    color: '#14241A',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+  },
+  headerCaption: {
+    marginTop: 3,
+    color: '#718176',
+    fontSize: 9,
+    letterSpacing: 1.05,
+    fontWeight: '700',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    paddingHorizontal: responsiveWidth(5),
+    paddingTop: responsiveHeight(1.5),
+    paddingBottom: responsiveHeight(2),
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E8EEE9',
+    paddingHorizontal: responsiveWidth(6),
+    paddingTop: responsiveHeight(3.2),
+    paddingBottom: responsiveHeight(3),
+    shadowColor: '#183B25',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 3,
+  },
+  stepBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
+    backgroundColor: '#EEF6F0',
+    borderRadius: 20,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    marginBottom: 16,
+  },
+  stepText: {
+    color: '#287149',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    marginLeft: 6,
+  },
+  title: {
+    color: '#17251B',
+    fontSize: 25,
+    fontWeight: '700',
+    textAlign: 'left',
+    lineHeight: 31,
+  },
+  subtitle: {
+    color: '#738076',
+    fontSize: 14,
+    textAlign: 'left',
     marginTop: 8,
-    textAlign: "center"
+    lineHeight: 20,
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 3,
+  },
+  phoneNumber: {
+    color: '#34473A',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  changePhone: {
+    color: '#147A43',
+    fontSize: 13,
+    fontWeight: '700',
+    marginLeft: 10,
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3F1',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 18,
+  },
+  resendRow: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  resendTimer: {
+    color: '#718176',
+    fontSize: 14,
+  },
+  resendTimerValue: {
+    color: '#26382B',
+    fontWeight: '700',
+  },
+  resendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  resendButtonText: {
+    color: '#147A43',
+    fontSize: 14,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+  primaryButton: {
+    backgroundColor: '#147A43',
+    height: 56,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 26,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   otpContainer: {
     flexDirection: 'row',
-    // justifyContent: "space-between",
-    // marginHorizontal:20,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    // alignSelf:"center",
-    // marginVertical: 16,
-    marginTop: responsiveHeight(5),
-    gap: 16,
+    marginTop: responsiveHeight(3.6),
+    gap: responsiveWidth(2.5),
   },
   otpBox: {
-    width: 60,
-    height: 60,
-    borderWidth: 1,
-    borderRadius: 7,
+    width: responsiveWidth(17),
+    height: responsiveWidth(17),
+    borderWidth: 1.5,
+    borderColor: '#DDE6DE',
+    borderRadius: 15,
     textAlign: 'center',
-    fontSize: 18,
-    // backgroundColor: '#F5F9FF',
-    borderColor: '#117943',
+    fontSize: 23,
+    fontWeight: '700',
+    color: '#17251B',
+    backgroundColor: '#FBFCFB',
+  },
+  otpBoxFocused: {
+    borderColor: '#147A43',
+    backgroundColor: '#F4FAF5',
+  },
+  otpBoxError: {
+    borderColor: '#D94638',
+    backgroundColor: '#FFF8F7',
   },
   timer: {
     color: 'gray',
