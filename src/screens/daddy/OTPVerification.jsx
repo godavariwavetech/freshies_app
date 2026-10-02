@@ -270,7 +270,7 @@ export default function OTPVerification({ navigation, route }) {
             <View style={styles.brandHeader}>
               <View style={styles.logoBadge}>
                 <Image
-                  source={require('./tabassets/singlevendorlogo.png')}
+                  source={require('./tabassets/freshieslogo.png')}
                   resizeMode="contain"
                   style={styles.logoImage}
                 />
