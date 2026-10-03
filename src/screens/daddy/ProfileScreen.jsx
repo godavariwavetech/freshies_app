@@ -247,13 +247,13 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('ReferAndEarnScreen')}>
+          {/* <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('ReferAndEarnScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="gift-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>Refer & Earn</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* ❓ Support & Info */}
           <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('Support')}>
@@ -264,37 +264,37 @@ const ProfileScreen = () => {
             <Icon name="chevron-right" size={24} color="#666" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('FAQScreen')}>
+          {/* <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('FAQScreen')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="help-circle-outline" size={24} color="#117943" />
               <Text style={styles.menuText}>FAQs</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('QualityFAQS')}>
+          {/* <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('QualityFAQS')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="check-decagram" size={24} color="#117943" />
               <Text style={styles.menuText}>Quality</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('HelthTips')}>
+          {/* <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('HelthTips')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="heart-pulse" size={24} color="#117943" />
               <Text style={styles.menuText}>Health Tips</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
-          <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('RefundPolicy')}>
+          {/* <TouchableOpacity style={styles.menuItemMain} onPress={() => navigation.navigate('RefundPolicy')}>
             <View style={styles.menuItemLeft}>
               <MaterialCommunityIcons name="cash-refund" size={22} color="#117943" />
               <Text style={styles.menuText}>Refund Policy</Text>
             </View>
             <Icon name="chevron-right" size={24} color="#666" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* 🔓 Logout */}
           {customerId ? (
